@@ -1,0 +1,22 @@
+This partially depends on the kerma sheevaplug stuff.
+
+--- a/include/configs/openrd.h
++++ b/include/configs/openrd.h
+@@ -65,6 +65,7 @@
+ #define CONFIG_CMD_DHCP
+ #define CONFIG_CMD_ENV
+ #define CONFIG_CMD_MII
++#define CONFIG_CMD_MMC
+ #define CONFIG_CMD_NAND
+ #define CONFIG_CMD_PING
+ #define CONFIG_CMD_USB
+@@ -139,4 +140,9 @@
+ #define CONFIG_SYS_ATA_IDE1_OFFSET	MV_SATA_PORT1_OFFSET
+ #endif /*CONFIG_MVSATA_IDE*/
+ 
++#ifdef CONFIG_CMD_MMC
++#define CONFIG_MMC
++#define CONFIG_MV_SDIO
++#endif /* CONFIG_CMD_MMC */
++
+ #endif /* _CONFIG_OPENRD_BASE_H */
