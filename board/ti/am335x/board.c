@@ -300,6 +300,15 @@ void am33xx_spl_board_init(void)
 			return;
 		}
 
+		/* Set DCDC1 (DDR3) to 1.35V for Beaglebone Black. */
+		if (board_is_bone_lt(&header)) {
+			if (tps65217_voltage_update(TPS65217_DEFDCDC1,
+						    TPS65217_DCDC_VOLT_SEL_1350MV)) {
+				puts("tps65217_voltage_update failure\n");
+				return;
+			}
+		}
+
 		/*
 		 * Set LDO3, LDO4 output voltage to 3.3V for Beaglebone.
 		 * Set LDO3 to 1.8V and LDO4 to 3.3V for Beaglebone Black.
