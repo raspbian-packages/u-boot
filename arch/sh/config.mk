@@ -6,7 +6,7 @@
 #
 
 ifeq ($(CROSS_COMPILE),)
-CROSS_COMPILE := sh4-linux-
+CROSS_COMPILE := sh4-linux-gnu-
 endif
 
 CONFIG_STANDALONE_LOAD_ADDR ?= 0x8C000000
