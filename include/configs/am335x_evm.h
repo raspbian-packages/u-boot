@@ -207,8 +207,12 @@
 #define CONFIG_BOOTCOMMAND \
 	"run findfdt; " \
 	"run mmcboot;" \
+	"setenv bootpart 0:1; " \
+	"run mmcboot;" \
 	"setenv mmcdev 1; " \
 	"setenv bootpart 1:2; " \
+	"run mmcboot;" \
+	"setenv bootpart 1:1; " \
 	"run mmcboot;" \
 	"run nandboot;"
 
