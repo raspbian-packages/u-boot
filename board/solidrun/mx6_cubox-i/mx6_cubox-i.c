@@ -276,30 +276,18 @@ int board_phy_config(struct phy_device *phydev)
 
 int board_eth_init(bd_t *bis)
 {
-	int ret;
-        struct iomuxc *const iomuxc_regs
-                = (struct iomuxc *) IOMUXC_BASE_ADDR;
-	struct anatop_regs __iomem *anatop =
-                (struct anatop_regs __iomem *)ANATOP_BASE_ADDR;
-	u32 reg = 0;
-	s32 timeout = 100000;
+	struct iomuxc *const iomuxc_regs = (struct iomuxc *)IOMUXC_BASE_ADDR;
 
-	enable_fec_anatop_clock(ENET_25MHz);
-	/* set gpr1[21] */
-        clrsetbits_le32(&iomuxc_regs->gpr[1], 0, (1 << 21));
+	int ret = enable_fec_anatop_clock(ENET_25MHz);
+	if (ret)
+		return ret;
 
-	while (timeout--) {
-        	if (readl(&anatop->pll_enet) & BM_ANADIG_PLL_ENET_LOCK)
-			break;
-	}
+	/* set gpr1[ENET_CLK_SEL] */
+	setbits_le32(&iomuxc_regs->gpr[1], IOMUXC_GPR1_ENET_CLK_SEL_MASK);
 
 	setup_iomux_enet();
 
-	ret = cpu_eth_init(bis);
-	if (ret)
-		printf("FEC MXC: %s:failed\n", __func__);
-
-	return 0;
+	return cpu_eth_init(bis);
 }
 #endif
 
