@@ -362,6 +362,7 @@ extern char *config_sys_prompt;
 
 #define CONFIG_OF_LIBFDT
 #define CONFIG_CMD_BOOTZ
+#define CONFIG_SUPPORT_RAW_INITRD
 
 #ifndef CONFIG_SYS_DCACHE_OFF
 #define CONFIG_CMD_CACHE
