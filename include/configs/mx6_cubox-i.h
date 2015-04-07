@@ -286,6 +286,10 @@
 
 #define CONFIG_BOOTCOMMAND \
 	   "mmc dev ${mmcdev}; if mmc rescan; then " \
+               "setenv boot_targets mmc ; " \
+               "setenv devtype mmc ; " \
+               "setenv devnum ${mmcdev} ; " \
+               "setenv bootpart ${mmcpart} ; " \
                "for prefix in ${boot_prefixes}; do " \
 		   "setenv file_prefix ${prefix}; " \
 		   "run autodetectfdt; " \
