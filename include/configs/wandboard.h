@@ -236,6 +236,10 @@
 
 #define CONFIG_BOOTCOMMAND \
 	"mmc dev ${mmcdev};" \
+	"setenv boot_targets mmc ; " \
+	"setenv devtype mmc ; " \
+	"setenv devnum ${mmcdev} ; " \
+	"setenv bootpart ${mmcpart} ; " \
 	"if mmc rescan; then " \
 		"echo SD/MMC found on device ${mmcdev};" \
 		"if run loadbootenv; then " \
