@@ -125,6 +125,12 @@
 	"loadramdisk=load mmc ${mmcdev} ${rdaddr} ramdisk.gz\0" \
 	"loadimage=load mmc ${bootpart} ${loadaddr} ${bootdir}/${bootfile}\0" \
 	"loadfdt=load mmc ${bootpart} ${fdtaddr} ${bootdir}/${fdtfile}\0" \
+	"script=boot.scr\0" \
+	"scriptfile=${script}\0" \
+	"loadbootscript=" \
+		"load mmc ${bootpart} ${loadaddr} ${scriptfile};\0" \
+	"bootscript=echo Running bootscript from mmc ...; " \
+		"source ${loadaddr}\0" \
 	"mmcloados=run mmcargs; " \
 		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
 			"if run loadfdt; then " \
@@ -152,6 +158,16 @@
 				"if test -n $uenvcmd; then " \
 					"echo Running uenvcmd ...;" \
 					"run uenvcmd;" \
+				"fi;" \
+				"setenv scriptfile ${script};" \
+				"if run loadbootscript; then " \
+					"echo Loaded script from ${scriptfile};" \
+					"run bootscript;" \
+				"fi;" \
+				"setenv scriptfile /boot/${script};" \
+				"if run loadbootscript; then " \
+					"echo Loaded script from ${scriptfile};" \
+					"run bootscript;" \
 				"fi;" \
 				"if run loadimage; then " \
 					"run mmcloados;" \
