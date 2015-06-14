@@ -1140,6 +1140,9 @@ spl/u-boot-spl: tools prepare
 spl/sunxi-spl.bin: spl/u-boot-spl
 	@:
 
+spl/$(BOARD)-spl.bin: spl/u-boot-spl
+	@:
+
 tpl/u-boot-tpl.bin: tools prepare
 	$(Q)$(MAKE) obj=tpl -f $(srctree)/scripts/Makefile.spl all
 
