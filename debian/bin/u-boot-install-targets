@@ -1,0 +1,5 @@
+#!/bin/sh
+subarch_install_file="debian/build/targets.${1}"
+if [ -f "${subarch_install_file}" ]; then
+    cat "${subarch_install_file}"
+fi
