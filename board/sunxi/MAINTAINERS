@@ -134,6 +134,11 @@ M:	Chen-Yu Tsai <wens@csie.org>
 S:	Maintained
 F:	configs/Ippo_q8h_v5_defconfig
 
+LAMOBO-R1 BOARD
+M:	Jelle de Jong <jelledejong@powercraft.nl>
+S:	Maintained
+F:	configs/Lamobo_R1_defconfig
+
 LINKSPRITE-PCDUINO BOARD
 M:	Zoltan Herpai <wigyori@uid0.hu>
 S:	Maintained
