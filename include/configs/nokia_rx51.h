@@ -138,6 +138,9 @@
 #define CONFIG_CMD_BOOTMENU		/* ANSI terminal Boot Menu */
 #define CONFIG_CMD_CLEAR		/* ANSI terminal clear screen command */
 
+#define CONFIG_CMD_BOOTZ       /* boot zImage                  */
+#define CONFIG_SUPPORT_RAW_INITRD
+
 #ifdef ONENAND_SUPPORT
 
 #define CONFIG_CMD_ONENAND		/* ONENAND support */
