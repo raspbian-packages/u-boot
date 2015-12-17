@@ -1,0 +1,24 @@
+# ARCH	subarch		platform	target
+# --------------------------------------------
+armel	-		dockstar	u-boot.kwb
+
+# Ian Campbell <ijc@debian.org>
+armel	-		dreamplug	u-boot.kwb
+
+# drEagle <drEagle@doukki.net>
+armel	-		guruplug	u-boot.kwb
+
+# Vagrant Cascadian <vagrant@debian.org>, rpi B 256M
+armel	-		rpi		u-boot.bin
+armhf	-		rpi		u-boot.bin
+
+# drEagle <drEagle@doukki.net>
+armel	-		sheevaplug	u-boot.kwb
+
+avr32	-		hammerhead	u-boot.img
+
+mips	-		qemu_mips	u-boot.bin
+
+sh4	-		r2dplus		u-boot.bin
+
+sh4	-		sh7785lcr_32bit	u-boot.bin
