@@ -49,9 +49,7 @@
 #define CONFIG_CMD_BOOTZ
 #define CONFIG_FIT
 #define CONFIG_FIT_VERBOSE
-#define CONFIG_BOOTARGS			"Please use defined boot"
-#define CONFIG_BOOTCOMMAND		"run autoboot"
-#define CONFIG_DEFAULT_CONSOLE		"console=ttySAC1,115200n8\0"
+#define CONFIG_DEFAULT_CONSOLE		"ttySAC1,115200n8\0"
 
 #define CONFIG_SYS_INIT_SP_ADDR	(CONFIG_SYS_LOAD_ADDR \
 					- GENERATED_GBL_DATA_SIZE)
@@ -92,6 +90,20 @@
 	"bl1 raw 0x1 0x1e;" \
 	"bl2 raw 0x1f 0x1d;" \
 	"tzsw raw 0x83f 0x138\0"
+
+#define BOOT_TARGET_DEVICES(func) \
+	func(MMC, mmc, 1) \
+	func(MMC, mmc, 0)
+
+#include <config_distro_bootcmd.h>
+
+#define MEM_LAYOUT_ENV_SETTINGS \
+	"bootm_size=0x10000000\0" \
+	"kernel_addr_r=0x42000000\0" \
+	"fdt_addr_r=0x43000000\0" \
+	"ramdisk_addr_r=0x43300000\0" \
+	"scriptaddr=0x50000000\0" \
+	"pxefile_addr_r=0x51000000\0"
 
 /*
  * Bootable media layout:
@@ -171,7 +183,6 @@
 	"mmcbootpart=1\0" \
 	"mmcrootdev=0\0" \
 	"mmcrootpart=2\0" \
-	"bootdelay=0\0" \
 	"dfu_alt_system="CONFIG_DFU_ALT \
 	"dfu_alt_info=Please reset the board\0" \
 	"consoleon=set console console=ttySAC1,115200n8; save; reset\0" \
@@ -179,7 +190,9 @@
 	"initrdname=uInitrd\0" \
 	"initrdaddr=42000000\0" \
 	"scriptaddr=0x42000000\0" \
-	"fdtaddr=40800000\0"
+	"fdtaddr=40800000\0" \
+	MEM_LAYOUT_ENV_SETTINGS \
+	BOOTENV
 
 /* I2C */
 #define CONFIG_CMD_I2C
