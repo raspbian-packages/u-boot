@@ -46,6 +46,7 @@
 #define CONFIG_CMD_FS_GENERIC
 #define CONFIG_CMD_FAT
 #define CONFIG_CMD_EXT2
+#define CONFIG_CMD_EXT4
 #define CONFIG_DOS_PARTITION
 
 /* Eth Configs */
