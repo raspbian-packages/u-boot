@@ -1322,6 +1322,9 @@ spl/u-boot-spl.sfp: spl/u-boot-spl
 spl/boot.bin: spl/u-boot-spl
 	@:
 
+spl/arndale-spl.bin: spl/u-boot-spl
+	@:
+
 tpl/u-boot-tpl.bin: tools prepare
 	$(Q)$(MAKE) obj=tpl -f $(srctree)/scripts/Makefile.spl all
 
