@@ -116,6 +116,9 @@
 
 #define CONFIG_BOOTCOMMAND ""
 
+#ifndef CONFIG_SANDBOX
+#define CONFIG_SANDBOX 1
+#endif
 #include <config_distro_bootcmd.h>
 
 #define CONFIG_KEEP_SERVERADDR
