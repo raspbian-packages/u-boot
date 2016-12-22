@@ -563,6 +563,19 @@ static struct mx6_ddr3_cfg mem_ddr_4g = {
 	.trasmin = 3500,
 };
 
+static struct mx6_ddr3_cfg mem_ddr_8g = {
+	.mem_speed = 1600,
+	.density = 4,
+	.width = 16,
+	.banks = 8,
+	.rowaddr = 16,
+	.coladdr = 10,
+	.pagesz = 2,
+	.trcd = 1375,
+	.trcmin = 4875,
+	.trasmin = 3500,
+};
+
 static void ccgr_init(void)
 {
 	struct mxc_ccm_reg *ccm = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
@@ -617,7 +630,11 @@ static void spl_dram_init(int width)
 	if (is_cpu_type(MXC_CPU_MX6D))
 		mx6_dram_cfg(&sysinfo, &mx6q_1g_mmcd_calib, &mem_ddr_2g);
 	else if (is_cpu_type(MXC_CPU_MX6Q))
-		mx6_dram_cfg(&sysinfo, &mx6q_2g_mmcd_calib, &mem_ddr_4g);
+		#ifdef CONFIG_I4X4_RAM
+			mx6_dram_cfg(&sysinfo, &mx6q_2g_mmcd_calib, &mem_ddr_8g);
+		#else
+			mx6_dram_cfg(&sysinfo, &mx6q_2g_mmcd_calib, &mem_ddr_4g);
+		#endif
 	else if (is_cpu_type(MXC_CPU_MX6DL))
 		mx6_dram_cfg(&sysinfo, &mx6dl_1g_mmcd_calib, &mem_ddr_2g);
 	else if (is_cpu_type(MXC_CPU_MX6SOLO))
