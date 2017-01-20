@@ -28,7 +28,7 @@
 #include <watchdog.h>
 #include <asm/cache.h>
 #include <asm/unaligned.h>
-#include <asm-generic/errno.h>
+#include <linux/errno.h>
 #include "xhci.h"
 
 #ifndef CONFIG_USB_MAX_CONTROLLER_COUNT
@@ -941,10 +941,12 @@ static int _xhci_submit_control_msg(struct usb_device *udev, unsigned long pipe,
 	if (usb_pipedevice(pipe) == ctrl->rootdev)
 		return xhci_submit_root(udev, pipe, buffer, setup);
 
-	if (setup->request == USB_REQ_SET_ADDRESS)
+	if (setup->request == USB_REQ_SET_ADDRESS &&
+	   (setup->requesttype & USB_TYPE_MASK) == USB_TYPE_STANDARD)
 		return xhci_address_device(udev, root_portnr);
 
-	if (setup->request == USB_REQ_SET_CONFIGURATION) {
+	if (setup->request == USB_REQ_SET_CONFIGURATION &&
+	   (setup->requesttype & USB_TYPE_MASK) == USB_TYPE_STANDARD) {
 		ret = xhci_set_configuration(udev);
 		if (ret) {
 			puts("Failed to configure xHCI endpoint\n");
@@ -1119,7 +1121,7 @@ static struct usb_device *get_usb_device(struct udevice *dev)
 	if (device_get_uclass_id(dev) == UCLASS_USB)
 		udev = dev_get_uclass_priv(dev);
 	else
-		udev = dev_get_parentdata(dev);
+		udev = dev_get_parent_priv(dev);
 
 	return udev;
 }
@@ -1150,7 +1152,7 @@ static int xhci_submit_control_msg(struct udevice *dev, struct usb_device *udev,
 		} else {
 			while (!is_root_hub(hub->parent))
 				hub = hub->parent;
-			uhop = dev_get_parentdata(hub);
+			uhop = dev_get_parent_priv(hub);
 			root_portnr = uhop->portnr;
 		}
 	}

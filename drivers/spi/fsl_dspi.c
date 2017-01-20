@@ -24,7 +24,7 @@
 DECLARE_GLOBAL_DATA_PTR;
 
 /* fsl_dspi_platdata flags */
-#define DSPI_FLAG_REGMAP_ENDIAN_BIG	(1 << 0)
+#define DSPI_FLAG_REGMAP_ENDIAN_BIG	BIT(0)
 
 /* idle data value */
 #define DSPI_IDLE_VAL			0x0
@@ -594,7 +594,7 @@ static int fsl_dspi_claim_bus(struct udevice *dev)
 
 	priv = dev_get_priv(bus);
 
-	/* processor special prepartion work */
+	/* processor special preparation work */
 	cpu_dspi_claim_bus(bus->seq, slave_plat->cs);
 
 	/* configure transfer mode */

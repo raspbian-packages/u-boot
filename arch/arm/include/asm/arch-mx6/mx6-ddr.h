@@ -408,6 +408,8 @@ struct mx6_ddr_sysinfo {
 	u8 sde_to_rst;	/* Time from SDE enable until DDR reset# is high */
 	u8 pd_fast_exit;/* enable precharge powerdown fast-exit */
 	u8 ddr_type;	/* DDR type: DDR3(0) or LPDDR2(1) */
+	u8 refsel;	/* REF_SEL field of register MDREF */
+	u8 refr;	/* REFR field of register MDREF */
 };
 
 /*
@@ -455,6 +457,11 @@ void mx6ul_dram_iocfg(unsigned width,
 void mx6sl_dram_iocfg(unsigned width,
 		      const struct mx6sl_iomux_ddr_regs *,
 		      const struct mx6sl_iomux_grp_regs *);
+
+#if defined(CONFIG_MX6QDL) || defined(CONFIG_MX6Q) || defined(CONFIG_MX6D)
+int mmdc_do_write_level_calibration(void);
+int mmdc_do_dqs_calibration(void);
+#endif
 
 /* configure mx6 mmdc registers */
 void mx6_dram_cfg(const struct mx6_ddr_sysinfo *,

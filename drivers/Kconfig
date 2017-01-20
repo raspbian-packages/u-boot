@@ -4,6 +4,8 @@ source "drivers/core/Kconfig"
 
 # types of drivers sorted in alphabetical order
 
+source "drivers/adc/Kconfig"
+
 source "drivers/block/Kconfig"
 
 source "drivers/clk/Kconfig"
@@ -18,6 +20,8 @@ source "drivers/dfu/Kconfig"
 
 source "drivers/dma/Kconfig"
 
+source "drivers/fpga/Kconfig"
+
 source "drivers/gpio/Kconfig"
 
 source "drivers/hwmon/Kconfig"
@@ -27,6 +31,10 @@ source "drivers/i2c/Kconfig"
 source "drivers/input/Kconfig"
 
 source "drivers/led/Kconfig"
+
+source "drivers/mailbox/Kconfig"
+
+source "drivers/memory/Kconfig"
 
 source "drivers/misc/Kconfig"
 
@@ -40,11 +48,19 @@ source "drivers/pci/Kconfig"
 
 source "drivers/pcmcia/Kconfig"
 
+source "drivers/phy/marvell/Kconfig"
+
 source "drivers/pinctrl/Kconfig"
 
 source "drivers/power/Kconfig"
 
+source "drivers/pwm/Kconfig"
+
 source "drivers/ram/Kconfig"
+
+source "drivers/remoteproc/Kconfig"
+
+source "drivers/reset/Kconfig"
 
 source "drivers/rtc/Kconfig"
 
@@ -54,7 +70,13 @@ source "drivers/sound/Kconfig"
 
 source "drivers/spi/Kconfig"
 
+source "drivers/spmi/Kconfig"
+
+source "drivers/sysreset/Kconfig"
+
 source "drivers/thermal/Kconfig"
+
+source "drivers/timer/Kconfig"
 
 source "drivers/tpm/Kconfig"
 

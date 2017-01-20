@@ -21,12 +21,7 @@
 #define CONFIG_MXC_UART_BASE           UART1_BASE
 
 /* SF Configs */
-#define CONFIG_CMD_SF
 #define CONFIG_SPI
-#define CONFIG_SPI_FLASH_STMICRO
-#define CONFIG_SPI_FLASH_WINBOND
-#define CONFIG_SPI_FLASH_MACRONIX
-#define CONFIG_SPI_FLASH_SST
 #define CONFIG_MXC_SPI
 #define CONFIG_SF_DEFAULT_BUS  2
 #define CONFIG_SF_DEFAULT_CS   0
@@ -41,7 +36,6 @@
 #define CONFIG_CMD_PCA953X_INFO
 
 /* I2C Configs */
-#define CONFIG_CMD_I2C
 #define CONFIG_SYS_I2C
 #define CONFIG_SYS_I2C_MXC
 #define CONFIG_SYS_I2C_MXC_I2C1		/* enable I2C bus 1 */
@@ -62,8 +56,6 @@
 #define CONFIG_SYS_FSL_USDHC_NUM       2
 
 /* USB Configs */
-#define CONFIG_CMD_USB
-#define CONFIG_USB_STORAGE
 #define CONFIG_USB_EHCI
 #define CONFIG_USB_EHCI_MX6
 #define CONFIG_MXC_USB_PORTSC   (PORT_PTS_UTMI | PORT_PTS_PTW)
@@ -85,20 +77,13 @@
 #define CONFIG_LIBATA
 #endif
 
-
 /* SPL */
 #ifdef CONFIG_SPL
 #include "imx6_spl.h"
-#define CONFIG_SPL_SPI_SUPPORT
-#define CONFIG_SPL_LIBCOMMON_SUPPORT
-#define CONFIG_SPL_SPI_FLASH_SUPPORT
 #define CONFIG_SYS_SPI_U_BOOT_OFFS     (64 * 1024)
 #define CONFIG_SPL_SPI_LOAD
 #endif
 
-#define CONFIG_CMD_PING
-#define CONFIG_CMD_DHCP
-#define CONFIG_CMD_MII
 #define CONFIG_FEC_MXC
 #define CONFIG_MII
 #define IMX_FEC_BASE                    ENET_BASE_ADDR
@@ -115,7 +100,6 @@
 #define CONFIG_SYS_I2C_EEPROM_ADDR_LEN        1
 #define CONFIG_SYS_EEPROM_PAGE_WRITE_BITS     3
 #define CONFIG_SYS_EEPROM_PAGE_WRITE_DELAY_MS 5
-#define CONFIG_SYS_I2C_MULTI_EEPROMS
 #endif
 
 /* Miscellaneous commands */

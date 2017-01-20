@@ -40,6 +40,7 @@ u32 spl_boot_device(void)
 		return BOOT_DEVICE_RAM;
 	case 0x2:	/* NAND Flash (1.8V) */
 	case 0x3:	/* NAND Flash (3.0V) */
+		socfpga_per_reset(SOCFPGA_RESET(NAND), 0);
 		return BOOT_DEVICE_NAND;
 	case 0x4:	/* SD/MMC External Transceiver (1.8V) */
 	case 0x5:	/* SD/MMC Internal Transceiver (3.0V) */
@@ -57,7 +58,7 @@ u32 spl_boot_device(void)
 }
 
 #ifdef CONFIG_SPL_MMC_SUPPORT
-u32 spl_boot_mode(void)
+u32 spl_boot_mode(const u32 boot_device)
 {
 #if defined(CONFIG_SPL_FAT_SUPPORT) || defined(CONFIG_SPL_EXT_SUPPORT)
 	return MMCSD_MODE_FS;

@@ -499,7 +499,8 @@ int i2c_get_chip(struct udevice *bus, uint chip_addr, uint offset_len,
 		 struct udevice **devp);
 
 /**
- * i2c_get_chip() - get a device to use to access a chip on a bus number
+ * i2c_get_chip_for_busnum() - get a device to use to access a chip on
+ *			       a bus number
  *
  * This returns the device for the given chip address on a particular bus
  * number.
@@ -700,6 +701,9 @@ extern struct i2c_bus_hose	i2c_bus[];
  * Initialization, must be called once on start up, may be called
  * repeatedly to change the speed and slave addresses.
  */
+#ifdef CONFIG_SYS_I2C_EARLY_INIT
+void i2c_early_init_f(void);
+#endif
 void i2c_init(int speed, int slaveaddr);
 void i2c_init_board(void);
 #ifdef CONFIG_SYS_I2C_BOARD_LATE_INIT

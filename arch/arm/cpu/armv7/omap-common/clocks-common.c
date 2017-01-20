@@ -236,6 +236,8 @@ static void do_setup_dpll(u32 const base, const struct dpll_params *params,
 			/* Dpll locked with ideal values for nominal opps. */
 			debug("\n %s Dpll already locked with ideal"
 						"nominal opp values", dpll);
+
+			bypass_dpll(base);
 			goto setup_post_dividers;
 		}
 	}
@@ -251,12 +253,12 @@ static void do_setup_dpll(u32 const base, const struct dpll_params *params,
 
 	writel(temp, &dpll_regs->cm_clksel_dpll);
 
+setup_post_dividers:
+	setup_post_dividers(base, params);
+
 	/* Lock */
 	if (lock)
 		do_lock_dpll(base);
-
-setup_post_dividers:
-	setup_post_dividers(base, params);
 
 	/* Wait till the DPLL locks */
 	if (lock)
@@ -339,7 +341,8 @@ void configure_mpu_dpll(void)
 	debug("MPU DPLL locked\n");
 }
 
-#if defined(CONFIG_USB_EHCI_OMAP) || defined(CONFIG_USB_XHCI_OMAP)
+#if defined(CONFIG_USB_EHCI_OMAP) || defined(CONFIG_USB_XHCI_OMAP) || \
+	defined(CONFIG_USB_MUSB_OMAP2PLUS)
 static void setup_usb_dpll(void)
 {
 	const struct dpll_params *params;
@@ -406,7 +409,8 @@ static void setup_dplls(void)
 	/* MPU dpll */
 	configure_mpu_dpll();
 
-#if defined(CONFIG_USB_EHCI_OMAP) || defined(CONFIG_USB_XHCI_OMAP)
+#if defined(CONFIG_USB_EHCI_OMAP) || defined(CONFIG_USB_XHCI_OMAP) || \
+	defined(CONFIG_USB_MUSB_OMAP2PLUS)
 	setup_usb_dpll();
 #endif
 	params = get_ddr_dpll_params(*dplls_data);
@@ -439,15 +443,12 @@ void do_scale_vcore(u32 vcore_reg, u32 volt_mv, struct pmic_data *pmic)
 {
 	u32 offset_code;
 	u32 offset = volt_mv;
-#ifndef	CONFIG_DRA7XX
 	int ret = 0;
-#endif
 
 	if (!volt_mv)
 		return;
 
 	pmic->pmic_bus_init();
-#ifndef	CONFIG_DRA7XX
 	/* See if we can first get the GPIO if needed */
 	if (pmic->gpio_en)
 		ret = gpio_request(pmic->gpio, "PMIC_GPIO");
@@ -461,7 +462,7 @@ void do_scale_vcore(u32 vcore_reg, u32 volt_mv, struct pmic_data *pmic)
 	/* Pull the GPIO low to select SET0 register, while we program SET1 */
 	if (pmic->gpio_en)
 		gpio_direction_output(pmic->gpio, 0);
-#endif
+
 	/* convert to uV for better accuracy in the calculations */
 	offset *= 1000;
 
@@ -472,10 +473,8 @@ void do_scale_vcore(u32 vcore_reg, u32 volt_mv, struct pmic_data *pmic)
 
 	if (pmic->pmic_write(pmic->i2c_slave_addr, vcore_reg, offset_code))
 		printf("Scaling voltage failed for 0x%x\n", vcore_reg);
-#ifndef	CONFIG_DRA7XX
 	if (pmic->gpio_en)
 		gpio_direction_output(pmic->gpio, 1);
-#endif
 }
 
 static u32 optimize_vcore_voltage(struct volts const *v)
@@ -530,7 +529,6 @@ void __weak recalibrate_iodelay(void)
  */
 void scale_vcores(struct vcores_data const *vcores)
 {
-#if defined(CONFIG_DRA7XX)
 	int i;
 	struct volts *pv = (struct volts *)vcores;
 	struct volts *px;
@@ -582,63 +580,55 @@ void scale_vcores(struct vcores_data const *vcores)
 	debug("mpu: %d\n", vcores->mpu.value);
 	do_scale_vcore(vcores->mpu.addr, vcores->mpu.value, vcores->mpu.pmic);
 	/* Configure MPU ABB LDO after scale */
-	abb_setup((*ctrl)->control_std_fuse_opp_vdd_mpu_2,
+	abb_setup(vcores->mpu.efuse.reg,
 		  (*ctrl)->control_wkup_ldovbb_mpu_voltage_ctrl,
 		  (*prcm)->prm_abbldo_mpu_setup,
 		  (*prcm)->prm_abbldo_mpu_ctrl,
 		  (*prcm)->prm_irqstatus_mpu_2,
-		  OMAP_ABB_MPU_TXDONE_MASK,
+		  vcores->mpu.abb_tx_done_mask,
 		  OMAP_ABB_FAST_OPP);
 
-	/* The .mm member is not used for the DRA7xx */
+	debug("mm: %d\n", vcores->mm.value);
+	do_scale_vcore(vcores->mm.addr, vcores->mm.value, vcores->mm.pmic);
+	/* Configure MM ABB LDO after scale */
+	abb_setup(vcores->mm.efuse.reg,
+		  (*ctrl)->control_wkup_ldovbb_mm_voltage_ctrl,
+		  (*prcm)->prm_abbldo_mm_setup,
+		  (*prcm)->prm_abbldo_mm_ctrl,
+		  (*prcm)->prm_irqstatus_mpu,
+		  vcores->mm.abb_tx_done_mask,
+		  OMAP_ABB_FAST_OPP);
 
 	debug("gpu: %d\n", vcores->gpu.value);
 	do_scale_vcore(vcores->gpu.addr, vcores->gpu.value, vcores->gpu.pmic);
+	/* Configure GPU ABB LDO after scale */
+	abb_setup(vcores->gpu.efuse.reg,
+		  (*ctrl)->control_wkup_ldovbb_gpu_voltage_ctrl,
+		  (*prcm)->prm_abbldo_gpu_setup,
+		  (*prcm)->prm_abbldo_gpu_ctrl,
+		  (*prcm)->prm_irqstatus_mpu,
+		  vcores->gpu.abb_tx_done_mask,
+		  OMAP_ABB_FAST_OPP);
 	debug("eve: %d\n", vcores->eve.value);
 	do_scale_vcore(vcores->eve.addr, vcores->eve.value, vcores->eve.pmic);
+	/* Configure EVE ABB LDO after scale */
+	abb_setup(vcores->eve.efuse.reg,
+		  (*ctrl)->control_wkup_ldovbb_eve_voltage_ctrl,
+		  (*prcm)->prm_abbldo_eve_setup,
+		  (*prcm)->prm_abbldo_eve_ctrl,
+		  (*prcm)->prm_irqstatus_mpu,
+		  vcores->eve.abb_tx_done_mask,
+		  OMAP_ABB_FAST_OPP);
 	debug("iva: %d\n", vcores->iva.value);
 	do_scale_vcore(vcores->iva.addr, vcores->iva.value, vcores->iva.pmic);
-	/* Might need udelay(1000) here if debug is enabled to see all prints */
-#else
-	u32 val;
-
-	val = optimize_vcore_voltage(&vcores->core);
-	do_scale_vcore(vcores->core.addr, val, vcores->core.pmic);
-
-	/*
-	 * IO delay recalibration should be done immediately after
-	 * adjusting AVS voltages for VDD_CORE_L.
-	 * Respective boards should call __recalibrate_iodelay()
-	 * with proper mux, virtual and manual mode configurations.
-	 */
-#ifdef CONFIG_IODELAY_RECALIBRATION
-	recalibrate_iodelay();
-#endif
-
-	val = optimize_vcore_voltage(&vcores->mpu);
-	do_scale_vcore(vcores->mpu.addr, val, vcores->mpu.pmic);
-
-	/* Configure MPU ABB LDO after scale */
-	abb_setup((*ctrl)->control_std_fuse_opp_vdd_mpu_2,
-		  (*ctrl)->control_wkup_ldovbb_mpu_voltage_ctrl,
-		  (*prcm)->prm_abbldo_mpu_setup,
-		  (*prcm)->prm_abbldo_mpu_ctrl,
-		  (*prcm)->prm_irqstatus_mpu_2,
-		  OMAP_ABB_MPU_TXDONE_MASK,
+	/* Configure IVA ABB LDO after scale */
+	abb_setup(vcores->iva.efuse.reg,
+		  (*ctrl)->control_wkup_ldovbb_iva_voltage_ctrl,
+		  (*prcm)->prm_abbldo_iva_setup,
+		  (*prcm)->prm_abbldo_iva_ctrl,
+		  (*prcm)->prm_irqstatus_mpu,
+		  vcores->iva.abb_tx_done_mask,
 		  OMAP_ABB_FAST_OPP);
-
-	val = optimize_vcore_voltage(&vcores->mm);
-	do_scale_vcore(vcores->mm.addr, val, vcores->mm.pmic);
-
-	val = optimize_vcore_voltage(&vcores->gpu);
-	do_scale_vcore(vcores->gpu.addr, val, vcores->gpu.pmic);
-
-	val = optimize_vcore_voltage(&vcores->eve);
-	do_scale_vcore(vcores->eve.addr, val, vcores->eve.pmic);
-
-	val = optimize_vcore_voltage(&vcores->iva);
-	do_scale_vcore(vcores->iva.addr, val, vcores->iva.pmic);
-#endif
 }
 
 static inline void enable_clock_domain(u32 const clkctrl_reg, u32 enable_mode)
@@ -769,7 +759,7 @@ void lock_dpll(u32 const base)
 	wait_for_lock(base);
 }
 
-void setup_clocks_for_console(void)
+static void setup_clocks_for_console(void)
 {
 	/* Do not add any spl_debug prints in this function */
 	clrsetbits_le32((*prcm)->cm_l4per_clkstctrl, CD_CLKCTRL_CLKTRCTRL_MASK,
@@ -853,14 +843,31 @@ void do_disable_clocks(u32 const *clk_domains,
 		disable_clock_domain(clk_domains[i]);
 }
 
+/**
+ * setup_early_clocks() - Setup early clocks needed for SoC
+ *
+ * Setup clocks for console, SPL basic initialization clocks and initialize
+ * the timer. This is invoked prior prcm_init.
+ */
+void setup_early_clocks(void)
+{
+	switch (omap_hw_init_context()) {
+	case OMAP_INIT_CONTEXT_SPL:
+	case OMAP_INIT_CONTEXT_UBOOT_FROM_NOR:
+	case OMAP_INIT_CONTEXT_UBOOT_AFTER_CH:
+		setup_clocks_for_console();
+		enable_basic_clocks();
+		timer_init();
+		/* Fall through */
+	}
+}
+
 void prcm_init(void)
 {
 	switch (omap_hw_init_context()) {
 	case OMAP_INIT_CONTEXT_SPL:
 	case OMAP_INIT_CONTEXT_UBOOT_FROM_NOR:
 	case OMAP_INIT_CONTEXT_UBOOT_AFTER_CH:
-		enable_basic_clocks();
-		timer_init();
 		scale_vcores(*omap_vcores);
 		setup_dplls();
 		setup_warmreset_time();

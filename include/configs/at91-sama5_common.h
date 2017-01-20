@@ -25,18 +25,12 @@
 #endif
 
 #define CONFIG_BOARD_EARLY_INIT_F
-#define CONFIG_DISPLAY_CPUINFO
 
 #define CONFIG_ENV_VARS_UBOOT_CONFIG
-#define CONFIG_CMD_BOOTZ
-#define CONFIG_OF_LIBFDT		/* Device Tree support */
-
-#define CONFIG_SYS_GENERIC_BOARD
 
 /* general purpose I/O */
 #define CONFIG_AT91_GPIO
 
-#define CONFIG_BOOTDELAY		3
 
 /*
  * BOOTP options
@@ -49,8 +43,6 @@
 /*
  * Command line configuration.
  */
-#define CONFIG_CMD_PING
-#define CONFIG_CMD_DHCP
 
 #ifdef CONFIG_SYS_USE_MMC
 
@@ -82,7 +74,7 @@
 #define CONFIG_BOOTARGS							\
 	"console=ttyS0,115200 earlyprintk "				\
 	"mtdparts=atmel_nand:256k(bootstrap)ro,512k(uboot)ro,"		\
-	"256K(env),256k(env_redundent),256k(spare),"			\
+	"256K(env),256k(env_redundant),256k(spare),"			\
 	"512k(dtb),6M(kernel)ro,-(rootfs) "				\
 	"rootfstype=ubifs ubi.mtd=7 root=ubi0:rootfs"
 
@@ -98,8 +90,8 @@
 #elif CONFIG_SYS_USE_SERIALFLASH
 /* u-boot env in serial flash, by default is bus 0 and cs 0 */
 #define CONFIG_ENV_IS_IN_SPI_FLASH
-#define CONFIG_ENV_OFFSET		0x4000
-#define CONFIG_ENV_SIZE			0x4000
+#define CONFIG_ENV_OFFSET		0x6000
+#define CONFIG_ENV_SIZE			0x2000
 #define CONFIG_ENV_SECT_SIZE		0x1000
 #define CONFIG_BOOTCOMMAND		"sf probe 0; "				\
 					"sf read 0x21000000 0x60000 0xc000; "	\
@@ -116,7 +108,6 @@
 #define CONFIG_SYS_LONGHELP
 #define CONFIG_CMDLINE_EDITING
 #define CONFIG_AUTO_COMPLETE
-#define CONFIG_SYS_HUSH_PARSER
 
 /* Size of malloc() pool */
 #define CONFIG_SYS_MALLOC_LEN		(4 * 1024 * 1024)

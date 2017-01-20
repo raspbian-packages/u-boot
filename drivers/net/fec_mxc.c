@@ -20,7 +20,7 @@
 #include <asm/arch/imx-regs.h>
 #include <asm/imx-common/sys_proto.h>
 #include <asm/io.h>
-#include <asm/errno.h>
+#include <linux/errno.h>
 #include <linux/compiler.h>
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -131,13 +131,25 @@ static void fec_mii_setspeed(struct ethernet_regs *eth)
 	/*
 	 * Set MII_SPEED = (1/(mii_speed * 2)) * System Clock
 	 * and do not drop the Preamble.
+	 *
+	 * The i.MX28 and i.MX6 types have another field in the MSCR (aka
+	 * MII_SPEED) register that defines the MDIO output hold time. Earlier
+	 * versions are RAZ there, so just ignore the difference and write the
+	 * register always.
+	 * The minimal hold time according to IEE802.3 (clause 22) is 10 ns.
+	 * HOLDTIME + 1 is the number of clk cycles the fec is holding the
+	 * output.
+	 * The HOLDTIME bitfield takes values between 0 and 7 (inclusive).
+	 * Given that ceil(clkrate / 5000000) <= 64, the calculation for
+	 * holdtime cannot result in a value greater than 3.
 	 */
-	register u32 speed = DIV_ROUND_UP(imx_get_fecclk(), 5000000);
+	u32 pclk = imx_get_fecclk();
+	u32 speed = DIV_ROUND_UP(pclk, 5000000);
+	u32 hold = DIV_ROUND_UP(pclk, 100000000) - 1;
 #ifdef FEC_QUIRK_ENET_MAC
 	speed--;
 #endif
-	speed <<= 1;
-	writel(speed, &eth->mii_speed);
+	writel(speed << 1 | hold << 8, &eth->mii_speed);
 	debug("%s: mii_speed %08x\n", __func__, readl(&eth->mii_speed));
 }
 
@@ -221,6 +233,7 @@ static int miiphy_restart_aneg(struct eth_device *dev)
 	return ret;
 }
 
+#ifndef CONFIG_FEC_FIXED_SPEED
 static int miiphy_wait_aneg(struct eth_device *dev)
 {
 	uint32_t start;
@@ -248,6 +261,7 @@ static int miiphy_wait_aneg(struct eth_device *dev)
 
 	return 0;
 }
+#endif /* CONFIG_FEC_FIXED_SPEED */
 #endif
 
 static int fec_rx_task_enable(struct fec_priv *fec)
@@ -490,6 +504,8 @@ static int fec_open(struct eth_device *edev)
 		}
 		speed = fec->phydev->speed;
 	}
+#elif CONFIG_FEC_FIXED_SPEED
+	speed = CONFIG_FEC_FIXED_SPEED;
 #else
 	miiphy_wait_aneg(edev);
 	speed = miiphy_speed(edev->name, fec->phy_id);
@@ -554,7 +570,7 @@ static int fec_init(struct eth_device *dev, bd_t* bd)
 
 
 	/* Do not access reserved register for i.MX6UL */
-	if (!is_cpu_type(MXC_CPU_MX6UL)) {
+	if (!is_mx6ul()) {
 		/* clear MIB RAM */
 		for (i = mib_ptr; i <= mib_ptr + 0xfc; i += 4)
 			writel(0, i);
@@ -1008,7 +1024,7 @@ static int fec_probe(bd_t *bd, int dev_id, uint32_t base_addr,
 	start = get_timer(0);
 	while (readl(&fec->eth->ecntrl) & FEC_ECNTRL_RESET) {
 		if (get_timer(start) > (CONFIG_SYS_HZ * 5)) {
-			printf("FEC MXC: Timeout reseting chip\n");
+			printf("FEC MXC: Timeout resetting chip\n");
 			goto err4;
 		}
 		udelay(10);
@@ -1097,6 +1113,7 @@ int fecmxc_initialize_multi(bd_t *bd, int dev_id, int phy_id, uint32_t addr)
 #ifdef CONFIG_PHYLIB
 	phydev = phy_find_by_mask(bus, 1 << phy_id, PHY_INTERFACE_MODE_RGMII);
 	if (!phydev) {
+		mdio_unregister(bus);
 		free(bus);
 		return -ENOMEM;
 	}
@@ -1108,6 +1125,7 @@ int fecmxc_initialize_multi(bd_t *bd, int dev_id, int phy_id, uint32_t addr)
 #ifdef CONFIG_PHYLIB
 		free(phydev);
 #endif
+		mdio_unregister(bus);
 		free(bus);
 	}
 	return ret;

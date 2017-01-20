@@ -32,7 +32,7 @@ static int disk_write(__u32 block, __u32 nr_blocks, void *buf)
 {
 	ulong ret;
 
-	if (!cur_dev || !cur_dev->block_write)
+	if (!cur_dev)
 		return -1;
 
 	if (cur_part_info.start + block + nr_blocks >
@@ -41,9 +41,7 @@ static int disk_write(__u32 block, __u32 nr_blocks, void *buf)
 		return -1;
 	}
 
-	ret = cur_dev->block_write(cur_dev->dev,
-				   cur_part_info.start + block,
-				   nr_blocks, buf);
+	ret = blk_dwrite(cur_dev, cur_part_info.start + block, nr_blocks, buf);
 	if (nr_blocks && ret == 0)
 		return -1;
 
@@ -106,12 +104,18 @@ static __u8 num_of_fats;
 /*
  * Write fat buffer into block device
  */
-static int flush_fat_buffer(fsdata *mydata)
+static int flush_dirty_fat_buffer(fsdata *mydata)
 {
 	int getsize = FATBUFBLOCKS;
 	__u32 fatlength = mydata->fatlength;
 	__u8 *bufptr = mydata->fatbuf;
 	__u32 startblock = mydata->fatbufnum * FATBUFBLOCKS;
+
+	debug("debug: evicting %d, dirty: %d\n", mydata->fatbufnum,
+	      (int)mydata->fat_dirty);
+
+	if ((!mydata->fat_dirty) || (mydata->fatbufnum == -1))
+		return 0;
 
 	startblock += mydata->fat_sect;
 
@@ -132,6 +136,7 @@ static int flush_fat_buffer(fsdata *mydata)
 			return -1;
 		}
 	}
+	mydata->fat_dirty = 0;
 
 	return 0;
 }
@@ -185,14 +190,11 @@ static __u32 get_fatent_value(fsdata *mydata, __u32 entry)
 		if (getsize > fatlength)
 			getsize = fatlength;
 
-		fatlength *= mydata->sect_size;	/* We want it in bytes now */
 		startblock += mydata->fat_sect;	/* Offset from start of disk */
 
 		/* Write back the fatbuf to the disk */
-		if (mydata->fatbufnum != -1) {
-			if (flush_fat_buffer(mydata) < 0)
-				return -1;
-		}
+		if (flush_dirty_fat_buffer(mydata) < 0)
+			return -1;
 
 		if (disk_read(startblock, getsize, bufptr) < 0) {
 			debug("Error reading FAT blocks\n");
@@ -328,10 +330,8 @@ fill_dir_slot(fsdata *mydata, dir_entry **dentptr, const char *l_name)
 	dir_slot *slotptr = (dir_slot *)get_contents_vfatname_block;
 	__u8 counter = 0, checksum;
 	int idx = 0, ret;
-	char s_name[16];
 
-	/* Get short file name and checksum value */
-	strncpy(s_name, (*dentptr)->name, 16);
+	/* Get short file name checksum value */
 	checksum = mkcksum((*dentptr)->name, (*dentptr)->ext);
 
 	do {
@@ -499,10 +499,8 @@ static int set_fatent_value(fsdata *mydata, __u32 entry, __u32 entry_value)
 		if (getsize > fatlength)
 			getsize = fatlength;
 
-		if (mydata->fatbufnum != -1) {
-			if (flush_fat_buffer(mydata) < 0)
-				return -1;
-		}
+		if (flush_dirty_fat_buffer(mydata) < 0)
+			return -1;
 
 		if (disk_read(startblock, getsize, bufptr) < 0) {
 			debug("Error reading FAT blocks\n");
@@ -510,6 +508,9 @@ static int set_fatent_value(fsdata *mydata, __u32 entry, __u32 entry_value)
 		}
 		mydata->fatbufnum = bufnum;
 	}
+
+	/* Mark as dirty */
+	mydata->fat_dirty = 1;
 
 	/* Set the actual entry */
 	switch (mydata->fatsize) {
@@ -527,7 +528,8 @@ static int set_fatent_value(fsdata *mydata, __u32 entry, __u32 entry_value)
 }
 
 /*
- * Determine the entry value at index 'entry' in a FAT (16/32) table
+ * Determine the next free cluster after 'entry' in a FAT (16/32) table
+ * and link it to 'entry'. EOC marker is not set on returned entry.
  */
 static __u32 determine_fatent(fsdata *mydata, __u32 entry)
 {
@@ -536,6 +538,7 @@ static __u32 determine_fatent(fsdata *mydata, __u32 entry)
 	while (1) {
 		next_fat = get_fatent_value(mydata, next_entry);
 		if (next_fat == 0) {
+			/* found free entry, link to entry */
 			set_fatent_value(mydata, entry, next_entry);
 			break;
 		}
@@ -650,7 +653,7 @@ static void flush_dir_table(fsdata *mydata, dir_entry **dentptr)
 
 	dir_curclust = dir_newclust;
 
-	if (flush_fat_buffer(mydata) < 0)
+	if (flush_dirty_fat_buffer(mydata) < 0)
 		return;
 
 	memset(get_dentfromdir_block, 0x00,
@@ -680,7 +683,7 @@ static int clear_fatent(fsdata *mydata, __u32 entry)
 	}
 
 	/* Flush fat buffer */
-	if (flush_fat_buffer(mydata) < 0)
+	if (flush_dirty_fat_buffer(mydata) < 0)
 		return -1;
 
 	return 0;
@@ -1016,6 +1019,7 @@ static int do_fat_write(const char *filename, void *buffer, loff_t size,
 	}
 
 	mydata->fatbufnum = -1;
+	mydata->fat_dirty = 0;
 	mydata->fatbuf = memalign(ARCH_DMA_MINALIGN, FATBUFSIZE);
 	if (mydata->fatbuf == NULL) {
 		debug("Error: allocating memory\n");
@@ -1116,7 +1120,7 @@ static int do_fat_write(const char *filename, void *buffer, loff_t size,
 	debug("attempt to write 0x%llx bytes\n", *actwrite);
 
 	/* Flush fat buffer */
-	ret = flush_fat_buffer(mydata);
+	ret = flush_dirty_fat_buffer(mydata);
 	if (ret) {
 		printf("Error: flush fat buffer\n");
 		goto exit;
@@ -1137,7 +1141,7 @@ int file_fat_write(const char *filename, void *buffer, loff_t offset,
 		   loff_t maxsize, loff_t *actwrite)
 {
 	if (offset != 0) {
-		printf("Error: non zero offset is currently not suported.\n");
+		printf("Error: non zero offset is currently not supported.\n");
 		return -1;
 	}
 

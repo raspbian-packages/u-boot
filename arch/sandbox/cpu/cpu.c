@@ -4,10 +4,12 @@
  */
 #define DEBUG
 #include <common.h>
-#include <dm/root.h>
+#include <errno.h>
+#include <libfdt.h>
 #include <os.h>
 #include <asm/io.h>
 #include <asm/state.h>
+#include <dm/root.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -37,7 +39,10 @@ void sandbox_exit(void)
 /* delay x useconds */
 void __udelay(unsigned long usec)
 {
-	os_usleep(usec);
+	struct sandbox_state *state = state_get_current();
+
+	if (!state->skip_delays)
+		os_usleep(usec);
 }
 
 int cleanup_before_linux(void)
@@ -52,7 +57,7 @@ int cleanup_before_linux_select(int flags)
 
 void *map_physmem(phys_addr_t paddr, unsigned long len, unsigned long flags)
 {
-#ifdef CONFIG_PCI
+#if defined(CONFIG_PCI) && !defined(CONFIG_SPL_BUILD)
 	unsigned long plen = len;
 	void *ptr;
 

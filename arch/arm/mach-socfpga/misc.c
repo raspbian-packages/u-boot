@@ -16,7 +16,6 @@
 #include <asm/arch/reset_manager.h>
 #include <asm/arch/scan_manager.h>
 #include <asm/arch/system_manager.h>
-#include <asm/arch/dwmmc.h>
 #include <asm/arch/nic301.h>
 #include <asm/arch/scu.h>
 #include <asm/pl310.h>
@@ -54,21 +53,31 @@ void enable_caches(void)
 
 void v7_outer_cache_enable(void)
 {
-	/* disable the L2 cache */
-	writel(0, &pl310->pl310_ctrl);
+	/* Disable the L2 cache */
+	clrbits_le32(&pl310->pl310_ctrl, L2X0_CTRL_EN);
 
 	/* enable BRESP, instruction and data prefetch, full line of zeroes */
 	setbits_le32(&pl310->pl310_aux_ctrl,
 		     L310_AUX_CTRL_DATA_PREFETCH_MASK |
 		     L310_AUX_CTRL_INST_PREFETCH_MASK |
 		     L310_SHARED_ATT_OVERRIDE_ENABLE);
+
+	/* Enable the L2 cache */
+	setbits_le32(&pl310->pl310_ctrl, L2X0_CTRL_EN);
+}
+
+void v7_outer_cache_disable(void)
+{
+	/* Disable the L2 cache */
+	clrbits_le32(&pl310->pl310_ctrl, L2X0_CTRL_EN);
 }
 
 /*
  * DesignWare Ethernet initialization
  */
 #ifdef CONFIG_ETH_DESIGNWARE
-static void dwmac_deassert_reset(const unsigned int of_reset_id)
+static void dwmac_deassert_reset(const unsigned int of_reset_id,
+				 const u32 phymode)
 {
 	u32 physhift, reset;
 
@@ -89,16 +98,41 @@ static void dwmac_deassert_reset(const unsigned int of_reset_id)
 
 	/* configure to PHY interface select choosed */
 	setbits_le32(&sysmgr_regs->emacgrp_ctrl,
-		     SYSMGR_EMACGRP_CTRL_PHYSEL_ENUM_RGMII << physhift);
+		     phymode << physhift);
 
 	/* Release the EMAC controller from reset */
 	socfpga_per_reset(reset, 0);
 }
 
-int cpu_eth_init(bd_t *bis)
+static u32 dwmac_phymode_to_modereg(const char *phymode, u32 *modereg)
+{
+	if (!phymode)
+		return -EINVAL;
+
+	if (!strcmp(phymode, "mii") || !strcmp(phymode, "gmii")) {
+		*modereg = SYSMGR_EMACGRP_CTRL_PHYSEL_ENUM_GMII_MII;
+		return 0;
+	}
+
+	if (!strcmp(phymode, "rgmii")) {
+		*modereg = SYSMGR_EMACGRP_CTRL_PHYSEL_ENUM_RGMII;
+		return 0;
+	}
+
+	if (!strcmp(phymode, "rmii")) {
+		*modereg = SYSMGR_EMACGRP_CTRL_PHYSEL_ENUM_RMII;
+		return 0;
+	}
+
+	return -EINVAL;
+}
+
+static int socfpga_eth_reset(void)
 {
 	const void *fdt = gd->fdt_blob;
 	struct fdtdec_phandle_args args;
+	const char *phy_mode;
+	u32 phy_modereg;
 	int nodes[2];	/* Max. two GMACs */
 	int ret, count;
 	int i, node;
@@ -123,22 +157,23 @@ int cpu_eth_init(bd_t *bis)
 			continue;
 		}
 
-		dwmac_deassert_reset(args.args[0]);
+		phy_mode = fdt_getprop(fdt, node, "phy-mode", NULL);
+		ret = dwmac_phymode_to_modereg(phy_mode, &phy_modereg);
+		if (ret) {
+			debug("GMAC%i: Failed to parse DT 'phy-mode'!\n", i);
+			continue;
+		}
+
+		dwmac_deassert_reset(args.args[0], phy_modereg);
 	}
 
 	return 0;
 }
-#endif
-
-#ifdef CONFIG_DWMMC
-/*
- * Initializes MMC controllers.
- * to override, implement board_mmc_init()
- */
-int cpu_mmc_init(bd_t *bis)
+#else
+static int socfpga_eth_reset(void)
 {
-	return socfpga_dwmmc_init(gd->fdt_blob);
-}
+	return 0;
+};
 #endif
 
 struct {
@@ -234,7 +269,7 @@ int arch_misc_init(void)
 	setenv("bootmode", bsel_str[bsel].mode);
 	if (fpga_id >= 0)
 		setenv("fpgatype", socfpga_fpga_model[fpga_id].var);
-	return 0;
+	return socfpga_eth_reset();
 }
 #endif
 
@@ -327,7 +362,7 @@ int arch_early_init_r(void)
 	 * issuing warm reset. The ancient kernel code expects this
 	 * value to be written into the register by the bootloader, so
 	 * to support that old code, we write it here instead of in the
-	 * reset_cpu() function just before reseting the CPU.
+	 * reset_cpu() function just before resetting the CPU.
 	 */
 	writel(0xae9efebc, &sysmgr_regs->romcodegrp_warmramgrp_enable);
 
@@ -359,6 +394,10 @@ int arch_early_init_r(void)
 	/* Get Designware SPI controller out of reset */
 	socfpga_per_reset(SOCFPGA_RESET(SPIM0), 0);
 	socfpga_per_reset(SOCFPGA_RESET(SPIM1), 0);
+#endif
+
+#ifdef CONFIG_NAND_DENALI
+	socfpga_per_reset(SOCFPGA_RESET(NAND), 0);
 #endif
 
 	return 0;

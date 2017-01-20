@@ -43,15 +43,8 @@
 #define CONFIG_BAUDRATE			115200
 
 /* Console configuration */
-#define CONFIG_SYS_CONSOLE_INFO_QUIET
-#define CONFIG_SYS_CONSOLE_IS_IN_ENV
 
-#define CONFIG_CMD_BOOTZ
-#define CONFIG_FIT
-#define CONFIG_FIT_VERBOSE
-#define CONFIG_BOOTARGS			"Please use defined boot"
-#define CONFIG_BOOTCOMMAND		"run autoboot"
-#define CONFIG_DEFAULT_CONSOLE		"console=ttySAC1,115200n8\0"
+#define CONFIG_DEFAULT_CONSOLE		"ttySAC1,115200n8\0"
 
 #define CONFIG_SYS_INIT_SP_ADDR	(CONFIG_SYS_LOAD_ADDR \
 					- GENERATED_GBL_DATA_SIZE)
@@ -60,7 +53,7 @@
 
 #define CONFIG_ENV_IS_IN_MMC
 #define CONFIG_SYS_MMC_ENV_DEV		CONFIG_MMC_DEFAULT_DEV
-#define CONFIG_ENV_SIZE			4096
+#define CONFIG_ENV_SIZE			8192
 #define CONFIG_ENV_OFFSET		(SZ_1K * 1280) /* 1.25 MiB offset */
 #define CONFIG_ENV_OVERWRITE
 
@@ -92,6 +85,20 @@
 	"bl1 raw 0x1 0x1e;" \
 	"bl2 raw 0x1f 0x1d;" \
 	"tzsw raw 0x83f 0x138\0"
+
+#define BOOT_TARGET_DEVICES(func) \
+	func(MMC, mmc, 1) \
+	func(MMC, mmc, 0)
+
+#include <config_distro_bootcmd.h>
+
+#define MEM_LAYOUT_ENV_SETTINGS \
+	"bootm_size=0x10000000\0" \
+	"kernel_addr_r=0x42000000\0" \
+	"fdt_addr_r=0x43000000\0" \
+	"ramdisk_addr_r=0x43300000\0" \
+	"scriptaddr=0x50000000\0" \
+	"pxefile_addr_r=0x51000000\0"
 
 /*
  * Bootable media layout:
@@ -171,7 +178,6 @@
 	"mmcbootpart=1\0" \
 	"mmcrootdev=0\0" \
 	"mmcrootpart=2\0" \
-	"bootdelay=0\0" \
 	"dfu_alt_system="CONFIG_DFU_ALT \
 	"dfu_alt_info=Please reset the board\0" \
 	"consoleon=set console console=ttySAC1,115200n8; save; reset\0" \
@@ -179,10 +185,11 @@
 	"initrdname=uInitrd\0" \
 	"initrdaddr=42000000\0" \
 	"scriptaddr=0x42000000\0" \
-	"fdtaddr=40800000\0"
+	"fdtaddr=40800000\0" \
+	MEM_LAYOUT_ENV_SETTINGS \
+	BOOTENV
 
 /* I2C */
-#define CONFIG_CMD_I2C
 #define CONFIG_SYS_I2C_S3C24X0
 #define CONFIG_SYS_I2C_S3C24X0_SPEED	100000
 #define CONFIG_SYS_I2C_S3C24X0_SLAVE	0
@@ -194,17 +201,11 @@
 #define CONFIG_EXYNOS_ACE_SHA
 #define CONFIG_LIB_HW_RAND
 
-#define CONFIG_CMD_GPIO
-
 /* USB */
-#define CONFIG_CMD_USB
 #define CONFIG_USB_EHCI
 #define CONFIG_USB_EHCI_EXYNOS
-#define CONFIG_USB_STORAGE
 
 #define CONFIG_SYS_USB_EHCI_MAX_ROOT_PORTS	3
-#define CONFIG_CMD_PING
-#define CONFIG_CMD_DHCP
 #define CONFIG_USB_HOST_ETHER
 #define CONFIG_USB_ETHER_SMSC95XX
 

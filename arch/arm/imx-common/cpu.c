@@ -10,7 +10,7 @@
 #include <bootm.h>
 #include <common.h>
 #include <netdev.h>
-#include <asm/errno.h>
+#include <linux/errno.h>
 #include <asm/io.h>
 #include <asm/arch/imx-regs.h>
 #include <asm/arch/clock.h>
@@ -137,6 +137,8 @@ unsigned imx_ddr_size(void)
 const char *get_imx_type(u32 imxtype)
 {
 	switch (imxtype) {
+	case MXC_CPU_MX7S:
+		return "7S";	/* Single-core version of the mx7 */
 	case MXC_CPU_MX7D:
 		return "7D";	/* Dual-core version of the mx7 */
 	case MXC_CPU_MX6QP:
@@ -157,6 +159,8 @@ const char *get_imx_type(u32 imxtype)
 		return "6SX";   /* SoloX version of the mx6 */
 	case MXC_CPU_MX6UL:
 		return "6UL";   /* Ultra-Lite version of the mx6 */
+	case MXC_CPU_MX6ULL:
+		return "6ULL";	/* ULL version of the mx6 */
 	case MXC_CPU_MX51:
 		return "51";
 	case MXC_CPU_MX53:
@@ -278,6 +282,9 @@ void arch_preboot_os(void)
 #if defined(CONFIG_VIDEO_IPUV3)
 	/* disable video before launching O/S */
 	ipuv3_fb_shutdown();
+#endif
+#if defined(CONFIG_VIDEO_MXS)
+	lcdif_power_down();
 #endif
 }
 

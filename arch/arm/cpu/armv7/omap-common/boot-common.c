@@ -91,6 +91,11 @@ void save_omap_boot_params(void)
 			sys_boot_device = 1;
 			break;
 #endif
+#if defined(BOOT_DEVICE_DFU) && !defined(CONFIG_SPL_DFU_SUPPORT)
+		case BOOT_DEVICE_DFU:
+			sys_boot_device = 1;
+			break;
+#endif
 	}
 
 	if (sys_boot_device) {
@@ -166,7 +171,7 @@ u32 spl_boot_device(void)
 	return gd->arch.omap_boot_device;
 }
 
-u32 spl_boot_mode(void)
+u32 spl_boot_mode(const u32 boot_device)
 {
 	return gd->arch.omap_boot_mode;
 }
@@ -200,7 +205,7 @@ void spl_board_init(void)
 #endif
 }
 
-int board_mmc_init(bd_t *bis)
+__weak int board_mmc_init(bd_t *bis)
 {
 	switch (spl_boot_device()) {
 	case BOOT_DEVICE_MMC1:
@@ -208,6 +213,7 @@ int board_mmc_init(bd_t *bis)
 		break;
 	case BOOT_DEVICE_MMC2:
 	case BOOT_DEVICE_MMC2_2:
+		omap_mmc_init(0, 0, 0, -1, -1);
 		omap_mmc_init(1, 0, 0, -1, -1);
 		break;
 	}

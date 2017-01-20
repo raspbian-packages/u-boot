@@ -19,9 +19,7 @@
 #define CONFIG_SYS_MALLOC_LEN		(4 << 20)	/* 4MB  */
 #endif
 
-#ifndef CONFIG_ARM64
 #define CONFIG_SYS_NONCACHED_MEMORY	(1 << 20)	/* 1 MiB */
-#endif
 
 #ifndef CONFIG_SPL_BUILD
 #define BOOT_TARGET_DEVICES(func) \
@@ -55,6 +53,12 @@
 #define STDOUT_LCD ""
 #endif
 
+#ifdef CONFIG_DM_VIDEO
+#define STDOUT_VIDEO ",vidconsole"
+#else
+#define STDOUT_VIDEO ""
+#endif
+
 #ifdef CONFIG_CROS_EC_KEYB
 #define STDOUT_CROS_EC	",cros-ec-keyb"
 #else
@@ -63,8 +67,8 @@
 
 #define TEGRA_DEVICE_SETTINGS \
 	"stdin=serial" STDIN_KBD_KBC STDIN_KBD_USB STDOUT_CROS_EC "\0" \
-	"stdout=serial" STDOUT_LCD "\0" \
-	"stderr=serial" STDOUT_LCD "\0" \
+	"stdout=serial" STDOUT_LCD STDOUT_VIDEO "\0" \
+	"stderr=serial" STDOUT_LCD STDOUT_VIDEO "\0" \
 	""
 
 #ifndef BOARD_EXTRA_ENV_SETTINGS
@@ -108,7 +112,6 @@
 #undef CONFIG_SYS_I2C_TEGRA
 #endif
 #ifdef CONFIG_CMD_I2C
-#undef CONFIG_CMD_I2C
 #endif
 
 /* remove MMC support */
@@ -122,7 +125,6 @@
 #undef CONFIG_TEGRA_MMC
 #endif
 #ifdef CONFIG_CMD_MMC
-#undef CONFIG_CMD_MMC
 #endif
 
 /* remove partitions/filesystems */
@@ -131,18 +133,6 @@
 #endif
 #ifdef CONFIG_EFI_PARTITION
 #undef CONFIG_EFI_PARTITION
-#endif
-#ifdef CONFIG_CMD_FS_GENERIC
-#undef CONFIG_CMD_FS_GENERIC
-#endif
-#ifdef CONFIG_CMD_EXT4
-#undef CONFIG_CMD_EXT4
-#endif
-#ifdef CONFIG_CMD_EXT2
-#undef CONFIG_CMD_EXT2
-#endif
-#ifdef CONFIG_CMD_FAT
-#undef CONFIG_CMD_FAT
 #endif
 #ifdef CONFIG_FS_EXT4
 #undef CONFIG_FS_EXT4
@@ -158,11 +148,7 @@
 #ifdef CONFIG_USB_EHCI_TEGRA
 #undef CONFIG_USB_EHCI_TEGRA
 #endif
-#ifdef CONFIG_USB_STORAGE
-#undef CONFIG_USB_STORAGE
-#endif
 #ifdef CONFIG_CMD_USB
-#undef CONFIG_CMD_USB
 #endif
 
 /* remove part command support */

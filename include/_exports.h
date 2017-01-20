@@ -13,7 +13,7 @@
 	EXPORT_FUNC(putc, void, putc, const char)
 	EXPORT_FUNC(puts, void, puts, const char *)
 	EXPORT_FUNC(printf, int, printf, const char*, ...)
-#if defined(CONFIG_X86) || defined(CONFIG_PPC)
+#if (defined(CONFIG_X86) && !defined(CONFIG_X86_64)) || defined(CONFIG_PPC)
 	EXPORT_FUNC(irq_install_handler, void, install_hdlr,
 		    int, interrupt_handler_t, void*)
 
@@ -23,7 +23,7 @@
 	EXPORT_FUNC(dummy, void, free_hdlr, void)
 #endif
 	EXPORT_FUNC(malloc, void *, malloc, size_t)
-#ifndef CONFIG_SYS_MALLOC_SIMPLE
+#if !CONFIG_IS_ENABLED(SYS_MALLOC_SIMPLE)
 	EXPORT_FUNC(free, void, free, void *)
 #endif
 	EXPORT_FUNC(udelay, void, udelay, unsigned long)
@@ -75,6 +75,7 @@
 		    const char *, char **, unsigned int)
 	EXPORT_FUNC(strcpy, char *, strcpy, char *dest, const char *src)
 	EXPORT_FUNC(mdelay, void, mdelay, unsigned long msec)
+	EXPORT_FUNC(memset, void *, memset, void *, int, size_t)
 #ifdef CONFIG_PHY_AQUANTIA
 	EXPORT_FUNC(mdio_get_current_dev, struct mii_dev *,
 		    mdio_get_current_dev, void)

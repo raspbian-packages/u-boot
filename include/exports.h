@@ -19,7 +19,7 @@ int printf(const char* fmt, ...);
 void install_hdlr(int, interrupt_handler_t, void*);
 void free_hdlr(int);
 void *malloc(size_t);
-#ifndef CONFIG_SYS_MALLOC_SIMPLE
+#if !CONFIG_IS_ENABLED(SYS_MALLOC_SIMPLE)
 void free(void*);
 #endif
 void __udelay(unsigned long);
@@ -57,7 +57,7 @@ struct jt_funcs {
 };
 
 
-#define XF_VERSION	8
+#define XF_VERSION	9
 
 #if defined(CONFIG_X86)
 extern gd_t *global_data;
