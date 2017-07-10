@@ -102,6 +102,9 @@
 #define CONFIG_CMDLINE_EDITING		/* add command line history */
 #define CONFIG_AUTO_COMPLETE		/* add autocompletion support */
 
+#define CONFIG_CMD_BOOTZ       /* boot zImage                  */
+#define CONFIG_SUPPORT_RAW_INITRD
+
 #ifdef ONENAND_SUPPORT
 
 #define CONFIG_CMD_ONENAND		/* ONENAND support */
