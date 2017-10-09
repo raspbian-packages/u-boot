@@ -8,6 +8,7 @@
 #define __CONFIG_H
 
 #define ROCKCHIP_DEVICE_SETTINGS \
+		"fdtfile=" CONFIG_DEFAULT_DEVICE_TREE ".dtb\0" \
 		"stdin=serial,usbkbd\0" \
 		"stdout=serial,vidconsole\0" \
 		"stderr=serial,vidconsole\0" \
