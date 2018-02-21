@@ -57,6 +57,9 @@
 	"initrd_high=0xffffffff\0" \
 	"fdt_file=undefined\0" \
 	"fdt_addr=0x18000000\0" \
+	"fdt_addr_r=0x18000000\0" \
+	"ramdisk_addr_r=0x13000000\0" \
+	"kernel_addr_r=" __stringify(CONFIG_LOADADDR) "\0"	\
 	"boot_fdt=try\0" \
 	"ip_dyn=yes\0" \
 	"mmcdev=0\0" \
@@ -129,8 +132,10 @@
 		"fi;\0" \
 		"findfdt=" \
 			"if test $board_rev = MX6Q ; then " \
+				"setenv fdtfile imx6q-udoo.dtb; " \
 				"setenv fdt_file imx6q-udoo.dtb; fi; " \
 			"if test $board_rev = MX6DL ; then " \
+				"setenv fdt_file imx6dl-udoo.dtb; " \
 				"setenv fdt_file imx6dl-udoo.dtb; fi; " \
 			"if test $fdt_file = undefined; then " \
 				"echo WARNING: Could not determine dtb to use; fi; \0"
