@@ -57,6 +57,21 @@
 #include <environment/ti/boot.h>
 #include <environment/ti/mmc.h>
 
+#define BOOT_TARGET_DEVICES(func) \
+	func(MMC, mmc, 0) \
+	func(MMC, mmc, 1) \
+	func(PXE, pxe, na) \
+	func(DHCP, dhcp, na)
+
+#ifdef CONFIG_BOOTCOMMAND
+#undef CONFIG_BOOTCOMMAND
+#endif
+#define CONFIG_BOOTCOMMAND \
+	"run findfdt; " \
+	"run distro_bootcmd"
+
+#include <config_distro_bootcmd.h>
+
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	DEFAULT_LINUX_BOOT_ENV \
 	DEFAULT_MMC_TI_ARGS \
@@ -65,6 +80,7 @@
 	DEFAULT_FDT_TI_ARGS \
 	DFUARGS \
 	NETARGS \
+	BOOTENV \
 
 /*
  * SPL related defines.  The Public RAM memory map the ROM defines the
