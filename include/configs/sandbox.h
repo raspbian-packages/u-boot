@@ -63,6 +63,9 @@
 	func(HOST, host, 1) \
 	func(HOST, host, 0)
 
+#ifndef CONFIG_SANDBOX
+#define CONFIG_SANDBOX 1
+#endif
 #include <config_distro_bootcmd.h>
 
 #define CONFIG_KEEP_SERVERADDR
