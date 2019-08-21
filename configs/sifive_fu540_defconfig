@@ -20,3 +20,5 @@ CONFIG_DEFAULT_DEVICE_TREE="hifive-unleashed-a00"
 CONFIG_SYS_RELOC_GD_ENV_ADDR=y
 CONFIG_SPL_CLK=y
 CONFIG_DM_MTD=y
+CONFIG_USE_PREBOOT=y
+CONFIG_PREBOOT="setenv fdt_addr ${fdtcontroladdr}; fdt addr ${fdtcontroladdr};"
