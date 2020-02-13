@@ -866,6 +866,7 @@ ALL-$(CONFIG_SPL_FRAMEWORK) += u-boot.img
 endif
 endif
 ALL-$(CONFIG_TPL) += tpl/u-boot-tpl.bin
+ALL-$(CONFIG_KIRKWOOD) += u-boot.kwb
 ALL-$(CONFIG_OF_SEPARATE) += u-boot.dtb
 ifeq ($(CONFIG_SPL_FRAMEWORK),y)
 ALL-$(CONFIG_OF_SEPARATE) += u-boot-dtb.img
