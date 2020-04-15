@@ -1,0 +1,25 @@
+add-debian-revision-to-u-boot-version
+no-force-CROSS_COMPILE-powerpc.diff
+tools-generic-builds.patch
+Makefile-add-kwb-target-to-all.patch
+
+mx53loco
+
+n900-bootz-raw-initrd.diff
+
+arndale/board-spl-rule.diff
+
+sh4-fix-linker-name-prefix.patch
+
+ensure-config-sandbox-for-make-env.patch
+
+am57xx/omap5_distro_bootcmd
+
+test-imagetools-test-fixes
+
+exynos/0001-arm-config-fix-default-console-only-to-specify-the-d.patch
+
+# Patches to fix https://bugs.debian.org/923379
+dreamplug/Commit-ARM-CPU-arm926ejs-Consolidate-cache-routines-.patch
+
+riscv64/qemu-riscv64_smode-sifive-fu540-fix-extlinux-define-.patch
