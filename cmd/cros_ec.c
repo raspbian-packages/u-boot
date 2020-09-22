@@ -1,23 +1,45 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Chromium OS cros_ec driver
  *
  * Copyright (c) 2016 The Chromium OS Authors.
  * Copyright (c) 2016 National Instruments Corp
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <command.h>
 #include <cros_ec.h>
 #include <dm.h>
+#include <flash.h>
+#include <log.h>
 #include <dm/device-internal.h>
 #include <dm/uclass-internal.h>
 
 /* Note: depends on enum ec_current_image */
 static const char * const ec_current_image_name[] = {"unknown", "RO", "RW"};
 
-DECLARE_GLOBAL_DATA_PTR;
+/**
+ * Decode a flash region parameter
+ *
+ * @param argc Number of params remaining
+ * @param argv List of remaining parameters
+ * @return flash region (EC_FLASH_REGION_...) or -1 on error
+ */
+static int cros_ec_decode_region(int argc, char *const argv[])
+{
+	if (argc > 0) {
+		if (0 == strcmp(*argv, "rw"))
+			return EC_FLASH_REGION_ACTIVE;
+		else if (0 == strcmp(*argv, "ro"))
+			return EC_FLASH_REGION_RO;
+
+		debug("%s: Invalid region '%s'\n", __func__, *argv);
+	} else {
+		debug("%s: Missing region parameter\n", __func__);
+	}
+
+	return -1;
+}
 
 /**
  * Perform a flash read or write command
@@ -29,8 +51,8 @@ DECLARE_GLOBAL_DATA_PTR;
  * @return 0 for ok, 1 for a usage error or -ve for ec command error
  *	(negative EC_RES_...)
  */
-static int do_read_write(struct cros_ec_dev *dev, int is_write, int argc,
-			 char * const argv[])
+static int do_read_write(struct udevice *dev, int is_write, int argc,
+			 char *const argv[])
 {
 	uint32_t offset, size = -1U, region_size;
 	unsigned long addr;
@@ -72,10 +94,10 @@ static int do_read_write(struct cros_ec_dev *dev, int is_write, int argc,
 	return 0;
 }
 
-static int do_cros_ec(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+static int do_cros_ec(struct cmd_tbl *cmdtp, int flag, int argc,
+		      char *const argv[])
 {
-	struct cros_ec_dev *dev;
-	struct udevice *udev;
+	struct udevice *dev;
 	const char *cmd;
 	int ret = 0;
 
@@ -85,10 +107,10 @@ static int do_cros_ec(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	cmd = argv[1];
 	if (0 == strcmp("init", cmd)) {
 		/* Remove any existing device */
-		ret = uclass_find_device(UCLASS_CROS_EC, 0, &udev);
+		ret = uclass_find_device(UCLASS_CROS_EC, 0, &dev);
 		if (!ret)
-			device_remove(udev);
-		ret = uclass_get_device(UCLASS_CROS_EC, 0, &udev);
+			device_remove(dev, DM_REMOVE_NORMAL);
+		ret = uclass_get_device(UCLASS_CROS_EC, 0, &dev);
 		if (ret) {
 			printf("Could not init cros_ec device (err %d)\n", ret);
 			return 1;
@@ -96,12 +118,11 @@ static int do_cros_ec(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		return 0;
 	}
 
-	ret = uclass_get_device(UCLASS_CROS_EC, 0, &udev);
+	ret = uclass_get_device(UCLASS_CROS_EC, 0, &dev);
 	if (ret) {
 		printf("Cannot get cros-ec device (err=%d)\n", ret);
 		return 1;
 	}
-	dev = dev_get_uclass_priv(udev);
 	if (0 == strcmp("id", cmd)) {
 		char id[MSG_BYTES];
 
@@ -119,7 +140,6 @@ static int do_cros_ec(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		}
 		printf("rows     = %u\n", info.rows);
 		printf("cols     = %u\n", info.cols);
-		printf("switches = %#x\n", info.switches);
 	} else if (0 == strcmp("curimage", cmd)) {
 		enum ec_current_image image;
 
@@ -132,7 +152,7 @@ static int do_cros_ec(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		struct ec_response_vboot_hash hash;
 		int i;
 
-		if (cros_ec_read_hash(dev, &hash)) {
+		if (cros_ec_read_hash(dev, EC_VBOOT_HASH_OFFSET_ACTIVE, &hash)) {
 			debug("%s: Could not read KBC hash\n", __func__);
 			return 1;
 		}
@@ -159,7 +179,7 @@ static int do_cros_ec(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 			region = cros_ec_decode_region(argc - 2, argv + 2);
 			if (region == EC_FLASH_REGION_RO)
 				cmd = EC_REBOOT_JUMP_RO;
-			else if (region == EC_FLASH_REGION_RW)
+			else if (region == EC_FLASH_REGION_ACTIVE)
 				cmd = EC_REBOOT_JUMP_RW;
 			else
 				return CMD_RET_USAGE;
@@ -242,7 +262,8 @@ static int do_cros_ec(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		unsigned long result;
 
 		if (argc <= 2) {
-			ret = cros_ec_read_vbnvcontext(dev, block);
+			ret = cros_ec_read_nvdata(dev, block,
+						  EC_VBNV_BLOCK_SIZE);
 			if (!ret) {
 				printf("vbnv_block: ");
 				for (i = 0; i < EC_VBNV_BLOCK_SIZE; i++)
@@ -268,7 +289,8 @@ static int do_cros_ec(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 				strict_strtoul(buf, 16, &result);
 				block[i] = result;
 			}
-			ret = cros_ec_write_vbnvcontext(dev, block);
+			ret = cros_ec_write_nvdata(dev, block,
+						   EC_VBNV_BLOCK_SIZE);
 		}
 		if (ret) {
 			debug("%s: Could not %s VbNvContext\n", __func__,
@@ -316,9 +338,9 @@ static int do_cros_ec(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 			state = simple_strtoul(argv[3], &endp, 10);
 			if (*argv[3] == 0 || *endp != 0)
 				return CMD_RET_USAGE;
-			ret = cros_ec_set_ldo(udev, index, state);
+			ret = cros_ec_set_ldo(dev, index, state);
 		} else {
-			ret = cros_ec_get_ldo(udev, index, &state);
+			ret = cros_ec_get_ldo(dev, index, &state);
 			if (!ret) {
 				printf("LDO%d: %s\n", index,
 				       state == EC_LDO_STATE_ON ?

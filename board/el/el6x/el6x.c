@@ -1,23 +1,27 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) Stefano Babic <sbabic@denx.de>
  *
  * Based on other i.MX6 boards
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
+#include <common.h>
+#include <init.h>
+#include <net.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/imx-regs.h>
 #include <asm/arch/iomux.h>
 #include <asm/arch/mx6-pins.h>
+#include <env.h>
+#include <linux/delay.h>
 #include <linux/errno.h>
 #include <asm/gpio.h>
-#include <asm/imx-common/mxc_i2c.h>
-#include <asm/imx-common/iomux-v3.h>
-#include <asm/imx-common/boot_mode.h>
-#include <asm/imx-common/video.h>
+#include <asm/mach-imx/mxc_i2c.h>
+#include <asm/mach-imx/iomux-v3.h>
+#include <asm/mach-imx/boot_mode.h>
+#include <asm/mach-imx/video.h>
 #include <mmc.h>
-#include <fsl_esdhc.h>
+#include <fsl_esdhc_imx.h>
 #include <miiphy.h>
 #include <netdev.h>
 #include <asm/arch/mxc_hdmi.h>
@@ -25,6 +29,7 @@
 #include <asm/io.h>
 #include <asm/arch/sys_proto.h>
 #include <i2c.h>
+#include <input.h>
 #include <power/pmic.h>
 #include <power/pfuze100_pmic.h>
 #include <asm/arch/mx6-ddr.h>
@@ -255,7 +260,7 @@ iomux_v3_cfg_t const usdhc4_pads[] = {
 	MX6_PAD_SD4_DAT7__SD4_DATA7 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
 };
 
-#ifdef CONFIG_FSL_ESDHC
+#ifdef CONFIG_FSL_ESDHC_IMX
 struct fsl_esdhc_cfg usdhc_cfg[2] = {
 	{USDHC2_BASE_ADDR},
 	{USDHC4_BASE_ADDR},
@@ -466,7 +471,7 @@ int board_late_init(void)
 	add_board_boot_modes(board_boot_modes);
 #endif
 
-	setenv("board_name", BOARD_NAME);
+	env_set("board_name", BOARD_NAME);
 	return 0;
 }
 
@@ -480,7 +485,7 @@ int checkboard(void)
 
 #ifdef CONFIG_SPL_BUILD
 #include <spl.h>
-#include <libfdt.h>
+#include <linux/libfdt.h>
 
 const struct mx6dq_iomux_ddr_regs mx6_ddr_ioregs = {
 	.dram_sdclk_0 =  0x00020030,
@@ -568,17 +573,6 @@ static void ccgr_init(void)
 	writel(0x00FFF300, &ccm->CCGR4);
 	writel(0x0F0000C3, &ccm->CCGR5);
 	writel(0x000003FF, &ccm->CCGR6);
-}
-
-static void gpr_init(void)
-{
-	struct iomuxc *iomux = (struct iomuxc *)IOMUXC_BASE_ADDR;
-
-	/* enable AXI cache for VDOA/VPU/IPU */
-	writel(0xF00000CF, &iomux->gpr[4]);
-	/* set IPU AXI-id0 Qos=0xf(bypass) AXI-id1 Qos=0x7 */
-	writel(0x007F007F, &iomux->gpr[6]);
-	writel(0x007F007F, &iomux->gpr[7]);
 }
 
 /*

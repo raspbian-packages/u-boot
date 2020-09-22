@@ -1,10 +1,12 @@
+Enable distro_bootcmd support (doc/README.distro) for omap5 targets.
+
 Index: u-boot/include/configs/ti_omap5_common.h
 ===================================================================
 --- u-boot.orig/include/configs/ti_omap5_common.h
 +++ u-boot/include/configs/ti_omap5_common.h
-@@ -64,6 +64,18 @@
- #define DFUARGS
- #endif
+@@ -58,6 +58,21 @@
+ #include <environment/ti/mmc.h>
+ #include <environment/ti/nand.h>
  
 +#define BOOT_TARGET_DEVICES(func) \
 +	func(MMC, mmc, 0) \
@@ -12,35 +14,23 @@ Index: u-boot/include/configs/ti_omap5_common.h
 +	func(PXE, pxe, na) \
 +	func(DHCP, dhcp, na)
 +
++#ifdef CONFIG_BOOTCOMMAND
++#undef CONFIG_BOOTCOMMAND
++#endif
 +#define CONFIG_BOOTCOMMAND \
 +	"run findfdt; " \
 +	"run distro_bootcmd"
 +
 +#include <config_distro_bootcmd.h>
 +
- #define CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
  #define CONFIG_EXTRA_ENV_SETTINGS \
  	DEFAULT_LINUX_BOOT_ENV \
-@@ -112,21 +124,7 @@
- 	"loadfdt=load mmc ${bootpart} ${fdtaddr} ${bootdir}/${fdtfile};\0" \
+ 	DEFAULT_MMC_TI_ARGS \
+@@ -67,6 +82,7 @@
  	DFUARGS \
  	NETARGS \
--
--#define CONFIG_BOOTCOMMAND \
--	"if test ${dofastboot} -eq 1; then " \
--		"echo Boot fastboot requested, resetting dofastboot ...;" \
--		"setenv dofastboot 0; saveenv;" \
--		"echo Booting into fastboot ...; fastboot 0;" \
--	"fi;" \
--	"run findfdt; " \
--	"run envboot; " \
--	"run mmcboot;" \
--	"setenv mmcdev 1; " \
--	"setenv bootpart 1:2; " \
--	"setenv mmcroot /dev/mmcblk0p2 rw; " \
--	"run mmcboot;" \
--	""
-+    BOOTENV
+ 	NANDARGS \
++	BOOTENV \
  
  /*
   * SPL related defines.  The Public RAM memory map the ROM defines the

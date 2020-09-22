@@ -1,16 +1,18 @@
+// SPDX-License-Identifier: GPL-2.0
 /*
  * Copyright (c) 2015 Realtek Semiconductor Corp. All rights reserved.
- *
- * SPDX-License-Identifier:	GPL-2.0
  *
  */
 
 #include <common.h>
 #include <dm.h>
 #include <errno.h>
+#include <log.h>
 #include <malloc.h>
+#include <memalign.h>
+#include <net.h>
 #include <usb.h>
-#include <usb/lin_gadget_compat.h>
+#include <linux/delay.h>
 #include <linux/mii.h>
 #include <linux/bitops.h>
 #include "usb_ether.h"
@@ -25,7 +27,7 @@ struct r8152_dongle {
 	unsigned short product;
 };
 
-static const struct r8152_dongle const r8152_dongles[] = {
+static const struct r8152_dongle r8152_dongles[] = {
 	/* Realtek */
 	{ 0x0bda, 0x8050 },
 	{ 0x0bda, 0x8152 },
@@ -58,7 +60,7 @@ struct r8152_version {
 	bool           gmii;
 };
 
-static const struct r8152_version const r8152_versions[] = {
+static const struct r8152_version r8152_versions[] = {
 	{ 0x4c00, RTL_VER_01, 0 },
 	{ 0x4c10, RTL_VER_02, 0 },
 	{ 0x5c00, RTL_VER_03, 1 },
@@ -71,17 +73,25 @@ static const struct r8152_version const r8152_versions[] = {
 static
 int get_registers(struct r8152 *tp, u16 value, u16 index, u16 size, void *data)
 {
-	return usb_control_msg(tp->udev, usb_rcvctrlpipe(tp->udev, 0),
-			       RTL8152_REQ_GET_REGS, RTL8152_REQT_READ,
-			       value, index, data, size, 500);
+	ALLOC_CACHE_ALIGN_BUFFER(void *, tmp, size);
+	int ret;
+
+	ret = usb_control_msg(tp->udev, usb_rcvctrlpipe(tp->udev, 0),
+		RTL8152_REQ_GET_REGS, RTL8152_REQT_READ,
+		value, index, tmp, size, 500);
+	memcpy(data, tmp, size);
+	return ret;
 }
 
 static
 int set_registers(struct r8152 *tp, u16 value, u16 index, u16 size, void *data)
 {
+	ALLOC_CACHE_ALIGN_BUFFER(void *, tmp, size);
+
+	memcpy(tmp, data, size);
 	return usb_control_msg(tp->udev, usb_sndctrlpipe(tp->udev, 0),
 			       RTL8152_REQ_SET_REGS, RTL8152_REQT_WRITE,
-			       value, index, data, size, 500);
+			       value, index, tmp, size, 500);
 }
 
 int generic_ocp_read(struct r8152 *tp, u16 index, u16 size,
@@ -701,9 +711,9 @@ static void r8152b_enter_oob(struct r8152 *tp)
 
 	rtl_rx_vlan_en(tp, false);
 
-	ocp_data = ocp_read_word(tp, MCU_TYPE_PLA, PAL_BDC_CR);
+	ocp_data = ocp_read_word(tp, MCU_TYPE_PLA, PLA_BDC_CR);
 	ocp_data |= ALDPS_PROXY_MODE;
-	ocp_write_word(tp, MCU_TYPE_PLA, PAL_BDC_CR, ocp_data);
+	ocp_write_word(tp, MCU_TYPE_PLA, PLA_BDC_CR, ocp_data);
 
 	ocp_data = ocp_read_byte(tp, MCU_TYPE_PLA, PLA_OOB_CTRL);
 	ocp_data |= NOW_IS_OOB | DIS_MCU_CLROOB;
@@ -834,9 +844,9 @@ static void r8153_enter_oob(struct r8152 *tp)
 
 	rtl_rx_vlan_en(tp, false);
 
-	ocp_data = ocp_read_word(tp, MCU_TYPE_PLA, PAL_BDC_CR);
+	ocp_data = ocp_read_word(tp, MCU_TYPE_PLA, PLA_BDC_CR);
 	ocp_data |= ALDPS_PROXY_MODE;
-	ocp_write_word(tp, MCU_TYPE_PLA, PAL_BDC_CR, ocp_data);
+	ocp_write_word(tp, MCU_TYPE_PLA, PLA_BDC_CR, ocp_data);
 
 	ocp_data = ocp_read_byte(tp, MCU_TYPE_PLA, PLA_OOB_CTRL);
 	ocp_data |= NOW_IS_OOB | DIS_MCU_CLROOB;
@@ -1216,7 +1226,8 @@ static int r8152_send_common(struct ueth_data *ueth, void *packet, int length)
 	u32 opts1, opts2 = 0;
 	int err;
 	int actual_len;
-	unsigned char msg[PKTSIZE + sizeof(struct tx_desc)];
+	ALLOC_CACHE_ALIGN_BUFFER(uint8_t, msg,
+				 PKTSIZE + sizeof(struct tx_desc));
 	struct tx_desc *tx_desc = (struct tx_desc *)msg;
 
 	debug("** %s(), len %d\n", __func__, length);
@@ -1257,7 +1268,7 @@ static int r8152_recv(struct eth_device *eth)
 {
 	struct ueth_data *dev = (struct ueth_data *)eth->priv;
 
-	static unsigned char  recv_buf[RTL8152_AGG_BUF_SZ];
+	ALLOC_CACHE_ALIGN_BUFFER(uint8_t, recv_buf, RTL8152_AGG_BUF_SZ);
 	unsigned char *pkt_ptr;
 	int err;
 	int actual_len;
@@ -1343,9 +1354,8 @@ int r8152_eth_probe(struct usb_device *dev, unsigned int ifnum,
 	struct usb_interface *iface;
 	struct usb_interface_descriptor *iface_desc;
 	int ep_in_found = 0, ep_out_found = 0;
-	int i;
-
 	struct r8152 *tp;
+	int i;
 
 	/* let's examine the device now */
 	iface = &dev->config.if_desc[ifnum];
@@ -1388,10 +1398,13 @@ int r8152_eth_probe(struct usb_device *dev, unsigned int ifnum,
 		if ((iface->ep_desc[i].bmAttributes &
 		     USB_ENDPOINT_XFERTYPE_MASK) == USB_ENDPOINT_XFER_BULK) {
 			u8 ep_addr = iface->ep_desc[i].bEndpointAddress;
-			if ((ep_addr & USB_DIR_IN) && !ep_in_found) {
-				ss->ep_in = ep_addr &
-					USB_ENDPOINT_NUMBER_MASK;
-				ep_in_found = 1;
+
+			if (ep_addr & USB_DIR_IN) {
+				if (!ep_in_found) {
+					ss->ep_in = ep_addr &
+						USB_ENDPOINT_NUMBER_MASK;
+					ep_in_found = 1;
+				}
 			} else {
 				if (!ep_out_found) {
 					ss->ep_out = ep_addr &

@@ -1,14 +1,14 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * (C) Copyright 2000-2009
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __VSPRINTF_H
 #define __VSPRINTF_H
 
 #include <stdarg.h>
+#include <linux/types.h>
 
 ulong simple_strtoul(const char *cp, char **endp, unsigned int base);
 
@@ -112,12 +112,10 @@ int sprintf(char *buf, const char *fmt, ...)
  * Format a string and place it in a buffer (va_list version)
  *
  * @param buf	The buffer to place the result into
- * @param size	The size of the buffer, including the trailing null space
  * @param fmt	The format string to use
  * @param args	Arguments for the format string
  * @return the number of characters which have been written into
- * the @buf not including the trailing '\0'. If @size is == 0 the function
- * returns 0.
+ * the @buf not including the trailing '\0'.
  *
  * If you're not already dealing with a va_list consider using scnprintf().
  *
@@ -214,4 +212,26 @@ void print_grouped_ull(unsigned long long int_val, int digits);
 
 bool str2off(const char *p, loff_t *num);
 bool str2long(const char *p, ulong *num);
+
+/**
+ * strmhz() - Convert a value to a Hz string
+ *
+ * This creates a string indicating the number of MHz of a value. For example,
+ * 2700000 produces "2.7".
+ * @buf: Buffer to hold output string, which must be large enough
+ * @hz: Value to convert
+ */
+char *strmhz(char *buf, unsigned long hz);
+
+/**
+ * str_to_upper() - Convert a string to upper case
+ *
+ * This simply uses toupper() on each character of the string.
+ *
+ * @in: String to convert (must be large enough to hold the output string)
+ * @out: Buffer to put converted string
+ * @len: Number of bytes available in @out (SIZE_MAX for all)
+ */
+void str_to_upper(const char *in, char *out, size_t len);
+
 #endif

@@ -1,10 +1,12 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2009-2011 Freescale Semiconductor, Inc.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <env.h>
+#include <log.h>
+#include <time.h>
 #ifdef CONFIG_SYS_P4080_ERRATUM_SERDES8
 #include <hwconfig.h>
 #endif
@@ -13,6 +15,7 @@
 #include <asm/io.h>
 #include <asm/processor.h>
 #include <asm/fsl_law.h>
+#include <linux/delay.h>
 #include <linux/errno.h>
 #include "fsl_corenet_serdes.h"
 
@@ -76,7 +79,7 @@ static const struct {
 	{ 17, 163, FSL_SRDS_BANK_2 },
 	{ 18, 164, FSL_SRDS_BANK_2 },
 	{ 19, 165, FSL_SRDS_BANK_2 },
-#ifdef CONFIG_PPC_P4080
+#ifdef CONFIG_ARCH_P4080
 	{ 20, 170, FSL_SRDS_BANK_3 },
 	{ 21, 171, FSL_SRDS_BANK_3 },
 	{ 22, 172, FSL_SRDS_BANK_3 },
@@ -491,7 +494,7 @@ void fsl_serdes_init(void)
 	ccsr_gur_t *gur = (void *)(CONFIG_SYS_MPC85xx_GUTS_ADDR);
 	int cfg;
 	serdes_corenet_t *srds_regs;
-#ifdef CONFIG_PPC_P5040
+#ifdef CONFIG_ARCH_P5040
 	serdes_corenet_t *srds2_regs;
 #endif
 	int lane, bank, idx;
@@ -514,7 +517,7 @@ void fsl_serdes_init(void)
 	 * Extract hwconfig from environment since we have not properly setup
 	 * the environment but need it for ddr config params
 	 */
-	if (getenv_f("hwconfig", buffer, sizeof(buffer)) > 0)
+	if (env_get_f("hwconfig", buffer, sizeof(buffer)) > 0)
 		buf = buffer;
 #endif
 	if (serdes_prtcl_map & (1 << NONE))
@@ -577,7 +580,7 @@ void fsl_serdes_init(void)
 		}
 	}
 
-#ifdef CONFIG_PPC_P5040
+#ifdef CONFIG_ARCH_P5040
 	/*
 	 * Lanes on bank 4 on P5040 are commented-out, but for some SERDES
 	 * protocols, these lanes are routed to SATA.  We use serdes_prtcl_map
@@ -606,6 +609,9 @@ void fsl_serdes_init(void)
 #endif
 
 	soc_serdes_init();
+
+	/* Set the first bit to indicate serdes has been initialized */
+	serdes_prtcl_map |= (1 << NONE);
 
 #ifdef CONFIG_SYS_P4080_ERRATUM_SERDES8
 	/*
@@ -862,9 +868,6 @@ void fsl_serdes_init(void)
 			     SRDS_RSTCTL_SDPD);
 	}
 #endif
-
-	/* Set the first bit to indicate serdes has been initialized */
-	serdes_prtcl_map |= (1 << NONE);
 }
 
 const char *serdes_clock_to_string(u32 clock)

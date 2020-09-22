@@ -15,7 +15,7 @@
     defined(__sun__)	 || \
     defined(__APPLE__)
 # include <inttypes.h>
-#elif defined(__linux__) || defined(__WIN32__) || defined(__MINGW32__) || defined(__OpenBSD__) || defined(__GLIBC__)
+#elif defined(__linux__) || defined(__WIN32__) || defined(__MINGW32__) || defined(__OpenBSD__)
 # include <stdint.h>
 #endif
 
@@ -41,17 +41,22 @@
 #define O_BINARY	0
 #endif
 
-#if defined(__linux__) || defined(__GLIBC__)
+#ifdef __linux__
 # include <endian.h>
 # include <byteswap.h>
 #elif defined(__MACH__) || defined(__FreeBSD__)
 # include <machine/endian.h>
-typedef unsigned long ulong;
 #endif
 #ifdef __FreeBSD__
 # include <sys/endian.h> /* htole32 and friends */
+# define __BYTE_ORDER BYTE_ORDER
+# define __LITTLE_ENDIAN LITTLE_ENDIAN
+# define __BIG_ENDIAN BIG_ENDIAN
 #elif defined(__OpenBSD__)
 # include <endian.h>
+# define __BYTE_ORDER BYTE_ORDER
+# define __LITTLE_ENDIAN LITTLE_ENDIAN
+# define __BIG_ENDIAN BIG_ENDIAN
 #endif
 
 #include <time.h>
@@ -60,6 +65,7 @@ typedef uint8_t __u8;
 typedef uint16_t __u16;
 typedef uint32_t __u32;
 typedef unsigned int uint;
+typedef unsigned long ulong;
 
 #define uswap_16(x) \
 	((((x) & 0xff00) >> 8) | \
@@ -84,20 +90,7 @@ typedef unsigned int uint;
 # define uswap_64(x) _uswap_64(x, )
 #endif
 
-#if defined(__OpenBSD__)
-#define cpu_to_le16(x)		htole16(x)
-#define cpu_to_le32(x)		htole32(x)
-#define cpu_to_le64(x)		htole64(x)
-#define le16_to_cpu(x)		letoh16(x)
-#define le32_to_cpu(x)		letoh32(x)
-#define le64_to_cpu(x)		letoh64(x)
-#define cpu_to_be16(x)		htobe16(x)
-#define cpu_to_be32(x)		htobe32(x)
-#define cpu_to_be64(x)		htobe64(x)
-#define be16_to_cpu(x)		betoh16(x)
-#define be32_to_cpu(x)		betoh32(x)
-#define be64_to_cpu(x)		betoh64(x)
-#elif __BYTE_ORDER == __LITTLE_ENDIAN
+#if __BYTE_ORDER == __LITTLE_ENDIAN
 # define cpu_to_le16(x)		(x)
 # define cpu_to_le32(x)		(x)
 # define cpu_to_le64(x)		(x)
@@ -127,13 +120,8 @@ typedef unsigned int uint;
 
 #else /* !USE_HOSTCC */
 
-#ifdef CONFIG_USE_STDINT
-/* Provided by gcc. */
-#include <stdint.h>
-#else
 /* Type for `void *' pointers. */
 typedef unsigned long int uintptr_t;
-#endif
 
 #include <linux/string.h>
 #include <linux/types.h>
@@ -155,5 +143,9 @@ typedef unsigned long int uintptr_t;
 
 #define likely(x)	__builtin_expect(!!(x), 1)
 #define unlikely(x)	__builtin_expect(!!(x), 0)
+
+#ifdef __LP64__
+#define MEM_SUPPORT_64BIT_DATA
+#endif
 
 #endif

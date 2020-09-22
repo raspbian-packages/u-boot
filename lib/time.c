@@ -1,17 +1,20 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2000-2009
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <bootstage.h>
 #include <dm.h>
 #include <errno.h>
+#include <init.h>
+#include <time.h>
 #include <timer.h>
 #include <watchdog.h>
 #include <div64.h>
 #include <asm/io.h>
+#include <linux/delay.h>
 
 #ifndef CONFIG_WD_PERIOD
 # define CONFIG_WD_PERIOD	(10 * 1000 * 1000)	/* 10 seconds default */
@@ -36,11 +39,28 @@ unsigned long notrace timer_read_counter(void)
 	return readl(CONFIG_SYS_TIMER_COUNTER);
 #endif
 }
+
+ulong timer_get_boot_us(void)
+{
+	ulong count = timer_read_counter();
+
+#if CONFIG_SYS_TIMER_RATE == 1000000
+	return count;
+#elif CONFIG_SYS_TIMER_RATE > 1000000
+	return lldiv(count, CONFIG_SYS_TIMER_RATE / 1000000);
+#elif defined(CONFIG_SYS_TIMER_RATE)
+	return (unsigned long long)count * 1000000 / CONFIG_SYS_TIMER_RATE;
+#else
+	/* Assume the counter is in microseconds */
+	return count;
+#endif
+}
+
 #else
 extern unsigned long __weak timer_read_counter(void);
 #endif
 
-#ifdef CONFIG_TIMER
+#if CONFIG_IS_ENABLED(TIMER)
 ulong notrace get_tbclk(void)
 {
 	if (!gd->timer) {
@@ -118,12 +138,26 @@ ulong __weak get_timer(ulong base)
 	return tick_to_time(get_ticks()) - base;
 }
 
+static uint64_t notrace tick_to_time_us(uint64_t tick)
+{
+	ulong div = get_tbclk() / 1000;
+
+	tick *= CONFIG_SYS_HZ;
+	do_div(tick, div);
+	return tick;
+}
+
+uint64_t __weak get_timer_us(uint64_t base)
+{
+	return tick_to_time_us(get_ticks()) - base;
+}
+
 unsigned long __weak notrace timer_get_us(void)
 {
 	return tick_to_time(get_ticks() * 1000);
 }
 
-static uint64_t usec_to_tick(unsigned long usec)
+uint64_t usec_to_tick(unsigned long usec)
 {
 	uint64_t tick = usec;
 	tick *= get_tbclk();
@@ -150,13 +184,7 @@ void udelay(unsigned long usec)
 	do {
 		WATCHDOG_RESET();
 		kv = usec > CONFIG_WD_PERIOD ? CONFIG_WD_PERIOD : usec;
-		__udelay (kv);
+		__udelay(kv);
 		usec -= kv;
 	} while(usec);
-}
-
-void mdelay(unsigned long msec)
-{
-	while (msec--)
-		udelay(1000);
 }

@@ -1,23 +1,27 @@
+// SPDX-License-Identifier: GPL-2.0
 /*
  * Copyright (C) 2013 Gabor Juhos <juhosg@openwrt.org>
  * Copyright (C) 2013 Imagination Technologies
- *
- * SPDX-License-Identifier:	GPL-2.0
  */
 
 #include <common.h>
 #include <ide.h>
+#include <init.h>
+#include <net.h>
 #include <netdev.h>
 #include <pci.h>
 #include <pci_gt64120.h>
 #include <pci_msc01.h>
 #include <rtc.h>
+#include <linux/delay.h>
 
 #include <asm/addrspace.h>
 #include <asm/io.h>
 #include <asm/malta.h>
 
 #include "superio.h"
+
+DECLARE_GLOBAL_DATA_PTR;
 
 enum core_card {
 	CORE_UNKNOWN,
@@ -83,9 +87,11 @@ static enum sys_con malta_sys_con(void)
 	}
 }
 
-phys_size_t initdram(int board_type)
+int dram_init(void)
 {
-	return CONFIG_SYS_MEM_SIZE;
+	gd->ram_size = CONFIG_SYS_MEM_SIZE;
+
+	return 0;
 }
 
 int checkboard(void)

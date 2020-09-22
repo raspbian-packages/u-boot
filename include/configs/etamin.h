@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * (C) Copyright 2013 Siemens Schweiz AG
  * (C) Heiko Schocher, DENX Software Engineering, hs@denx.de.
@@ -6,8 +7,6 @@
  * U-Boot file:/include/configs/am335x_evm.h
  *
  * Copyright (C) 2011 Texas Instruments Incorporated - http://www.ti.com/
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __CONFIG_ETAMIN_H
@@ -21,11 +20,9 @@
 #undef CONFIG_SYS_NAND_ECCPOS
 #undef CONFIG_SYS_NAND_U_BOOT_OFFS
 #undef CONFIG_SYS_ENV_SECT_SIZE
-#undef CONFIG_ENV_OFFSET
 #undef CONFIG_NAND_OMAP_ECCSCHEME
 #define CONFIG_NAND_OMAP_ECCSCHEME	OMAP_ECC_BCH16_CODE_HW
 
-#define CONFIG_ENV_OFFSET       0x980000
 #define CONFIG_SYS_ENV_SECT_SIZE       (512 << 10)     /* 512 KiB */
 #define CONFIG_SYS_NAND_PAGE_SIZE       4096
 #define CONFIG_SYS_NAND_OOBSIZE         224
@@ -69,9 +66,7 @@
 					CONFIG_SYS_NAND_BASE2}
 
 #define CONFIG_SYS_NAND_ONFI_DETECTION
-#define CONFIG_SYS_MPUCLK	300
 #define DDR_PLL_FREQ	303
-#undef CONFIG_SPL_AM33XX_ENABLE_RTC32K_OSC
 
 /* FWD Button = 27
  * SRV Button = 87 */
@@ -88,11 +83,6 @@
 	"led4=60,0,1\0" \
 	"led5=63,0,1\0"
 
-#undef CONFIG_DOS_PARTITION
-#undef CONFIG_CMD_FAT
-
-#define CONFIG_BOARD_LATE_INIT
-
 /* Physical Memory Map */
 #define CONFIG_MAX_RAM_BANK_SIZE       (1024 << 20)    /* 1GB */
 
@@ -102,12 +92,6 @@
 #define CONFIG_SYS_I2C_EEPROM_ADDR              0x50
 #define EEPROM_ADDR_DDR3 0x90
 #define EEPROM_ADDR_CHIP 0x120
-
-#define CONFIG_SYS_U_BOOT_MAX_SIZE_SECTORS	0x300
-
-#undef CONFIG_MII
-#undef CONFIG_PHY_GIGE
-#define CONFIG_PHY_SMSC
 
 #define CONFIG_FACTORYSET
 
@@ -122,17 +106,11 @@
 #define CONFIG_SYS_DCACHE_OFF
 #endif
 
-/* Watchdog */
-#define CONFIG_OMAP_WATCHDOG
-
 /* Define own nand partitions */
-#define CONFIG_ENV_OFFSET_REDUND	0xB80000
-#define CONFIG_ENV_SIZE_REDUND		CONFIG_ENV_SIZE
 #define CONFIG_ENV_RANGE		(4 * CONFIG_SYS_ENV_SECT_SIZE)
 
 
 
-#define CONFIG_DFU_MTD
 #undef COMMON_ENV_DFU_ARGS
 #define COMMON_ENV_DFU_ARGS	"dfu_args=run bootargs_defaults;" \
 				"setenv bootargs ${bootargs};" \
@@ -151,26 +129,6 @@
 	"u-boot.env0 mtddev;" \
 	"u-boot.env1 mtddev;" \
 	"rootfs mtddevubi" \
-
-#undef MTDIDS_NAME_STR
-#define MTDIDS_NAME_STR		"omap2-nand_concat"
-#undef MTDIDS_DEFAULT
-#define MTDIDS_DEFAULT		"nand2=" MTDIDS_NAME_STR
-
-#undef MTDPARTS_DEFAULT_V2
-#define MTDPARTS_DEFAULT_V2     "mtdparts=" MTDIDS_NAME_STR ":" \
-				"512k(spl)," \
-				"512k(spl.backup1)," \
-				"512k(spl.backup2)," \
-				"512k(spl.backup3)," \
-				"7680k(u-boot)," \
-				"2048k(u-boot.env0)," \
-				"2048k(u-boot.env1)," \
-				"2048k(mtdoops)," \
-				"-(rootfs)"
-
-#undef MTDPARTS_DEFAULT
-#define MTDPARTS_DEFAULT	MTDPARTS_DEFAULT_V2
 
 #undef CONFIG_ENV_SETTINGS_NAND_V2
 #define CONFIG_ENV_SETTINGS_NAND_V2 \

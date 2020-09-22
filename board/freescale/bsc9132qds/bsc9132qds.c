@@ -1,17 +1,20 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2013 Freescale Semiconductor, Inc.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <image.h>
+#include <init.h>
+#include <net.h>
 #include <asm/processor.h>
 #include <asm/mmu.h>
 #include <asm/cache.h>
 #include <asm/immap_85xx.h>
 #include <asm/io.h>
+#include <env.h>
 #include <miiphy.h>
-#include <libfdt.h>
+#include <linux/libfdt.h>
 #include <fdt_support.h>
 #include <fsl_mdio.h>
 #include <tsec.h>
@@ -151,7 +154,7 @@ void dsp_ddr_configure(void)
 
 int board_early_init_r(void)
 {
-#ifndef CONFIG_SYS_NO_FLASH
+#ifdef CONFIG_MTD_NOR_FLASH
 	const unsigned int flashbase = CONFIG_SYS_FLASH_BASE;
 	int flash_esel = find_tlb_idx((void *)flashbase, 1);
 
@@ -358,7 +361,7 @@ void fdt_del_node_compat(void *blob, const char *compatible)
 
 #if defined(CONFIG_OF_BOARD_SETUP)
 #ifdef CONFIG_FDT_FIXUP_PARTITIONS
-struct node_info nodes[] = {
+static const struct node_info nodes[] = {
 	{ "cfi-flash",			MTD_DEV_TYPE_NOR,  },
 	{ "fsl,ifc-nand",		MTD_DEV_TYPE_NAND, },
 };
@@ -370,8 +373,8 @@ int ft_board_setup(void *blob, bd_t *bd)
 
 	ft_cpu_setup(blob, bd);
 
-	base = getenv_bootm_low();
-	size = getenv_bootm_size();
+	base = env_get_bootm_low();
+	size = env_get_bootm_size();
 
 	#if defined(CONFIG_PCI)
 	FT_FSL_PCI_SETUP;

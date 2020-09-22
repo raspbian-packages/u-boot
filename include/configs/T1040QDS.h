@@ -1,5 +1,6 @@
 /*
  * Copyright 2013-2014 Freescale Semiconductor, Inc.
+ * Copyright 2020 NXP
  *
  * See file CREDITS for list of people who contributed to this
  * project.
@@ -23,10 +24,11 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
+#include <linux/stringify.h>
+
 /*
  * T1040 QDS board configuration file
  */
-#define CONFIG_T1040QDS
 
 #ifdef CONFIG_RAMBOOT_PBL
 #define CONFIG_RAMBOOT_TEXT_BASE	CONFIG_SYS_TEXT_BASE
@@ -36,30 +38,17 @@
 #endif
 
 /* High Level Configuration Options */
-#define CONFIG_BOOKE
-#define CONFIG_E500			/* BOOKE e500 family */
-#define CONFIG_E500MC			/* BOOKE e500mc family */
 #define CONFIG_SYS_BOOK3E_HV		/* Category E.HV supported */
-#define CONFIG_MP			/* support multiple processors */
 
 /* support deep sleep */
 #define CONFIG_DEEP_SLEEP
-#if defined(CONFIG_DEEP_SLEEP)
-#define CONFIG_BOARD_EARLY_INIT_F
-#endif
-
-#ifndef CONFIG_SYS_TEXT_BASE
-#define CONFIG_SYS_TEXT_BASE	0xeff40000
-#endif
 
 #ifndef CONFIG_RESET_VECTOR_ADDRESS
 #define CONFIG_RESET_VECTOR_ADDRESS	0xeffffffc
 #endif
 
 #define CONFIG_SYS_FSL_CPC		/* Corenet Platform Cache */
-#define CONFIG_SYS_NUM_CPC		CONFIG_NUM_DDR_CONTROLLERS
-#define CONFIG_FSL_IFC			/* Enable IFC Support */
-#define CONFIG_FSL_CAAM			/* Enable SEC/CAAM */
+#define CONFIG_SYS_NUM_CPC		CONFIG_SYS_NUM_DDR_CTLRS
 #define CONFIG_PCI_INDIRECT_BRIDGE
 #define CONFIG_PCIE1			/* PCIE controller 1 */
 #define CONFIG_PCIE2			/* PCIE controller 2 */
@@ -69,49 +58,13 @@
 #define CONFIG_FSL_PCI_INIT		/* Use common FSL init code */
 #define CONFIG_SYS_PCI_64BIT		/* enable 64-bit PCI resources */
 
-#define CONFIG_FSL_LAW			/* Use common FSL init code */
-
 #define CONFIG_ENV_OVERWRITE
 
-#ifdef CONFIG_SYS_NO_FLASH
-#define CONFIG_ENV_IS_NOWHERE
-#else
-#define CONFIG_FLASH_CFI_DRIVER
-#define CONFIG_SYS_FLASH_CFI
-#define CONFIG_SYS_FLASH_USE_BUFFER_WRITE
-#endif
-
-#ifndef CONFIG_SYS_NO_FLASH
+#ifdef CONFIG_MTD_NOR_FLASH
 #if defined(CONFIG_SPIFLASH)
-#define CONFIG_SYS_EXTRA_ENV_RELOC
-#define CONFIG_ENV_IS_IN_SPI_FLASH
-#define CONFIG_ENV_SPI_BUS              0
-#define CONFIG_ENV_SPI_CS               0
-#define CONFIG_ENV_SPI_MAX_HZ           10000000
-#define CONFIG_ENV_SPI_MODE             0
-#define CONFIG_ENV_SIZE                 0x2000          /* 8KB */
-#define CONFIG_ENV_OFFSET               0x100000        /* 1MB */
-#define CONFIG_ENV_SECT_SIZE            0x10000
 #elif defined(CONFIG_SDCARD)
-#define CONFIG_SYS_EXTRA_ENV_RELOC
-#define CONFIG_ENV_IS_IN_MMC
 #define CONFIG_SYS_MMC_ENV_DEV          0
-#define CONFIG_ENV_SIZE			0x2000
-#define CONFIG_ENV_OFFSET		(512 * 1658)
-#elif defined(CONFIG_NAND)
-#define CONFIG_SYS_EXTRA_ENV_RELOC
-#define CONFIG_ENV_IS_IN_NAND
-#define CONFIG_ENV_SIZE			CONFIG_SYS_NAND_BLOCK_SIZE
-#define CONFIG_ENV_OFFSET		(7 * CONFIG_SYS_NAND_BLOCK_SIZE)
-#else
-#define CONFIG_ENV_IS_IN_FLASH
-#define CONFIG_ENV_ADDR		(CONFIG_SYS_MONITOR_BASE - CONFIG_ENV_SECT_SIZE)
-#define CONFIG_ENV_SIZE		0x2000
-#define CONFIG_ENV_SECT_SIZE	0x20000 /* 128K (one sector) */
 #endif
-#else /* CONFIG_SYS_NO_FLASH */
-#define CONFIG_ENV_SIZE                0x2000
-#define CONFIG_ENV_SECT_SIZE   0x20000 /* 128K (one sector) */
 #endif
 
 #ifndef __ASSEMBLY__
@@ -140,11 +93,6 @@ unsigned long get_board_ddr_clk(void);
 #define CONFIG_ADDR_MAP
 #define CONFIG_SYS_NUM_ADDR_MAP		64	/* number of TLB1 entries */
 
-#define CONFIG_SYS_MEMTEST_START	0x00200000	/* memtest works on */
-#define CONFIG_SYS_MEMTEST_END		0x00400000
-#define CONFIG_SYS_ALT_MEMTEST
-#define CONFIG_PANIC_HANG	/* do not reset board on panic */
-
 /*
  *  Config the L3 Cache as L3 SRAM
  */
@@ -169,15 +117,10 @@ unsigned long get_board_ddr_clk(void);
 #define CONFIG_SYS_DDR_SDRAM_BASE	0x00000000
 #define CONFIG_SYS_SDRAM_BASE		CONFIG_SYS_DDR_SDRAM_BASE
 
-/* CONFIG_NUM_DDR_CONTROLLERS is defined in include/asm/config_mpc85xx.h */
 #define CONFIG_DIMM_SLOTS_PER_CTLR	1
 #define CONFIG_CHIP_SELECTS_PER_CTRL	(2 * CONFIG_DIMM_SLOTS_PER_CTLR)
 
 #define CONFIG_DDR_SPD
-#ifndef CONFIG_SYS_FSL_DDR4
-#define CONFIG_SYS_FSL_DDR3
-#endif
-#define CONFIG_FSL_DDR_INTERACTIVE
 
 #define CONFIG_SYS_SPD_BUS_NUM	0
 #define SPD_EEPROM_ADDRESS	0x51
@@ -252,7 +195,7 @@ unsigned long get_board_ddr_clk(void);
 				| CSPR_PORT_SIZE_8 \
 				| CSPR_MSEL_GPCM \
 				| CSPR_V)
-#define CONFIG_SYS_AMASK3	IFC_AMASK(4*1024)
+#define CONFIG_SYS_AMASK3	IFC_AMASK(64 * 1024)
 #define CONFIG_SYS_CSOR3	0x0
 /* QIXIS Timing parameters for IFC CS3 */
 #define CONFIG_SYS_CS3_FTIM0		(FTIM0_GPCM_TACSE(0x0e) | \
@@ -303,11 +246,10 @@ unsigned long get_board_ddr_clk(void);
 #define CONFIG_SYS_NAND_DDR_LAW		11
 #define CONFIG_SYS_NAND_BASE_LIST	{ CONFIG_SYS_NAND_BASE }
 #define CONFIG_SYS_MAX_NAND_DEVICE	1
-#define CONFIG_CMD_NAND
 
 #define CONFIG_SYS_NAND_BLOCK_SIZE	(128 * 1024)
 
-#if defined(CONFIG_NAND)
+#if defined(CONFIG_MTD_RAW_NAND)
 #define CONFIG_SYS_CSPR0_EXT		CONFIG_SYS_NAND_CSPR_EXT
 #define CONFIG_SYS_CSPR0		CONFIG_SYS_NAND_CSPR
 #define CONFIG_SYS_AMASK0		CONFIG_SYS_NAND_AMASK
@@ -365,9 +307,6 @@ unsigned long get_board_ddr_clk(void);
 #define CONFIG_SYS_RAMBOOT
 #endif
 
-#define CONFIG_BOARD_EARLY_INIT_R
-#define CONFIG_MISC_INIT_R
-
 #define CONFIG_HWCONFIG
 
 /* define to use L1 as initial stack */
@@ -393,7 +332,6 @@ unsigned long get_board_ddr_clk(void);
  * open - index 2
  * shorted - index 1
  */
-#define CONFIG_CONS_INDEX	1
 #define CONFIG_SYS_NS16550_SERIAL
 #define CONFIG_SYS_NS16550_REG_SIZE	1
 #define CONFIG_SYS_NS16550_CLK		(get_bus_freq(0)/2)
@@ -411,7 +349,6 @@ unsigned long get_board_ddr_clk(void);
 #ifdef CONFIG_FSL_DIU_FB
 #define CONFIG_FSL_DIU_CH7301
 #define CONFIG_SYS_DIU_ADDR	(CONFIG_SYS_CCSRBAR + 0x180000)
-#define CONFIG_CMD_BMP
 #define CONFIG_VIDEO_LOGO
 #define CONFIG_VIDEO_BMP_LOGO
 #define CONFIG_CFI_FLASH_USE_WEAK_ACCESSORS
@@ -423,6 +360,8 @@ unsigned long get_board_ddr_clk(void);
 #endif
 
 /* I2C */
+
+#ifndef CONFIG_DM_I2C
 #define CONFIG_SYS_I2C
 #define CONFIG_SYS_I2C_FSL		/* Use FSL common I2C driver */
 #define CONFIG_SYS_FSL_I2C_SPEED	50000	/* I2C speed in Hz */
@@ -437,6 +376,9 @@ unsigned long get_board_ddr_clk(void);
 #define CONFIG_SYS_FSL_I2C2_OFFSET	0x118100
 #define CONFIG_SYS_FSL_I2C3_OFFSET	0x119000
 #define CONFIG_SYS_FSL_I2C4_OFFSET	0x119100
+#endif
+
+#define CONFIG_SYS_I2C_FSL		/* Use FSL common I2C driver */
 
 #define I2C_MUX_PCA_ADDR		0x77
 #define I2C_MUX_PCA_ADDR_PRI		0x77 /* Primary Mux*/
@@ -448,6 +390,7 @@ unsigned long get_board_ddr_clk(void);
 /* LDI/DVI Encoder for display */
 #define CONFIG_SYS_I2C_LDI_ADDR         0x38
 #define CONFIG_SYS_I2C_DVI_ADDR         0x75
+#define CONFIG_SYS_I2C_DVI_BUS_NUM	0
 
 /*
  * RTC configuration
@@ -459,8 +402,6 @@ unsigned long get_board_ddr_clk(void);
 /*
  * eSPI - Enhanced SPI
  */
-#define CONFIG_SF_DEFAULT_SPEED         10000000
-#define CONFIG_SF_DEFAULT_MODE          0
 
 /*
  * General PCI
@@ -517,15 +458,11 @@ unsigned long get_board_ddr_clk(void);
 #endif
 
 #define CONFIG_PCI_SCAN_SHOW		/* show pci devices on startup */
-#define CONFIG_DOS_PARTITION
 #endif	/* CONFIG_PCI */
 
 /* SATA */
 #define CONFIG_FSL_SATA_V2
 #ifdef CONFIG_FSL_SATA_V2
-#define CONFIG_LIBATA
-#define CONFIG_FSL_SATA
-
 #define CONFIG_SYS_SATA_MAX_DEVICE	2
 #define CONFIG_SATA1
 #define CONFIG_SYS_SATA1		CONFIG_SYS_MPC85xx_SATA1_ADDR
@@ -535,8 +472,6 @@ unsigned long get_board_ddr_clk(void);
 #define CONFIG_SYS_SATA2_FLAGS		FLAGS_DMA
 
 #define CONFIG_LBA48
-#define CONFIG_CMD_SATA
-#define CONFIG_DOS_PARTITION
 #endif
 
 /*
@@ -545,28 +480,19 @@ unsigned long get_board_ddr_clk(void);
 #define CONFIG_HAS_FSL_DR_USB
 
 #ifdef CONFIG_HAS_FSL_DR_USB
-#define CONFIG_USB_EHCI
-
-#ifdef CONFIG_USB_EHCI
+#ifdef CONFIG_USB_EHCI_HCD
 #define CONFIG_USB_EHCI_FSL
 #define CONFIG_EHCI_HCD_INIT_AFTER_RESET
 #endif
 #endif
 
-#define CONFIG_MMC
-
 #ifdef CONFIG_MMC
-#define CONFIG_FSL_ESDHC
-#define CONFIG_FSL_ESDHC_USE_PERIPHERAL_CLK
 #define CONFIG_SYS_FSL_ESDHC_ADDR       CONFIG_SYS_MPC85xx_ESDHC_ADDR
-#define CONFIG_GENERIC_MMC
-#define CONFIG_DOS_PARTITION
 #define CONFIG_FSL_ESDHC_ADAPTER_IDENT
 #endif
 
 /* Qman/Bman */
 #ifndef CONFIG_NOBQFMAN
-#define CONFIG_SYS_DPAA_QBMAN		/* Support Q/Bman */
 #define CONFIG_SYS_BMAN_NUM_PORTALS	10
 #define CONFIG_SYS_BMAN_MEM_BASE	0xf4000000
 #define CONFIG_SYS_BMAN_MEM_PHYS	0xff4000000ull
@@ -595,15 +521,12 @@ unsigned long get_board_ddr_clk(void);
 #define CONFIG_SYS_DPAA_FMAN
 #define CONFIG_SYS_DPAA_PME
 
-#define CONFIG_QE
-#define CONFIG_U_QE
 /* Default address of microcode for the Linux Fman driver */
 #if defined(CONFIG_SPIFLASH)
 /*
  * env is stored at 0x100000, sector size is 0x10000, ucode is stored after
  * env, so we got 0x110000.
  */
-#define CONFIG_SYS_QE_FW_IN_SPIFLASH
 #define CONFIG_SYS_FMAN_FW_ADDR	0x110000
 #elif defined(CONFIG_SDCARD)
 /*
@@ -611,13 +534,10 @@ unsigned long get_board_ddr_clk(void);
  * about 825KB (1650 blocks), Env is stored after the image, and the env size is
  * 0x2000 (16 blocks), 8 + 1650 + 16 = 1674, enlarge it to 1680.
  */
-#define CONFIG_SYS_QE_FMAN_FW_IN_MMC
 #define CONFIG_SYS_FMAN_FW_ADDR	(512 * 1680)
-#elif defined(CONFIG_NAND)
-#define CONFIG_SYS_QE_FMAN_FW_IN_NAND
+#elif defined(CONFIG_MTD_RAW_NAND)
 #define CONFIG_SYS_FMAN_FW_ADDR	(8 * CONFIG_SYS_NAND_BLOCK_SIZE)
 #else
-#define CONFIG_SYS_QE_FMAN_FW_IN_NOR
 #define CONFIG_SYS_FMAN_FW_ADDR		0xEFF00000
 #define CONFIG_SYS_QE_FW_ADDR		0xEFF10000
 #endif
@@ -626,11 +546,6 @@ unsigned long get_board_ddr_clk(void);
 #endif /* CONFIG_NOBQFMAN */
 
 #ifdef CONFIG_SYS_DPAA_FMAN
-#define CONFIG_FMAN_ENET
-#define CONFIG_PHYLIB_10G
-#define CONFIG_PHY_VITESSE
-#define CONFIG_PHY_REALTEK
-#define CONFIG_PHY_TERANETICS
 #define SGMII_CARD_PORT1_PHY_ADDR 0x1C
 #define SGMII_CARD_PORT2_PHY_ADDR 0x10
 #define SGMII_CARD_PORT3_PHY_ADDR 0x1E
@@ -646,33 +561,17 @@ unsigned long get_board_ddr_clk(void);
 #define CONFIG_SYS_FM1_DTSEC3_RISER_PHY_ADDR    0x1e
 #define CONFIG_SYS_FM1_DTSEC4_RISER_PHY_ADDR    0x1f
 
-#define CONFIG_MII		/* MII PHY management */
 #define CONFIG_ETHPRIME		"FM1@DTSEC1"
-#define CONFIG_PHY_GIGE		/* Include GbE speed/duplex detection */
 #endif
 
 /* Enable VSC9953 L2 Switch driver */
 #define CONFIG_VSC9953
-#define CONFIG_CMD_ETHSW
 #define CONFIG_SYS_FM1_QSGMII11_PHY_ADDR	0x14
 #define CONFIG_SYS_FM1_QSGMII21_PHY_ADDR	0x18
 
 /*
  * Dynamic MTD Partition support with mtdparts
  */
-#ifndef CONFIG_SYS_NO_FLASH
-#define CONFIG_MTD_DEVICE
-#define CONFIG_MTD_PARTITIONS
-#define CONFIG_CMD_MTDPARTS
-#define CONFIG_FLASH_CFI_MTD
-#define MTDIDS_DEFAULT "nor0=fe8000000.nor,nand0=fff800000.flash," \
-			"spi0=spife110000.0"
-#define MTDPARTS_DEFAULT	"mtdparts=fe8000000.nor:1m(uboot),5m(kernel)," \
-				"128k(dtb),96m(fs),-(user);"\
-				"fff800000.flash:2m(uboot),9m(kernel),"\
-				"128k(dtb),96m(fs),-(user);spife110000.0:" \
-				"2m(uboot),9m(kernel),128k(dtb),-(user)"
-#endif
 
 /*
  * Environment
@@ -681,39 +580,9 @@ unsigned long get_board_ddr_clk(void);
 #define CONFIG_SYS_LOADS_BAUD_CHANGE	/* allow baudrate change */
 
 /*
- * Command line configuration.
- */
-#define CONFIG_CMD_DATE
-#define CONFIG_CMD_EEPROM
-#define CONFIG_CMD_ERRATA
-#define CONFIG_CMD_IRQ
-#define CONFIG_CMD_REGINFO
-
-#ifdef CONFIG_PCI
-#define CONFIG_CMD_PCI
-#endif
-
-/* Hash command with SHA acceleration supported in hardware */
-#ifdef CONFIG_FSL_CAAM
-#define CONFIG_CMD_HASH
-#define CONFIG_SHA_HW_ACCEL
-#endif
-
-/*
  * Miscellaneous configurable options
  */
-#define CONFIG_SYS_LONGHELP			/* undef to save memory	*/
-#define CONFIG_CMDLINE_EDITING			/* Command-line editing */
-#define CONFIG_AUTO_COMPLETE			/* add autocompletion support */
 #define CONFIG_SYS_LOAD_ADDR	0x2000000	/* default load address */
-#ifdef CONFIG_CMD_KGDB
-#define CONFIG_SYS_CBSIZE	1024		/* Console I/O Buffer Size */
-#else
-#define CONFIG_SYS_CBSIZE	256		/* Console I/O Buffer Size */
-#endif
-#define CONFIG_SYS_PBSIZE (CONFIG_SYS_CBSIZE+sizeof(CONFIG_SYS_PROMPT)+16)
-#define CONFIG_SYS_MAXARGS	16		/* max number of command args */
-#define CONFIG_SYS_BARGSIZE	CONFIG_SYS_CBSIZE/* Boot Argument Buffer Size */
 
 /*
  * For booting Linux, the board info and command line data
@@ -736,9 +605,6 @@ unsigned long get_board_ddr_clk(void);
 
 /* default location for tftp and bootm */
 #define CONFIG_LOADADDR		1000000
-
-
-#define CONFIG_BAUDRATE	115200
 
 #define __USB_PHY_TYPE	utmi
 

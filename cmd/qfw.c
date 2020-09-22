@@ -1,11 +1,11 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2015 Miao Yan <yanmiaobest@gmail.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <command.h>
+#include <env.h>
 #include <errno.h>
 #include <qfw.h>
 
@@ -55,7 +55,7 @@ static int qemu_fwcfg_setup_kernel(void *load_addr, void *initrd_addr)
 		 * when invoking qemu), do not update bootargs
 		 */
 		if (*data_addr != '\0') {
-			if (setenv("bootargs", data_addr) < 0)
+			if (env_set("bootargs", data_addr) < 0)
 				printf("warning: unable to change bootargs\n");
 		}
 	}
@@ -93,8 +93,8 @@ static int qemu_fwcfg_list_firmware(void)
 	return 0;
 }
 
-static int qemu_fwcfg_do_list(cmd_tbl_t *cmdtp, int flag,
-		int argc, char * const argv[])
+static int qemu_fwcfg_do_list(struct cmd_tbl *cmdtp, int flag,
+			      int argc, char *const argv[])
 {
 	if (qemu_fwcfg_list_firmware() < 0)
 		return CMD_RET_FAILURE;
@@ -102,8 +102,8 @@ static int qemu_fwcfg_do_list(cmd_tbl_t *cmdtp, int flag,
 	return 0;
 }
 
-static int qemu_fwcfg_do_cpus(cmd_tbl_t *cmdtp, int flag,
-		int argc, char * const argv[])
+static int qemu_fwcfg_do_cpus(struct cmd_tbl *cmdtp, int flag,
+			      int argc, char *const argv[])
 {
 	int ret = qemu_fwcfg_online_cpus();
 	if (ret < 0) {
@@ -116,14 +116,14 @@ static int qemu_fwcfg_do_cpus(cmd_tbl_t *cmdtp, int flag,
 	return 0;
 }
 
-static int qemu_fwcfg_do_load(cmd_tbl_t *cmdtp, int flag,
-		int argc, char * const argv[])
+static int qemu_fwcfg_do_load(struct cmd_tbl *cmdtp, int flag,
+			      int argc, char *const argv[])
 {
 	char *env;
 	void *load_addr;
 	void *initrd_addr;
 
-	env = getenv("loadaddr");
+	env = env_get("loadaddr");
 	load_addr = env ?
 		(void *)simple_strtoul(env, NULL, 16) :
 #ifdef CONFIG_LOADADDR
@@ -132,7 +132,7 @@ static int qemu_fwcfg_do_load(cmd_tbl_t *cmdtp, int flag,
 		NULL;
 #endif
 
-	env = getenv("ramdiskaddr");
+	env = env_get("ramdiskaddr");
 	initrd_addr = env ?
 		(void *)simple_strtoul(env, NULL, 16) :
 #ifdef CONFIG_RAMDISK_ADDR
@@ -156,16 +156,17 @@ static int qemu_fwcfg_do_load(cmd_tbl_t *cmdtp, int flag,
 	return qemu_fwcfg_setup_kernel(load_addr, initrd_addr);
 }
 
-static cmd_tbl_t fwcfg_commands[] = {
+static struct cmd_tbl fwcfg_commands[] = {
 	U_BOOT_CMD_MKENT(list, 0, 1, qemu_fwcfg_do_list, "", ""),
 	U_BOOT_CMD_MKENT(cpus, 0, 1, qemu_fwcfg_do_cpus, "", ""),
 	U_BOOT_CMD_MKENT(load, 2, 1, qemu_fwcfg_do_load, "", ""),
 };
 
-static int do_qemu_fw(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+static int do_qemu_fw(struct cmd_tbl *cmdtp, int flag, int argc,
+		      char *const argv[])
 {
 	int ret;
-	cmd_tbl_t *fwcfg_cmd;
+	struct cmd_tbl *fwcfg_cmd;
 
 	if (!qemu_fwcfg_present()) {
 		printf("QEMU fw_cfg interface not found\n");

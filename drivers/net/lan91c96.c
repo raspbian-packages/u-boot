@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*------------------------------------------------------------------------
  * lan91c96.c
  * This is a driver for SMSC's LAN91C96 single-chip Ethernet device, based
@@ -10,8 +11,6 @@
  * Copyright (C) 2001 Standard Microsystems Corporation (SMSC)
  *       Developed by Simple Network Magic Corporation (SNMC)
  * Copyright (C) 1996 by Erik Stahlman (ES)
- *
- * SPDX-License-Identifier:	GPL-2.0+
  *
  * Information contained in this file was obtained from the LAN91C96
  * manual from SMC.  To get a copy, if you really want one, you can find
@@ -47,7 +46,9 @@
 
 #include <common.h>
 #include <command.h>
+#include <env.h>
 #include <malloc.h>
+#include <linux/delay.h>
 #include "lan91c96.h"
 #include <net.h>
 #include <linux/compiler.h>
@@ -211,7 +212,7 @@ static void smc_reset(struct eth_device *dev)
 	SMC_SELECT_BANK(dev, 0);
 	SMC_outw(dev, LAN91C96_RCR_SOFT_RST, LAN91C96_RCR);
 
-	udelay (10);
+	udelay(10);
 
 	/* Disable transmit and receive functionality */
 	SMC_outw(dev, 0, LAN91C96_RCR);
@@ -438,7 +439,7 @@ static int smc_send_packet(struct eth_device *dev, void *packet,
 
 		/* wait for MMU getting ready (low) */
 		while (SMC_inw(dev, LAN91C96_MMU) & LAN91C96_MMUCR_NO_BUSY)
-			udelay (10);
+			udelay(10);
 
 		PRINTK2("MMU ready\n");
 
@@ -455,7 +456,7 @@ static int smc_send_packet(struct eth_device *dev, void *packet,
 
 		/* wait for MMU getting ready (low) */
 		while (SMC_inw(dev, LAN91C96_MMU) & LAN91C96_MMUCR_NO_BUSY)
-			udelay (10);
+			udelay(10);
 
 		PRINTK2 ("MMU ready\n");
 	}
@@ -600,13 +601,13 @@ static int smc_rcv(struct eth_device *dev)
 	}
 
 	while (SMC_inw(dev, LAN91C96_MMU) & LAN91C96_MMUCR_NO_BUSY)
-		udelay (1);		/* Wait until not busy */
+		udelay(1);		/* Wait until not busy */
 
 	/*  error or good, tell the card to get rid of this packet */
 	SMC_outw(dev, LAN91C96_MMUCR_RELEASE_RX, LAN91C96_MMU);
 
 	while (SMC_inw(dev, LAN91C96_MMU) & LAN91C96_MMUCR_NO_BUSY)
-		udelay (1);		/* Wait until not busy */
+		udelay(1);		/* Wait until not busy */
 
 	if (!is_error) {
 		/* Pass the packet up to the protocol layers. */
@@ -704,13 +705,13 @@ static int smc_get_ethaddr(bd_t *bd, struct eth_device *dev)
 {
 	uchar v_mac[6];
 
-	if (!eth_getenv_enetaddr("ethaddr", v_mac)) {
+	if (!eth_env_get_enetaddr("ethaddr", v_mac)) {
 		/* get ROM mac value if any */
 		if (!get_rom_mac(dev, v_mac)) {
 			printf("\n*** ERROR: ethaddr is NOT set !!\n");
 			return -1;
 		}
-		eth_setenv_enetaddr("ethaddr", v_mac);
+		eth_env_set_enetaddr("ethaddr", v_mac);
 	}
 
 	smc_set_mac_addr(v_mac); /* use old function to update smc default */

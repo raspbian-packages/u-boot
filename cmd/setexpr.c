@@ -1,8 +1,7 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2008 Freescale Semiconductor, Inc.
  * Copyright 2013 Wolfgang Denk <wd@denx.de>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 /*
@@ -12,6 +11,8 @@
 #include <common.h>
 #include <config.h>
 #include <command.h>
+#include <env.h>
+#include <log.h>
 #include <mapmem.h>
 
 static ulong get_arg(char *s, int w)
@@ -145,7 +146,7 @@ static int regex_sub(const char *name,
 	}
 
 	if (t == NULL) {
-		value = getenv(name);
+		value = env_get(name);
 
 		if (value == NULL) {
 			printf("## Error: variable \"%s\" not defined\n", name);
@@ -282,15 +283,16 @@ static int regex_sub(const char *name,
 		if (!global)
 			break;
 	}
-	debug("## FINAL (now setenv()) :  %s\n", data);
+	debug("## FINAL (now env_set()) :  %s\n", data);
 
 	printf("%s=%s\n", name, data);
 
-	return setenv(name, data);
+	return env_set(name, data);
 }
 #endif
 
-static int do_setexpr(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+static int do_setexpr(struct cmd_tbl *cmdtp, int flag, int argc,
+		      char *const argv[])
 {
 	ulong a, b;
 	ulong value;
@@ -314,7 +316,7 @@ static int do_setexpr(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 
 	/* plain assignment: "setexpr name value" */
 	if (argc == 3) {
-		setenv_hex(argv[1], a);
+		env_set_hex(argv[1], a);
 		return 0;
 	}
 
@@ -370,7 +372,7 @@ static int do_setexpr(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		return 1;
 	}
 
-	setenv_hex(argv[1], value);
+	env_set_hex(argv[1], value);
 
 	return 0;
 }

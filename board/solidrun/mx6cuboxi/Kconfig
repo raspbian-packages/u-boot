@@ -9,8 +9,4 @@ config SYS_VENDOR
 config SYS_CONFIG_NAME
 	default "mx6cuboxi"
 
-config I4X4_RAM
-	bool "4GB ram support for cubox i4x4 (will break cubox i4)"
-	default n
-
 endif

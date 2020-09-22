@@ -1,7 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2015 Google, Inc
- *
- * SPDX-License-Identifier:	GPL-2.0+
  *
  * Based on code from the coreboot file of the same name
  */
@@ -10,6 +9,7 @@
 #include <cpu.h>
 #include <dm.h>
 #include <errno.h>
+#include <log.h>
 #include <malloc.h>
 #include <qfw.h>
 #include <asm/atomic.h>
@@ -26,6 +26,7 @@
 #include <dm/uclass-internal.h>
 #include <dm/lists.h>
 #include <dm/root.h>
+#include <linux/delay.h>
 #include <linux/linkage.h>
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -248,7 +249,8 @@ static int load_sipi_vector(atomic_t **ap_countp, int num_cpus)
 	if (!stack)
 		return -ENOMEM;
 	params->stack_top = (u32)(stack + size);
-#if !defined(CONFIG_QEMU) && !defined(CONFIG_HAVE_FSP)
+#if !defined(CONFIG_QEMU) && !defined(CONFIG_HAVE_FSP) && \
+	!defined(CONFIG_INTEL_MID)
 	params->microcode_ptr = ucode_base;
 	debug("Microcode at %x\n", params->microcode_ptr);
 #endif
@@ -322,7 +324,7 @@ static int start_aps(int ap_count, atomic_t *num_aps)
 	if (sipi_vector > max_vector_loc) {
 		printf("SIPI vector too large! 0x%08x\n",
 		       sipi_vector);
-		return -1;
+		return -ENOSPC;
 	}
 
 	debug("Attempting to start %d APs\n", ap_count);
@@ -364,7 +366,7 @@ static int start_aps(int ap_count, atomic_t *num_aps)
 	if (wait_for_aps(num_aps, ap_count, 10000, 50)) {
 		debug("Not all APs checked in: %d/%d\n",
 		      atomic_read(num_aps), ap_count);
-		return -1;
+		return -EIO;
 	}
 
 	return 0;
@@ -387,7 +389,7 @@ static int bsp_do_flight_plan(struct udevice *cpu, struct mp_params *mp_params)
 			if (wait_for_aps(&rec->cpus_entered, num_aps,
 					 timeout_us, step_us)) {
 				debug("MP record %d timeout\n", i);
-				ret = -1;
+				ret = -ETIMEDOUT;
 			}
 		}
 
@@ -418,69 +420,6 @@ static int init_bsp(struct udevice **devp)
 	return 0;
 }
 
-#ifdef CONFIG_QFW
-static int qemu_cpu_fixup(void)
-{
-	int ret;
-	int cpu_num;
-	int cpu_online;
-	struct udevice *dev, *pdev;
-	struct cpu_platdata *plat;
-	char *cpu;
-
-	/* first we need to find '/cpus' */
-	for (device_find_first_child(dm_root(), &pdev);
-	     pdev;
-	     device_find_next_child(&pdev)) {
-		if (!strcmp(pdev->name, "cpus"))
-			break;
-	}
-	if (!pdev) {
-		printf("unable to find cpus device\n");
-		return -ENODEV;
-	}
-
-	/* calculate cpus that are already bound */
-	cpu_num = 0;
-	for (uclass_find_first_device(UCLASS_CPU, &dev);
-	     dev;
-	     uclass_find_next_device(&dev)) {
-		cpu_num++;
-	}
-
-	/* get actual cpu number */
-	cpu_online = qemu_fwcfg_online_cpus();
-	if (cpu_online < 0) {
-		printf("unable to get online cpu number: %d\n", cpu_online);
-		return cpu_online;
-	}
-
-	/* bind addtional cpus */
-	dev = NULL;
-	for (; cpu_num < cpu_online; cpu_num++) {
-		/*
-		 * allocate device name here as device_bind_driver() does
-		 * not copy device name, 8 bytes are enough for
-		 * sizeof("cpu@") + 3 digits cpu number + '\0'
-		 */
-		cpu = malloc(8);
-		if (!cpu) {
-			printf("unable to allocate device name\n");
-			return -ENOMEM;
-		}
-		sprintf(cpu, "cpu@%d", cpu_num);
-		ret = device_bind_driver(pdev, "cpu_qemu", cpu, &dev);
-		if (ret) {
-			printf("binding cpu@%d failed: %d\n", cpu_num, ret);
-			return ret;
-		}
-		plat = dev_get_parent_platdata(dev);
-		plat->cpu_id = cpu_num;
-	}
-	return 0;
-}
-#endif
-
 int mp_init(struct mp_params *p)
 {
 	int num_aps;
@@ -494,11 +433,11 @@ int mp_init(struct mp_params *p)
 	if (ret)
 		return ret;
 
-#ifdef CONFIG_QFW
-	ret = qemu_cpu_fixup();
-	if (ret)
-		return ret;
-#endif
+	if (IS_ENABLED(CONFIG_QFW)) {
+		ret = qemu_cpu_fixup();
+		if (ret)
+			return ret;
+	}
 
 	ret = init_bsp(&cpu);
 	if (ret) {
@@ -508,7 +447,7 @@ int mp_init(struct mp_params *p)
 
 	if (p == NULL || p->flight_plan == NULL || p->num_records < 1) {
 		printf("Invalid MP parameters\n");
-		return -1;
+		return -EINVAL;
 	}
 
 	num_cpus = cpu_get_count(cpu);
@@ -531,7 +470,7 @@ int mp_init(struct mp_params *p)
 	/* Load the SIPI vector */
 	ret = load_sipi_vector(&ap_count, num_cpus);
 	if (ap_count == NULL)
-		return -1;
+		return -ENOENT;
 
 	/*
 	 * Make sure SIPI data hits RAM so the APs that come up will see
@@ -568,7 +507,8 @@ int mp_init_cpu(struct udevice *cpu, void *unused)
 	 * seq num in the uclass_resolve_seq() during device_probe(). To avoid
 	 * this, set req_seq to the reg number in the device tree in advance.
 	 */
-	cpu->req_seq = fdtdec_get_int(gd->fdt_blob, cpu->of_offset, "reg", -1);
+	cpu->req_seq = fdtdec_get_int(gd->fdt_blob, dev_of_offset(cpu), "reg",
+				      -1);
 	plat->ucode_version = microcode_read_rev();
 	plat->device_id = gd->arch.x86_device;
 

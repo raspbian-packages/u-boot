@@ -1,8 +1,7 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2000
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 /*
@@ -10,10 +9,8 @@
  */
 #include <common.h>
 #include <command.h>
-
-#ifdef CONFIG_HAS_DATAFLASH
-#include <dataflash.h>
-#endif
+#include <log.h>
+#include <uuid.h>
 
 #if defined(CONFIG_CMD_MTDPARTS)
 #include <jffs2/jffs2.h>
@@ -25,7 +22,7 @@ int find_dev_and_part(const char *id, struct mtd_device **dev,
 		u8 *part_num, struct part_info **part);
 #endif
 
-#ifndef CONFIG_SYS_NO_FLASH
+#ifdef CONFIG_MTD_NOR_FLASH
 #include <flash.h>
 #include <mtd/cfi_flash.h>
 extern flash_info_t flash_info[];	/* info for FLASH chips */
@@ -93,7 +90,7 @@ abbrev_spec (char *str, flash_info_t ** pinfo, int *psf, int *psl)
 /*
  * Take *addr in Flash and adjust it to fall on the end of its sector
  */
-int flash_sect_roundb (ulong *addr)
+int flash_sect_roundb(ulong *addr)
 {
 	flash_info_t *info;
 	ulong bank, sector_end_addr;
@@ -271,24 +268,21 @@ flash_fill_sect_ranges (ulong addr_first, ulong addr_last,
 
 	return rcode;
 }
-#endif /* CONFIG_SYS_NO_FLASH */
+#endif /* CONFIG_MTD_NOR_FLASH */
 
-static int do_flinfo(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+static int do_flinfo(struct cmd_tbl *cmdtp, int flag, int argc,
+		     char *const argv[])
 {
-#ifndef CONFIG_SYS_NO_FLASH
+#ifdef CONFIG_MTD_NOR_FLASH
 	ulong bank;
 #endif
 
-#ifdef CONFIG_HAS_DATAFLASH
-	dataflash_print_info();
-#endif
-
-#ifndef CONFIG_SYS_NO_FLASH
+#ifdef CONFIG_MTD_NOR_FLASH
 	if (argc == 1) {	/* print info for all FLASH banks */
 		for (bank=0; bank <CONFIG_SYS_MAX_FLASH_BANKS; ++bank) {
 			printf ("\nBank # %ld: ", bank+1);
 
-			flash_print_info (&flash_info[bank]);
+			flash_print_info(&flash_info[bank]);
 		}
 		return 0;
 	}
@@ -300,14 +294,15 @@ static int do_flinfo(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		return 1;
 	}
 	printf ("\nBank # %ld: ", bank);
-	flash_print_info (&flash_info[bank-1]);
-#endif /* CONFIG_SYS_NO_FLASH */
+	flash_print_info(&flash_info[bank - 1]);
+#endif /* CONFIG_MTD_NOR_FLASH */
 	return 0;
 }
 
-static int do_flerase(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+static int do_flerase(struct cmd_tbl *cmdtp, int flag, int argc,
+		      char *const argv[])
 {
-#ifndef CONFIG_SYS_NO_FLASH
+#ifdef CONFIG_MTD_NOR_FLASH
 	flash_info_t *info = NULL;
 	ulong bank, addr_first, addr_last;
 	int n, sect_first = 0, sect_last = 0;
@@ -325,7 +320,7 @@ static int do_flerase(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		for (bank=1; bank<=CONFIG_SYS_MAX_FLASH_BANKS; ++bank) {
 			printf ("Erase Flash Bank # %ld ", bank);
 			info = &flash_info[bank-1];
-			rcode = flash_erase (info, 0, info->sector_count-1);
+			rcode = flash_erase(info, 0, info->sector_count - 1);
 		}
 		return rcode;
 	}
@@ -379,7 +374,7 @@ static int do_flerase(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		}
 		printf ("Erase Flash Bank # %ld ", bank);
 		info = &flash_info[bank-1];
-		rcode = flash_erase (info, 0, info->sector_count-1);
+		rcode = flash_erase(info, 0, info->sector_count - 1);
 		return rcode;
 	}
 
@@ -395,11 +390,11 @@ static int do_flerase(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	return rcode;
 #else
 	return 0;
-#endif /* CONFIG_SYS_NO_FLASH */
+#endif /* CONFIG_MTD_NOR_FLASH */
 }
 
-#ifndef CONFIG_SYS_NO_FLASH
-int flash_sect_erase (ulong addr_first, ulong addr_last)
+#ifdef CONFIG_MTD_NOR_FLASH
+int flash_sect_erase(ulong addr_first, ulong addr_last)
 {
 	flash_info_t *info;
 	ulong bank;
@@ -417,14 +412,14 @@ int flash_sect_erase (ulong addr_first, ulong addr_last)
 		     ++bank, ++info) {
 			if (s_first[bank]>=0) {
 				erased += s_last[bank] - s_first[bank] + 1;
-				debug ("Erase Flash from 0x%08lx to 0x%08lx "
-					"in Bank # %ld ",
-					info->start[s_first[bank]],
-					(s_last[bank] == info->sector_count) ?
-						info->start[0] + info->size - 1:
-						info->start[s_last[bank]+1] - 1,
-					bank+1);
-				rcode = flash_erase (info, s_first[bank], s_last[bank]);
+				debug("Erase Flash from 0x%08lx to 0x%08lx in Bank # %ld ",
+				      info->start[s_first[bank]],
+				      (s_last[bank] == info->sector_count) ?
+				      info->start[0] + info->size - 1 :
+				      info->start[s_last[bank] + 1] - 1,
+				      bank + 1);
+				rcode = flash_erase(info, s_first[bank],
+						    s_last[bank]);
 			}
 		}
 		if (rcode == 0)
@@ -436,12 +431,13 @@ int flash_sect_erase (ulong addr_first, ulong addr_last)
 	}
 	return rcode;
 }
-#endif /* CONFIG_SYS_NO_FLASH */
+#endif /* CONFIG_MTD_NOR_FLASH */
 
-static int do_protect(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+static int do_protect(struct cmd_tbl *cmdtp, int flag, int argc,
+		      char *const argv[])
 {
 	int rcode = 0;
-#ifndef CONFIG_SYS_NO_FLASH
+#ifdef CONFIG_MTD_NOR_FLASH
 	flash_info_t *info = NULL;
 	ulong bank;
 	int i, n, sect_first = 0, sect_last = 0;
@@ -450,11 +446,8 @@ static int do_protect(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	struct part_info *part;
 	u8 dev_type, dev_num, pnum;
 #endif
-#endif /* CONFIG_SYS_NO_FLASH */
-#ifdef CONFIG_HAS_DATAFLASH
-	int status;
-#endif
-#if !defined(CONFIG_SYS_NO_FLASH) || defined(CONFIG_HAS_DATAFLASH)
+#endif /* CONFIG_MTD_NOR_FLASH */
+#if defined(CONFIG_MTD_NOR_FLASH)
 	int p;
 	ulong addr_first, addr_last;
 #endif
@@ -462,7 +455,7 @@ static int do_protect(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	if (argc < 3)
 		return CMD_RET_USAGE;
 
-#if !defined(CONFIG_SYS_NO_FLASH) || defined(CONFIG_HAS_DATAFLASH)
+#if defined(CONFIG_MTD_NOR_FLASH)
 	if (strcmp(argv[1], "off") == 0)
 		p = 0;
 	else if (strcmp(argv[1], "on") == 0)
@@ -471,25 +464,7 @@ static int do_protect(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		return CMD_RET_USAGE;
 #endif
 
-#ifdef CONFIG_HAS_DATAFLASH
-	if ((strcmp(argv[2], "all") != 0) && (strcmp(argv[2], "bank") != 0)) {
-		addr_first = simple_strtoul(argv[2], NULL, 16);
-		addr_last  = simple_strtoul(argv[3], NULL, 16);
-
-		if (addr_dataflash(addr_first) && addr_dataflash(addr_last)) {
-			status = dataflash_real_protect(p,addr_first,addr_last);
-			if (status < 0){
-				puts ("Bad DataFlash sector specification\n");
-				return 1;
-			}
-			printf("%sProtect %d DataFlash Sectors\n",
-				p ? "" : "Un-", status);
-			return 0;
-		}
-	}
-#endif
-
-#ifndef CONFIG_SYS_NO_FLASH
+#ifdef CONFIG_MTD_NOR_FLASH
 	if (strcmp(argv[2], "all") == 0) {
 		for (bank=1; bank<=CONFIG_SYS_MAX_FLASH_BANKS; ++bank) {
 			info = &flash_info[bank-1];
@@ -556,7 +531,8 @@ static int do_protect(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 						p ? "" : "Un", argv[1],
 						bank, addr_first, addr_last);
 
-				rcode = flash_sect_protect (p, addr_first, addr_last);
+				rcode = flash_sect_protect(p, addr_first,
+							   addr_last);
 				return rcode;
 			}
 
@@ -610,13 +586,13 @@ static int do_protect(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	if (addr_first >= addr_last)
 		return CMD_RET_USAGE;
 
-	rcode = flash_sect_protect (p, addr_first, addr_last);
-#endif /* CONFIG_SYS_NO_FLASH */
+	rcode = flash_sect_protect(p, addr_first, addr_last);
+#endif /* CONFIG_MTD_NOR_FLASH */
 	return rcode;
 }
 
-#ifndef CONFIG_SYS_NO_FLASH
-int flash_sect_protect (int p, ulong addr_first, ulong addr_last)
+#ifdef CONFIG_MTD_NOR_FLASH
+int flash_sect_protect(int p, ulong addr_first, ulong addr_last)
 {
 	flash_info_t *info;
 	ulong bank;
@@ -636,9 +612,9 @@ int flash_sect_protect (int p, ulong addr_first, ulong addr_last)
 			}
 
 			if (s_first[bank]>=0 && s_first[bank]<=s_last[bank]) {
-				debug ("%sProtecting sectors %d..%d in bank %ld\n",
-					p ? "" : "Un-",
-					s_first[bank], s_last[bank], bank+1);
+				debug("%sProtecting sectors %d..%d in bank %ld\n",
+				      p ? "" : "Un-", s_first[bank],
+				      s_last[bank], bank + 1);
 				protected += s_last[bank] - s_first[bank] + 1;
 				for (i=s_first[bank]; i<=s_last[bank]; ++i) {
 #if defined(CONFIG_SYS_FLASH_PROTECTION)
@@ -664,7 +640,7 @@ int flash_sect_protect (int p, ulong addr_first, ulong addr_last)
 	}
 	return rcode;
 }
-#endif /* CONFIG_SYS_NO_FLASH */
+#endif /* CONFIG_MTD_NOR_FLASH */
 
 
 /**************************************************/

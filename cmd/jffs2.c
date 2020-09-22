@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2002
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
@@ -17,8 +18,6 @@
  *
  *   $Id: cmdlinepart.c,v 1.17 2004/11/26 11:18:47 lavinen Exp $
  *   Copyright 2002 SYSGO Real-Time Solutions GmbH
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 /*
@@ -73,14 +72,18 @@
  */
 #include <common.h>
 #include <command.h>
+#include <env.h>
+#include <flash.h>
+#include <image.h>
 #include <malloc.h>
 #include <jffs2/jffs2.h>
+#include <linux/bug.h>
 #include <linux/list.h>
 #include <linux/ctype.h>
 #include <cramfs/cramfs_fs.h>
 
 #if defined(CONFIG_CMD_NAND)
-#include <linux/mtd/nand.h>
+#include <linux/mtd/rawnand.h>
 #include <nand.h>
 #endif
 
@@ -166,8 +169,9 @@ static int mtd_device_validate(u8 type, u8 num, u32 *size)
 #endif
 	} else if (type == MTD_DEV_TYPE_NAND) {
 #if defined(CONFIG_JFFS2_NAND) && defined(CONFIG_CMD_NAND)
-		if (num < CONFIG_SYS_MAX_NAND_DEVICE) {
-			*size = nand_info[num]->size;
+		struct mtd_info *mtd = get_nand_dev_by_index(num);
+		if (mtd) {
+			*size = mtd->size;
 			return 0;
 		}
 
@@ -244,7 +248,7 @@ static inline u32 get_part_sector_size_nand(struct mtdids *id)
 #if defined(CONFIG_JFFS2_NAND) && defined(CONFIG_CMD_NAND)
 	struct mtd_info *mtd;
 
-	mtd = nand_info[id->num];
+	mtd = get_nand_dev_by_index(id->num);
 
 	return mtd->erasesize;
 #else
@@ -469,25 +473,26 @@ static struct part_info* jffs2_part_info(struct mtd_device *dev, unsigned int pa
  * @param argv arguments list
  * @return 0 on success, 1 otherwise
  */
-int do_jffs2_fsload(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+int do_jffs2_fsload(struct cmd_tbl *cmdtp, int flag, int argc,
+		    char *const argv[])
 {
 	char *fsname;
 	char *filename;
 	int size;
 	struct part_info *part;
-	ulong offset = load_addr;
+	ulong offset = image_load_addr;
 
 	/* pre-set Boot file name */
-	if ((filename = getenv("bootfile")) == NULL) {
+	filename = env_get("bootfile");
+	if (!filename)
 		filename = "uImage";
-	}
 
 	if (argc == 2) {
 		filename = argv[1];
 	}
 	if (argc == 3) {
 		offset = simple_strtoul(argv[1], NULL, 16);
-		load_addr = offset;
+		image_load_addr = offset;
 		filename = argv[2];
 	}
 
@@ -511,7 +516,7 @@ int do_jffs2_fsload(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		if (size > 0) {
 			printf("### %s load complete: %d bytes loaded to 0x%lx\n",
 				fsname, size, offset);
-			setenv_hex("filesize", size);
+			env_set_hex("filesize", size);
 		} else {
 			printf("### %s LOAD ERROR<%x> for %s!\n", fsname, size, filename);
 		}
@@ -531,7 +536,7 @@ int do_jffs2_fsload(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
  * @param argv arguments list
  * @return 0 on success, 1 otherwise
  */
-int do_jffs2_ls(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+int do_jffs2_ls(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
 {
 	char *filename = "/";
 	int ret;
@@ -569,7 +574,8 @@ int do_jffs2_ls(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
  * @param argv arguments list
  * @return 0 on success, 1 otherwise
  */
-int do_jffs2_fsinfo(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+int do_jffs2_fsinfo(struct cmd_tbl *cmdtp, int flag, int argc,
+		    char *const argv[])
 {
 	struct part_info *part;
 	char *fsname;
@@ -606,7 +612,7 @@ U_BOOT_CMD(
 	"      with offset 'off'"
 );
 U_BOOT_CMD(
-	ls,	2,	1,	do_jffs2_ls,
+	fsls,	2,	1,	do_jffs2_ls,
 	"list files in a directory (default /)",
 	"[ directory ]"
 );

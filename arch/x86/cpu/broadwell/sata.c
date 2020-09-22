@@ -1,13 +1,13 @@
+// SPDX-License-Identifier: GPL-2.0
 /*
  * Copyright (c) 2016 Google, Inc
  *
  * From coreboot src/soc/intel/broadwell/sata.c
- *
- * SPDX-License-Identifier:	GPL-2.0
  */
 
 #include <common.h>
 #include <dm.h>
+#include <log.h>
 #include <asm/gpio.h>
 #include <asm/io.h>
 #include <asm/intel_regs.h>
@@ -15,6 +15,7 @@
 #include <asm/pch_common.h>
 #include <asm/pch_common.h>
 #include <asm/arch/pch.h>
+#include <linux/delay.h>
 
 struct sata_platdata {
 	int port_map;
@@ -235,7 +236,7 @@ static int broadwell_sata_ofdata_to_platdata(struct udevice *dev)
 {
 	struct sata_platdata *plat = dev_get_platdata(dev);
 	const void *blob = gd->fdt_blob;
-	int node = dev->of_offset;
+	int node = dev_of_offset(dev);
 
 	plat->port_map = fdtdec_get_int(blob, node, "intel,sata-port-map", 0);
 	plat->port0_gen3_tx = fdtdec_get_int(blob, node,

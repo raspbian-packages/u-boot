@@ -1,19 +1,9 @@
 add-debian-revision-to-u-boot-version
-mipsel-native-endianness.diff
 no-force-CROSS_COMPILE-powerpc.diff
 tools-generic-builds.patch
-tools-only-in-no-dot-config-targets.diff
 Makefile-add-kwb-target-to-all.patch
-hurd.diff
-
-udoo/udoo_quad-support.patch
-udoo/udoo-standardized-variables
 
 mx53loco
-
-n900-bootz-raw-initrd.diff
-
-beagleboneblack/usb-mass-storage.patch
 
 arndale/board-spl-rule.diff
 
@@ -21,16 +11,14 @@ sh4-fix-linker-name-prefix.patch
 
 ensure-config-sandbox-for-make-env.patch
 
-mx6cuboxi/serial_console_speed.patch
-mx6cuboxi/i4x4-ram.patch
-
 am57xx/omap5_distro_bootcmd
 
-odroid/0001-Convert-odroid-to-use-distro_bootcmd.patch
+test-imagetools-test-fixes
 
-odroid-xu3/bootdelay
+exynos/0001-arm-config-fix-default-console-only-to-specify-the-d.patch
 
-orangepi_zero/0001-sunxi-add-proper-device-tree-for-Orange-Pi-Zero-boar.patch
-orangepi_zero/0002-sunxi-add-orangepi-zero-defconfig.patch
+riscv64/qemu-riscv64_smode-sifive-fu540-fix-extlinux-define-.patch
 
-upstream/openrd/0001-armv5te-make-ret-lr-produce-iinterworking-bx-lr.patch
+n900/bootz_and_raw_initrd.patch
+
+reproducible/0001-fit_image-Use-calloc-to-fix-reproducibility-issue.patch

@@ -1,19 +1,22 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2009
  * Vipin Kumar, ST Micoelectronics, vipin.kumar@st.com.
  *
  * Copyright (C) 2012 Stefan Roese <sr@denx.de>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <flash.h>
+#include <init.h>
 #include <micrel.h>
 #include <nand.h>
+#include <net.h>
 #include <netdev.h>
 #include <phy.h>
 #include <rtc.h>
 #include <asm/io.h>
+#include <asm/mach-types.h>
 #include <asm/arch/hardware.h>
 #include <asm/arch/spr_defs.h>
 #include <asm/arch/spr_misc.h>

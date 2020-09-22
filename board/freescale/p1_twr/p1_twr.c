@@ -1,12 +1,15 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2013 Freescale Semiconductor, Inc.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <command.h>
+#include <env.h>
 #include <hwconfig.h>
+#include <image.h>
+#include <init.h>
+#include <net.h>
 #include <pci.h>
 #include <i2c.h>
 #include <asm/processor.h>
@@ -20,7 +23,7 @@
 #include <asm/fsl_lbc.h>
 #include <asm/mp.h>
 #include <miiphy.h>
-#include <libfdt.h>
+#include <linux/libfdt.h>
 #include <fdt_support.h>
 #include <fsl_mdio.h>
 #include <tsec.h>
@@ -268,8 +271,8 @@ int ft_board_setup(void *blob, bd_t *bd)
 
 	ft_cpu_setup(blob, bd);
 
-	base = getenv_bootm_low();
-	size = getenv_bootm_size();
+	base = env_get_bootm_low();
+	size = env_get_bootm_size();
 
 	fdt_fixup_memory(blob, (u64)base, (u64)size);
 

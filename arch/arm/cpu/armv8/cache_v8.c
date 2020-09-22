@@ -1,20 +1,23 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2013
  * David Feng <fenghua@phytium.com.cn>
  *
  * (C) Copyright 2016
  * Alexander Graf <agraf@suse.de>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <cpu_func.h>
+#include <hang.h>
+#include <log.h>
+#include <asm/cache.h>
 #include <asm/system.h>
 #include <asm/armv8/mmu.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
-#ifndef CONFIG_SYS_DCACHE_OFF
+#if !CONFIG_IS_ENABLED(SYS_DCACHE_OFF)
 
 /*
  *  With 4k page granule, a virtual address is split into 4 lookup parts
@@ -230,7 +233,10 @@ static void add_map(struct mm_region *map)
 				/* Page fits, create block PTE */
 				debug("Setting PTE %p to block virt=%llx\n",
 				      pte, virt);
-				*pte = phys | attrs;
+				if (level == 3)
+					*pte = phys | attrs | PTE_TYPE_PAGE;
+				else
+					*pte = phys | attrs;
 				virt += blocksize;
 				phys += blocksize;
 				size -= blocksize;
@@ -441,12 +447,13 @@ inline void flush_dcache_all(void)
 		debug("flushing dcache successfully.\n");
 }
 
+#ifndef CONFIG_SYS_DISABLE_DCACHE_OPS
 /*
  * Invalidates range in all levels of D-cache/unified cache
  */
 void invalidate_dcache_range(unsigned long start, unsigned long stop)
 {
-	__asm_flush_dcache_range(start, stop);
+	__asm_invalidate_dcache_range(start, stop);
 }
 
 /*
@@ -456,6 +463,15 @@ void flush_dcache_range(unsigned long start, unsigned long stop)
 {
 	__asm_flush_dcache_range(start, stop);
 }
+#else
+void invalidate_dcache_range(unsigned long start, unsigned long stop)
+{
+}
+
+void flush_dcache_range(unsigned long start, unsigned long stop)
+{
+}
+#endif /* CONFIG_SYS_DISABLE_DCACHE_OPS */
 
 void dcache_enable(void)
 {
@@ -501,7 +517,8 @@ static bool is_aligned(u64 addr, u64 size, u64 align)
 	return !(addr & (align - 1)) && !(size & (align - 1));
 }
 
-static u64 set_one_region(u64 start, u64 size, u64 attrs, int level)
+/* Use flag to indicate if attrs has more than d-cache attributes */
+static u64 set_one_region(u64 start, u64 size, u64 attrs, bool flag, int level)
 {
 	int levelshift = level2shift(level);
 	u64 levelsize = 1ULL << levelshift;
@@ -509,8 +526,13 @@ static u64 set_one_region(u64 start, u64 size, u64 attrs, int level)
 
 	/* Can we can just modify the current level block PTE? */
 	if (is_aligned(start, size, levelsize)) {
-		*pte &= ~PMD_ATTRINDX_MASK;
-		*pte |= attrs;
+		if (flag) {
+			*pte &= ~PMD_ATTRMASK;
+			*pte |= attrs & PMD_ATTRMASK;
+		} else {
+			*pte &= ~PMD_ATTRINDX_MASK;
+			*pte |= attrs & PMD_ATTRINDX_MASK;
+		}
 		debug("Set attrs=%llx pte=%p level=%d\n", attrs, pte, level);
 
 		return levelsize;
@@ -535,7 +557,7 @@ static u64 set_one_region(u64 start, u64 size, u64 attrs, int level)
 void mmu_set_region_dcache_behaviour(phys_addr_t start, size_t size,
 				     enum dcache_option option)
 {
-	u64 attrs = PMD_ATTRINDX(option);
+	u64 attrs = PMD_ATTRINDX(option >> 2);
 	u64 real_start = start;
 	u64 real_size = size;
 
@@ -560,7 +582,8 @@ void mmu_set_region_dcache_behaviour(phys_addr_t start, size_t size,
 		u64 r;
 
 		for (level = 1; level < 4; level++) {
-			r = set_one_region(start, size, attrs, level);
+			/* Set d-cache attributes only */
+			r = set_one_region(start, size, attrs, false, level);
 			if (r) {
 				/* PTE successfully replaced */
 				size -= r;
@@ -581,7 +604,64 @@ void mmu_set_region_dcache_behaviour(phys_addr_t start, size_t size,
 	flush_dcache_range(real_start, real_start + real_size);
 }
 
-#else	/* CONFIG_SYS_DCACHE_OFF */
+/*
+ * Modify MMU table for a region with updated PXN/UXN/Memory type/valid bits.
+ * The procecess is break-before-make. The target region will be marked as
+ * invalid during the process of changing.
+ */
+void mmu_change_region_attr(phys_addr_t addr, size_t siz, u64 attrs)
+{
+	int level;
+	u64 r, size, start;
+
+	start = addr;
+	size = siz;
+	/*
+	 * Loop through the address range until we find a page granule that fits
+	 * our alignment constraints, then set it to "invalid".
+	 */
+	while (size > 0) {
+		for (level = 1; level < 4; level++) {
+			/* Set PTE to fault */
+			r = set_one_region(start, size, PTE_TYPE_FAULT, true,
+					   level);
+			if (r) {
+				/* PTE successfully invalidated */
+				size -= r;
+				start += r;
+				break;
+			}
+		}
+	}
+
+	flush_dcache_range(gd->arch.tlb_addr,
+			   gd->arch.tlb_addr + gd->arch.tlb_size);
+	__asm_invalidate_tlb_all();
+
+	/*
+	 * Loop through the address range until we find a page granule that fits
+	 * our alignment constraints, then set it to the new cache attributes
+	 */
+	start = addr;
+	size = siz;
+	while (size > 0) {
+		for (level = 1; level < 4; level++) {
+			/* Set PTE to new attributes */
+			r = set_one_region(start, size, attrs, true, level);
+			if (r) {
+				/* PTE successfully updated */
+				size -= r;
+				start += r;
+				break;
+			}
+		}
+	}
+	flush_dcache_range(gd->arch.tlb_addr,
+			   gd->arch.tlb_addr + gd->arch.tlb_size);
+	__asm_invalidate_tlb_all();
+}
+
+#else	/* !CONFIG_IS_ENABLED(SYS_DCACHE_OFF) */
 
 /*
  * For SPL builds, we may want to not have dcache enabled. Any real U-Boot
@@ -618,9 +698,9 @@ void mmu_set_region_dcache_behaviour(phys_addr_t start, size_t size,
 {
 }
 
-#endif	/* CONFIG_SYS_DCACHE_OFF */
+#endif	/* !CONFIG_IS_ENABLED(SYS_DCACHE_OFF) */
 
-#ifndef CONFIG_SYS_ICACHE_OFF
+#if !CONFIG_IS_ENABLED(SYS_ICACHE_OFF)
 
 void icache_enable(void)
 {
@@ -644,7 +724,7 @@ void invalidate_icache_all(void)
 	__asm_invalidate_l3_icache();
 }
 
-#else	/* CONFIG_SYS_ICACHE_OFF */
+#else	/* !CONFIG_IS_ENABLED(SYS_ICACHE_OFF) */
 
 void icache_enable(void)
 {
@@ -663,7 +743,7 @@ void invalidate_icache_all(void)
 {
 }
 
-#endif	/* CONFIG_SYS_ICACHE_OFF */
+#endif	/* !CONFIG_IS_ENABLED(SYS_ICACHE_OFF) */
 
 /*
  * Enable dCache & iCache, whether cache is actually enabled

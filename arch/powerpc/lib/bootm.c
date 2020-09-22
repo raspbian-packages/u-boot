@@ -1,26 +1,32 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2008 Semihalf
  *
  * (C) Copyright 2000-2006
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 
 #include <common.h>
+#include <bootstage.h>
+#include <cpu_func.h>
+#include <env.h>
+#include <init.h>
+#include <lmb.h>
+#include <log.h>
 #include <watchdog.h>
 #include <command.h>
 #include <image.h>
 #include <malloc.h>
 #include <u-boot/zlib.h>
 #include <bzlib.h>
-#include <environment.h>
 #include <asm/byteorder.h>
 #include <asm/mp.h>
+#include <bootm.h>
+#include <vxworks.h>
 
 #if defined(CONFIG_OF_LIBFDT)
-#include <libfdt.h>
+#include <linux/libfdt.h>
 #include <fdt_support.h>
 #endif
 
@@ -48,8 +54,8 @@ static void boot_jump_linux(bootm_headers_t *images)
 
 	kernel = (void (*)(bd_t *, ulong, ulong, ulong,
 			   ulong, ulong, ulong))images->ep;
-	debug ("## Transferring control to Linux (at address %08lx) ...\n",
-		(ulong)kernel);
+	debug("## Transferring control to Linux (at address %08lx) ...\n",
+	      (ulong)kernel);
 
 	bootstage_mark(BOOTSTAGE_ID_RUN_OS);
 
@@ -76,10 +82,10 @@ static void boot_jump_linux(bootm_headers_t *images)
 		 *   r8: 0
 		 *   r9: 0
 		 */
-		debug ("   Booting using OF flat tree...\n");
+		debug("   Booting using OF flat tree...\n");
 		WATCHDOG_RESET ();
 		(*kernel) ((bd_t *)of_flat_tree, 0, 0, EPAPR_MAGIC,
-			   getenv_bootm_mapsize(), 0, 0);
+			   env_get_bootm_mapsize(), 0, 0);
 		/* does not return */
 	} else
 #endif
@@ -100,7 +106,7 @@ static void boot_jump_linux(bootm_headers_t *images)
 		ulong initrd_end = images->initrd_end;
 		bd_t *kbd = images->kbd;
 
-		debug ("   Booting using board info...\n");
+		debug("   Booting using board info...\n");
 		WATCHDOG_RESET ();
 		(*kernel) (kbd, initrd_start, initrd_end,
 			   cmd_start, cmd_end, 0, 0);
@@ -114,8 +120,8 @@ void arch_lmb_reserve(struct lmb *lmb)
 	phys_size_t bootm_size;
 	ulong size, sp, bootmap_base;
 
-	bootmap_base = getenv_bootm_low();
-	bootm_size = getenv_bootm_size();
+	bootmap_base = env_get_bootm_low();
+	bootm_size = env_get_bootm_size();
 
 #ifdef DEBUG
 	if (((u64)bootmap_base + bootm_size) >
@@ -144,7 +150,7 @@ void arch_lmb_reserve(struct lmb *lmb)
 	 * pointer.
 	 */
 	sp = get_sp();
-	debug ("## Current stack ends at 0x%08lx\n", sp);
+	debug("## Current stack ends at 0x%08lx\n", sp);
 
 	/* adjust sp by 4K to be safe */
 	sp -= 4096;
@@ -227,8 +233,8 @@ static int boot_body_linux(bootm_headers_t *images)
 	return 0;
 }
 
-noinline
-int do_bootm_linux(int flag, int argc, char * const argv[], bootm_headers_t *images)
+noinline int do_bootm_linux(int flag, int argc, char *const argv[],
+			    bootm_headers_t *images)
 {
 	int	ret;
 
@@ -268,7 +274,8 @@ static void set_clocks_in_mhz (bd_t *kbd)
 {
 	char	*s;
 
-	if ((s = getenv ("clocks_in_mhz")) != NULL) {
+	s = env_get("clocks_in_mhz");
+	if (s) {
 		/* convert all clock information to MHz */
 		kbd->bi_intfreq /= 1000000L;
 		kbd->bi_busfreq /= 1000000L;
@@ -278,10 +285,6 @@ static void set_clocks_in_mhz (bd_t *kbd)
 		kbd->bi_sccfreq /= 1000000L;
 		kbd->bi_vco	/= 1000000L;
 #endif
-#if defined(CONFIG_MPC5xxx)
-		kbd->bi_ipbfreq /= 1000000L;
-		kbd->bi_pcifreq /= 1000000L;
-#endif /* CONFIG_MPC5xxx */
 	}
 }
 
@@ -336,6 +339,6 @@ void boot_jump_vxworks(bootm_headers_t *images)
 
 	((void (*)(void *, ulong, ulong, ulong,
 		ulong, ulong, ulong))images->ep)(images->ft_addr,
-		0, 0, EPAPR_MAGIC, getenv_bootm_mapsize(), 0, 0);
+		0, 0, EPAPR_MAGIC, env_get_bootm_mapsize(), 0, 0);
 }
 #endif

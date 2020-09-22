@@ -1,15 +1,15 @@
+// SPDX-License-Identifier: GPL-2.0
 /*
  * From coreboot southbridge/intel/bd82x6x/lpc.c
  *
  * Copyright (C) 2008-2009 coresystems GmbH
- *
- * SPDX-License-Identifier:	GPL-2.0
  */
 
 #include <common.h>
 #include <dm.h>
 #include <errno.h>
 #include <fdtdec.h>
+#include <log.h>
 #include <rtc.h>
 #include <pci.h>
 #include <asm/intel_regs.h>
@@ -19,6 +19,8 @@
 #include <asm/lpc_common.h>
 #include <asm/pci.h>
 #include <asm/arch/pch.h>
+
+DECLARE_GLOBAL_DATA_PTR;
 
 #define NMI_OFF				0
 
@@ -84,7 +86,7 @@ static int pch_pirq_init(struct udevice *pch)
 {
 	uint8_t route[8], *ptr;
 
-	if (fdtdec_get_byte_array(gd->fdt_blob, pch->of_offset,
+	if (fdtdec_get_byte_array(gd->fdt_blob, dev_of_offset(pch),
 				  "intel,pirq-routing", route, sizeof(route)))
 		return -EINVAL;
 	ptr = route;
@@ -111,7 +113,7 @@ static int pch_gpi_routing(struct udevice *pch)
 	u32 reg;
 	int gpi;
 
-	if (fdtdec_get_byte_array(gd->fdt_blob, pch->of_offset,
+	if (fdtdec_get_byte_array(gd->fdt_blob, dev_of_offset(pch),
 				  "intel,gpi-routing", route, sizeof(route)))
 		return -EINVAL;
 
@@ -126,7 +128,7 @@ static int pch_gpi_routing(struct udevice *pch)
 static int pch_power_options(struct udevice *pch)
 {
 	const void *blob = gd->fdt_blob;
-	int node = pch->of_offset;
+	int node = dev_of_offset(pch);
 	u8 reg8;
 	u16 reg16, pmbase;
 	u32 reg32;

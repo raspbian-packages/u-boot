@@ -1,8 +1,7 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2000-2004
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 /*
@@ -11,10 +10,17 @@
 #include <common.h>
 #include <command.h>
 #include <console.h>
+#include <cpu_func.h>
+#include <env.h>
+#include <flash.h>
+#include <image.h>
 #include <s_record.h>
 #include <net.h>
 #include <exports.h>
+#include <serial.h>
 #include <xyzModem.h>
+#include <asm/cache.h>
+#include <linux/delay.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -36,8 +42,8 @@ static int do_echo = 1;
 /* -------------------------------------------------------------------- */
 
 #if defined(CONFIG_CMD_LOADS)
-static int do_load_serial(cmd_tbl_t *cmdtp, int flag, int argc,
-			  char * const argv[])
+static int do_load_serial(struct cmd_tbl *cmdtp, int flag, int argc,
+			  char *const argv[])
 {
 	long offset = 0;
 	ulong addr;
@@ -50,11 +56,11 @@ static int do_load_serial(cmd_tbl_t *cmdtp, int flag, int argc,
 	load_baudrate = current_baudrate = gd->baudrate;
 #endif
 
-	if (((env_echo = getenv("loads_echo")) != NULL) && (*env_echo == '1')) {
+	env_echo = env_get("loads_echo");
+	if (env_echo && *env_echo == '1')
 		do_echo = 1;
-	} else {
+	else
 		do_echo = 0;
-	}
 
 #ifdef	CONFIG_SYS_LOADS_BAUD_CHANGE
 	if (argc >= 2) {
@@ -106,7 +112,7 @@ static int do_load_serial(cmd_tbl_t *cmdtp, int flag, int argc,
 		rcode = 1;
 	} else {
 		printf("## Start Addr      = 0x%08lX\n", addr);
-		load_addr = addr;
+		image_load_addr = addr;
 	}
 
 #ifdef	CONFIG_SYS_LOADS_BAUD_CHANGE
@@ -151,7 +157,7 @@ static ulong load_serial(long offset)
 		case SREC_DATA3:
 		case SREC_DATA4:
 		    store_addr = addr + offset;
-#ifndef CONFIG_SYS_NO_FLASH
+#ifdef CONFIG_MTD_NOR_FLASH
 		    if (addr2info(store_addr)) {
 			int rc;
 
@@ -182,7 +188,7 @@ static ulong load_serial(long offset)
 			    start_addr, end_addr, size, size
 		    );
 		    flush_cache(start_addr, size);
-		    setenv_hex("filesize", size);
+		    env_set_hex("filesize", size);
 		    return (addr);
 		case SREC_START:
 		    break;
@@ -237,7 +243,8 @@ static int read_record(char *buf, ulong len)
 
 #if defined(CONFIG_CMD_SAVES)
 
-int do_save_serial (cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+int do_save_serial(struct cmd_tbl *cmdtp, int flag, int argc,
+		   char *const argv[])
 {
 	ulong offset = 0;
 	ulong size   = 0;
@@ -414,8 +421,8 @@ static int  his_pad_count;  /* number of pad chars he needs */
 static char his_pad_char;   /* pad chars he needs */
 static char his_quote;      /* quote chars he'll use */
 
-static int do_load_serial_bin(cmd_tbl_t *cmdtp, int flag, int argc,
-			      char * const argv[])
+static int do_load_serial_bin(struct cmd_tbl *cmdtp, int flag, int argc,
+			      char *const argv[])
 {
 	ulong offset = 0;
 	ulong addr;
@@ -427,9 +434,9 @@ static int do_load_serial_bin(cmd_tbl_t *cmdtp, int flag, int argc,
 	offset = CONFIG_SYS_LOAD_ADDR;
 
 	/* pre-set offset from $loadaddr */
-	if ((s = getenv("loadaddr")) != NULL) {
+	s = env_get("loadaddr");
+	if (s)
 		offset = simple_strtoul(s, NULL, 16);
-	}
 
 	load_baudrate = current_baudrate = gd->baudrate;
 
@@ -482,12 +489,12 @@ static int do_load_serial_bin(cmd_tbl_t *cmdtp, int flag, int argc,
 		addr = load_serial_bin(offset);
 
 		if (addr == ~0) {
-			load_addr = 0;
+			image_load_addr = 0;
 			printf("## Binary (kermit) download aborted\n");
 			rcode = 1;
 		} else {
 			printf("## Start Addr      = 0x%08lX\n", addr);
-			load_addr = addr;
+			image_load_addr = addr;
 		}
 	}
 	if (load_baudrate != current_baudrate) {
@@ -529,7 +536,7 @@ static ulong load_serial_bin(ulong offset)
 	flush_cache(offset, size);
 
 	printf("## Total Size      = 0x%08x = %d Bytes\n", size, size);
-	setenv_hex("filesize", size);
+	env_set_hex("filesize", size);
 
 	return offset;
 }
@@ -971,14 +978,14 @@ static ulong load_serial_ymodem(ulong offset, int mode)
 			store_addr = addr + offset;
 			size += res;
 			addr += res;
-#ifndef CONFIG_SYS_NO_FLASH
+#ifdef CONFIG_MTD_NOR_FLASH
 			if (addr2info(store_addr)) {
 				int rc;
 
 				rc = flash_write((char *) ymodemBuf,
 						  store_addr, res);
 				if (rc != 0) {
-					flash_perror (rc);
+					flash_perror(rc);
 					return (~0);
 				}
 			} else
@@ -1000,7 +1007,7 @@ static ulong load_serial_ymodem(ulong offset, int mode)
 	flush_cache(offset, ALIGN(size, ARCH_DMA_MINALIGN));
 
 	printf("## Total Size      = 0x%08x = %d Bytes\n", size, size);
-	setenv_hex("filesize", size);
+	env_set_hex("filesize", size);
 
 	return offset;
 }

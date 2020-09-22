@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2009 Sergey Kubushyn <ksi@koi8.net>
  *
@@ -5,23 +6,20 @@
  *
  * (C) Copyright 2000
  * Paolo Scaffardi, AIRVENT SAM s.p.a - RIMINI(ITALY), arsenio@tin.it
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <config.h>
 #include <common.h>
 #include <dm.h>
 #include <errno.h>
+#include <log.h>
 #include <stdarg.h>
 #include <malloc.h>
 #include <stdio_dev.h>
 #include <serial.h>
-#ifdef CONFIG_LOGBUFFER
-#include <logbuff.h>
-#endif
+#include <splash.h>
 
-#if defined(CONFIG_HARD_I2C) || defined(CONFIG_SYS_I2C)
+#if defined(CONFIG_SYS_I2C)
 #include <i2c.h>
 #endif
 
@@ -151,9 +149,10 @@ static int stdio_probe_device(const char *name, enum uclass_id id,
 	*sdevp = NULL;
 	seq = trailing_strtoln(name, NULL);
 	if (seq == -1)
+		seq = 0;
+	ret = uclass_get_device_by_seq(id, seq, &dev);
+	if (ret == -ENODEV)
 		ret = uclass_first_device_err(id, &dev);
-	else
-		ret = uclass_get_device_by_seq(id, seq, &dev);
 	if (ret) {
 		debug("No %s device for seq %d (%s)\n", uclass_get_name(id),
 		      seq, name);
@@ -173,12 +172,12 @@ static int stdio_probe_device(const char *name, enum uclass_id id,
 }
 #endif
 
-struct stdio_dev* stdio_get_by_name(const char *name)
+struct stdio_dev *stdio_get_by_name(const char *name)
 {
 	struct list_head *pos;
 	struct stdio_dev *sdev;
 
-	if(!name)
+	if (!name)
 		return NULL;
 
 	list_for_each(pos, &(devs.list)) {
@@ -345,9 +344,6 @@ int stdio_add_devices(void)
 #ifdef CONFIG_SYS_I2C
 	i2c_init_all();
 #else
-#if defined(CONFIG_HARD_I2C)
-	i2c_init (CONFIG_SYS_I2C_SPEED, CONFIG_SYS_I2C_SLAVE);
-#endif
 #endif
 #ifdef CONFIG_DM_VIDEO
 	/*
@@ -372,6 +368,9 @@ int stdio_add_devices(void)
 	if (ret)
 		printf("%s: Video device failed (ret=%d)\n", __func__, ret);
 #endif /* !CONFIG_SYS_CONSOLE_IS_IN_ENV */
+#if defined(CONFIG_SPLASH_SCREEN) && defined(CONFIG_CMD_BMP)
+	splash_display();
+#endif /* CONFIG_SPLASH_SCREEN && CONFIG_CMD_BMP */
 #else
 # if defined(CONFIG_LCD)
 	drv_lcd_init ();
@@ -382,9 +381,6 @@ int stdio_add_devices(void)
 #endif /* CONFIG_DM_VIDEO */
 #if defined(CONFIG_KEYBOARD) && !defined(CONFIG_DM_KEYBOARD)
 	drv_keyboard_init ();
-#endif
-#ifdef CONFIG_LOGBUFFER
-	drv_logbuff_init ();
 #endif
 	drv_system_init ();
 	serial_stdio_init ();

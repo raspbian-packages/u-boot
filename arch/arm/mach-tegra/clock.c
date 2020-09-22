@@ -1,13 +1,16 @@
+// SPDX-License-Identifier: GPL-2.0
 /*
- * Copyright (c) 2010-2015, NVIDIA CORPORATION.  All rights reserved.
- *
- * SPDX-License-Identifier:	GPL-2.0
+ * Copyright (c) 2010-2019, NVIDIA CORPORATION.  All rights reserved.
  */
 
 /* Tegra SoC common clock control functions */
 
 #include <common.h>
+#include <div64.h>
+#include <dm.h>
 #include <errno.h>
+#include <log.h>
+#include <time.h>
 #include <asm/io.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/tegra.h>
@@ -15,8 +18,7 @@
 #include <asm/arch-tegra/clk_rst.h>
 #include <asm/arch-tegra/pmc.h>
 #include <asm/arch-tegra/timer.h>
-#include <div64.h>
-#include <fdtdec.h>
+#include <linux/delay.h>
 
 /*
  * This is our record of the current clock rate of each clock. We don't
@@ -339,8 +341,11 @@ unsigned long clock_get_periph_rate(enum periph_id periph_id,
 		 * return value doesn't help. In summary this clock driver is
 		 * quite broken but I'm afraid I have no idea how to fix it
 		 * without completely replacing it.
+		 *
+		 * Be careful to avoid a divide by zero error.
 		 */
-		div -= 2;
+		if (div >= 1)
+			div -= 2;
 		break;
 #endif
 	default:
@@ -475,6 +480,7 @@ unsigned clock_start_periph_pll(enum periph_id periph_id,
 
 	reset_set_enable(periph_id, 1);
 	clock_enable(periph_id);
+	udelay(2);
 
 	effective_rate = clock_adjust_periph_pll_div(periph_id, parent, rate,
 						 NULL);
@@ -652,14 +658,13 @@ void clock_ll_start_uart(enum periph_id periph_id)
 }
 
 #if CONFIG_IS_ENABLED(OF_CONTROL)
-int clock_decode_periph_id(const void *blob, int node)
+int clock_decode_periph_id(struct udevice *dev)
 {
 	enum periph_id id;
 	u32 cell[2];
 	int err;
 
-	err = fdtdec_get_int_array(blob, node, "clocks", cell,
-				   ARRAY_SIZE(cell));
+	err = dev_read_u32_array(dev, "clocks", cell, ARRAY_SIZE(cell));
 	if (err)
 		return -1;
 	id = clk_id_to_periph_id(cell[1]);
@@ -813,15 +818,25 @@ void tegra30_set_up_pllp(void)
 
 int clock_external_output(int clk_id)
 {
-	struct pmc_ctlr *pmc = (struct pmc_ctlr *)NV_PA_PMC_BASE;
+	u32 val;
 
 	if (clk_id >= 1 && clk_id <= 3) {
-		setbits_le32(&pmc->pmc_clk_out_cntrl,
-			     1 << (2 + (clk_id - 1) * 8));
+		val = tegra_pmc_readl(offsetof(struct pmc_ctlr,
+				      pmc_clk_out_cntrl));
+		val |= 1 << (2 + (clk_id - 1) * 8);
+		tegra_pmc_writel(val,
+				 offsetof(struct pmc_ctlr,
+				 pmc_clk_out_cntrl));
+
 	} else {
 		printf("%s: Unknown output clock id %d\n", __func__, clk_id);
 		return -EINVAL;
 	}
 
 	return 0;
+}
+
+__weak bool clock_early_init_done(void)
+{
+	return true;
 }

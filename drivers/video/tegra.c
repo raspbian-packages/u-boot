@@ -1,14 +1,17 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (c) 2011 The Chromium OS Authors.
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <dm.h>
 #include <fdtdec.h>
+#include <log.h>
 #include <panel.h>
+#include <part.h>
 #include <pwm.h>
 #include <video.h>
+#include <asm/cache.h>
 #include <asm/system.h>
 #include <asm/gpio.h>
 #include <asm/io.h>
@@ -338,12 +341,12 @@ static int tegra_lcd_ofdata_to_platdata(struct udevice *dev)
 	struct tegra_lcd_priv *priv = dev_get_priv(dev);
 	const void *blob = gd->fdt_blob;
 	struct display_timing *timing;
-	int node = dev->of_offset;
+	int node = dev_of_offset(dev);
 	int panel_node;
 	int rgb;
 	int ret;
 
-	priv->disp = (struct disp_ctlr *)dev_get_addr(dev);
+	priv->disp = (struct disp_ctlr *)devfdt_get_addr(dev);
 	if (!priv->disp) {
 		debug("%s: No display controller address\n", __func__);
 		return -EINVAL;
@@ -392,7 +395,7 @@ static int tegra_lcd_bind(struct udevice *dev)
 {
 	struct video_uc_platdata *plat = dev_get_uclass_platdata(dev);
 	const void *blob = gd->fdt_blob;
-	int node = dev->of_offset;
+	int node = dev_of_offset(dev);
 	int rgb;
 
 	rgb = fdt_subnode_offset(blob, node, "rgb");

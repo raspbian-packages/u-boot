@@ -8,20 +8,13 @@ armel	-		dreamplug	u-boot.kwb
 # drEagle <drEagle@doukki.net>
 armel	-		guruplug	u-boot.kwb
 
-# Albert ARIBAUD <albert.u.boot@aribaud.net>
-armel  -               openrd_base u-boot.kwb
-
-# Rick Thomas <rbthomas@rcthomas.org>
-# Albert ARIBAUD <albert.u.boot@aribaud.net>
-armel  -               openrd_client u-boot.kwb
-
-# Rick Thomas <rbthomas@rcthomas.org>
-# Philip Hands <phil@hands.com>
-armel  -               openrd_ultimate u-boot.kwb
-
 # Vagrant Cascadian <vagrant@debian.org>, rpi B 256M
 armel	rpi		rpi		u-boot.bin
 armhf	rpi		rpi		u-boot.bin
+
+# Romain Perier <romain.perier@gmail.com>, rpi zero w
+armel	rpi		rpi_0_w		u-boot.bin
+armhf	rpi		rpi_0_w		u-boot.bin
 
 # drEagle <drEagle@doukki.net>
 # Rick Thomas <rbthomas@rcthomas.org>
@@ -29,8 +22,14 @@ armel	-		sheevaplug	u-boot.kwb
 
 avr32	-		hammerhead	u-boot.img
 
-mips	-		qemu_mips	u-boot.bin
+# Hector Oron <zumbi@debian.org>
+riscv64	sifive	sifive_fu540	u-boot.bin
 
 sh4	-		r2dplus		u-boot.bin
 
-sh4	-		sh7785lcr_32bit	u-boot.bin
+all:amd64	qemu	qemu-x86_64	u-boot.bin
+all:armhf	qemu	qemu_arm	u-boot.bin
+all:arm64	qemu	qemu_arm64	u-boot.bin
+all:i386	qemu	qemu-x86	u-boot.bin
+all:riscv64	qemu	qemu-riscv64	u-boot.bin
+all:riscv64	qemu	qemu-riscv64_smode	u-boot.bin

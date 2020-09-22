@@ -1,9 +1,824 @@
-u-boot (2016.11+dfsg1-4+rpi1) stretch-staging; urgency=medium
+u-boot (2020.07+dfsg-2+rpi1) bullseye-staging; urgency=medium
 
   [changes brought forward from 2014.10+dfsg1-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Fri, 28 Nov 2014 06:00:07 +0000]
   * Don't build versions for various armv7 devices, build rpi version instead.
 
- -- Raspbian forward porter <root@raspbian.org>  Wed, 26 Apr 2017 14:08:28 +0000
+ -- Peter Michael Green <plugwash@raspbian.org>  Tue, 22 Sep 2020 21:56:06 +0000
+
+u-boot (2020.07+dfsg-2) unstable; urgency=medium
+
+  [ Vagrant Cascadian ]
+  * u-boot-install-rockchip: Update with additional RockPro64 names from
+    linux 5.7 device-trees.
+
+  [ Denis Pynkin ]
+  * u-boot-rpi: Add rpi_arm64 target for arm64 (Closes: #966078).
+
+  [ Vagrant Cascadian ]
+  * debian/patches: Fix reproducibility of mx6cuboxi target.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Fri, 28 Aug 2020 16:35:40 -0700
+
+u-boot (2020.07+dfsg-1) unstable; urgency=medium
+
+  * New upstream release.
+  * [armhf] u-boot-omap: Drop omap3_pandora, removed upstream.
+  * [arm64] u-boot-amlogic: Install new board-specific documentation.
+  * debian/patches: Fix riscv64 support for extlinux.
+  * debian/control:
+    - Upgrade to debhelper compat 13.
+    - Update Build-Depends on arm-trusted-firmware.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Wed, 08 Jul 2020 16:29:02 -0700
+
+u-boot (2020.07~rc4+dfsg-1) experimental; urgency=medium
+
+  * New upstream release candidate.
+  * debian/patches:
+    - Remove pinebook-pro patches, applied upstream.
+    - Remove riscv64 patches, applied upstream.
+  * u-boot-rockchip: Update puma-rk3399 to include new
+    rk3399-puma-haikou.dtb file.
+  * Update lintian overrides to use "shared-library-lacks-prerequisites"
+    instead of older tag name.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Tue, 09 Jun 2020 18:48:06 -0700
+
+u-boot (2020.07~rc3+dfsg-1) experimental; urgency=medium
+
+  [ Andreas Henriksson ]
+  * u-boot-rpi: Enable rpi4 target on armhf and arm64 (Closes: #958668)
+
+  [ Vagrant Cascadian ]
+  * New upstream release candidate.
+  * debian/patches: Refresh n900 patch.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Thu, 04 Jun 2020 09:47:49 -0700
+
+u-boot (2020.07~rc2+dfsg-1) experimental; urgency=medium
+
+  * New upstream release candidate.
+  * debian/patches: Refresh.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Mon, 18 May 2020 17:16:07 -0700
+
+u-boot (2020.04+dfsg-2) unstable; urgency=medium
+
+  * debian/patches:
+    - Remove dreamplug cache patch, fixed upstream.
+    - Add patches submitted upstream to support pinebook pro.
+  * u-boot-rockchip:
+    - Add support for rockpro64-rk3399.
+    - Add support for pinebook-pro-rk3399.
+    - Add u-boot-install-rockchip helper script.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Mon, 20 Apr 2020 19:34:37 -0700
+
+u-boot (2020.04+dfsg-1) unstable; urgency=medium
+
+  * New upstream release.
+
+  [ Vagrant Cascadian ]
+  * Update upstream signing key.
+  * [arm64] Build arm-trusted-firmware into rockchip/sunxi systems.
+  * [arm64] u-boot-sunxi: Add a64-olinuxino-emmc target Thanks to Philip
+    Rinn. (Closes: #956394).
+
+  [ Walter Lozano ]
+  * debian/targets: Add support for rock-pi-4-rk3399
+  * debian/targets: Add target idbloader.img for rk3399 boards
+
+  [ Vagrant Cascadian ]
+  * debian/control: Add versioned Build-Depends on arm-trusted-firmware
+    for rk3399 support.
+  * debian/targets: Add idbloader.img for all rockchip platforms.
+  * u-boot-rockchip: Update README.Debian.
+  * Remove debian/bin/generate-rksd.
+  * u-boot-rockchip: firefly-rk3288: Also install u-boot.img.
+  * [arm64] u-boot-rockchip, u-boot-sunxi: Add Built-Using
+    arm-trusted-firmware.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Tue, 14 Apr 2020 17:24:39 -0700
+
+u-boot (2020.04~rc5+dfsg-1) experimental; urgency=medium
+
+  * New upstream release candidate.
+  * debian/patches:
+    - Remove patch fixing video on pinebook, fixed upstream.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Tue, 07 Apr 2020 08:50:37 -0700
+
+u-boot (2020.04~rc2+dfsg-1) experimental; urgency=medium
+
+  * New upstream release candidate.
+  * debian/patches:
+    - riscv64: refresh qemu-riscv64 extlinux patch.
+    - exynos: Refresh patch fixing console.
+    - Drop patches applied upstream.
+  * debian/rules: Disable CONFIG_FIT_SIGNATURE in all targets, as it
+    requires openssl which introduces license incompatibilities with the
+    GPL.
+  * u-boot-rockchip: Update firefly-rk3288 instructions.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Thu, 13 Feb 2020 00:17:14 -0800
+
+u-boot (2020.01+dfsg-2) unstable; urgency=medium
+
+  * debian/patches:
+    - Fix video output on pinebook (Closes: #948753).
+    - Fix exynos5 board detection (Closes: #951195). Thanks to Jochen
+      Sprickerhof!
+    - Fix MMC on odroid U3. (Closes: #950293)
+    - Improve error handling with GPT renames. Fixes CVE-2020-8432.
+  * debian/control: Update Standards-Version to 4.5.0, no changes.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Wed, 12 Feb 2020 22:29:38 -0800
+
+u-boot (2020.01+dfsg-1) unstable; urgency=medium
+
+  * New upstream release.
+  * debian/rules: Do not call qcom wrapper script.
+  * debian/control: Drop Build-Depends on "skales", removed from testing.
+  * u-boot-rockchip: Use python3 in rockchip_make_fit_atf.
+  * generate-rksd: Only generate SPL rksd on targets not using TPL.
+  * Add build profile pkg.uboot.subarch.* to build only subsets of
+    packages.
+  * [arm64] u-boot-rockchip: Add arm-trusted-firmware and u-boot-tools to
+    Recommends.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Wed, 08 Jan 2020 00:19:44 -0800
+
+u-boot (2020.01~rc5+dfsg-1) experimental; urgency=medium
+
+  * New upstream release candidate (Closes: #941231).
+  * debian/control: Update Build-Depends to use python3 and
+    libpython3-dev, add python3-distutils (Closes: #938739).
+  * [armhf] u-boot-imx: install u-boot-dtb.imx on mx6qsabrelite and
+    nitrogen6q.
+  * debian/patches:
+    - Remove mx6/Revert-spl-imx6-Let-spl_boot_device-return-USDHC1-or,
+      applied upstream.
+    - Refresh riscv64/qemu-riscv64_smode-sifive-fu540-fix-extlinux.
+    - Remove mx6/arm-Set-SYS_DCACHE_OFF-for-MX6-platforms, it was an ugly
+      workaround.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Tue, 17 Dec 2019 17:23:23 -0800
+
+u-boot (2019.10+dfsg-1) experimental; urgency=medium
+
+  * u-boot-sifive: Install new fu540 documentation.
+  * debian/patches:
+    - Add qemu-riscv64_smode-sifive-fu540-fix-extlinux-define to fix
+      extlinux support on riscv64 targets.
+    - Drop qemu-riscv64-raw-initrd, it is redundant due to
+      DISTRO_DEFAULTS=y.
+    - Disable dcache on MX6 platforms.
+    - Add patch to revert changes to imx6 MMC boot device order.
+  * debian/control:
+    - Set Rules-Requires-Root: no.
+    - Update Standards-Version to 4.1.1, no changes needed.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Thu, 17 Oct 2019 12:23:42 -0700
+
+u-boot (2019.10~rc4+dfsg-1) experimental; urgency=medium
+
+  * New upstream release candidate.
+  * u-boot-rockchip: Add rock64-rk3328 target.
+  * u-boot-rockchip: Install rockchip_make_fit_atf and Recommend python3.
+  * generate-rksd: Add support for rk3328 and TPL images.
+  * debian/patches:
+    - Update ensure-config-sandbox-for-make-env.
+    - Update qemu-riscv64-raw-initrd for.
+    - Add description and forwarded links for qemu-riscv64-raw-initrd.
+  * u-boot-qemu: Drop support for qemu_mips, qemu_mipsel and
+    qemu_mips64el as the cross compilers are no longer available.
+  * u-boot-tools:
+    - Remove fw_printenv and fw_setenv and Recommend libubootenv-tool.
+      (Closes: #939598)
+    - Update package description.
+  * README.Debian: Drop references to fw_setenv and fw_printenv.
+  * debian/control:
+    - [arm64] Drop Build-Depends on python-pyelftools; no longer needed
+      for fit image creation.
+    - Update Standards-Version to 4.4.0, no changes needed.
+    - Update to debhelper-compat 12.
+  * debian/copyright: Drop stanza and license for pcmcia; code was
+    removed.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Tue, 24 Sep 2019 01:03:23 -0700
+
+u-boot (2019.07+dfsg-1) experimental; urgency=medium
+
+  * New upstream release.
+  * Add support for nanopi_neo_plus2. Thanks to Steev Klimaszewski.
+  * Add support for nanopi_neo_air (Closes: #930013). Thanks to Philip
+    Hands and Domenico Andreoli.
+  * debian/control: [arm64] Add python-pyelftools to Build-Depends.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Mon, 08 Jul 2019 16:41:40 -0700
+
+u-boot (2019.07~rc4+dfsg-1) experimental; urgency=medium
+
+  * New upstream release candidate.
+  * [sh4] Remove sh7785lcr_32bit, dropped upstream.
+  * debian/rules: Explicitly mark fit signature support as unset.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Tue, 11 Jun 2019 16:13:47 -0700
+
+u-boot (2019.07~rc2+dfsg-1) experimental; urgency=medium
+
+  * New upstream release candidate:
+    (CVE-2019-11059, Closes: #928800)
+    (CVE-2019-11690, Closes: #928557)
+
+  [ Sunil Mohan Adapa ]
+  * Enable pine64-lts target in u-boot-sunxi (Closes: #928947).
+
+  [ Domenico Andreoli ]
+  * Enable support for NanoPi NEO 2 in u-boot-sunxi (Closes: #928612).
+
+  [ Vagrant Cascadian ]
+  * u-boot-omap: Fix installation instructions for various beagleboard.org
+    boards.
+  * Remove patches applied upstream:
+    - upstream/lib-uuid-Fix-unseeded-PRNG-on-RANDOM_UUID-y
+    - sunxi/teres-i
+    - booti/riscv64
+    - qemu-riscv64/riscv-qemu-riscv.h-define-CONFIG_PREBOOT-enables-ext
+    - pocketbeagle/0001-ti-Add-device-tree-for-am335x-pocketbeagle
+    - pocketbeagle/0002-ti-Add-am335x-pocketbeagle-to-am335x_evm_defconfig
+  * u-boot-tools: Use tools-only_defconfig, disabling CONFIG_FIT_SIGNATURE
+    which requires openssl.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Fri, 17 May 2019 21:02:15 -0700
+
+u-boot (2019.07~rc1+dfsg-4) experimental; urgency=medium
+
+  [ Vagrant Cascadian ]
+  * u-boot-qemu: qemu-riscv64: Patch to support loading FDT in extlinux.
+  * Add patches to enable PocketBeagle support to am335x_evm target.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Sun, 12 May 2019 20:38:27 -0700
+
+u-boot (2019.07~rc1+dfsg-3) experimental; urgency=medium
+
+  * debian/rules: Fail when cross-compiler for an arch:all build is not
+    available.
+  * debian/control: Use architecture negation to not require cross
+    compiler on native architecture in Build-Depends-Indep.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Wed, 08 May 2019 01:34:45 -0700
+
+u-boot (2019.07~rc1+dfsg-2) experimental; urgency=medium
+
+  * Update novena-rawsd config: SPL_FAT_SUPPORT -> SPL_FS_FAT.
+  * Add build profile "pkg.uboot.notools" to disable building of
+    u-boot-tools.
+  * [riscv64] Add u-boot-sifive package with sifive_fu540 target.
+  * Add patch to enable booti on RISC-V.
+  * Add patch to enable raw initrd support on qemu-riscv64 targets.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Mon, 06 May 2019 13:06:04 -0700
+
+u-boot (2019.07~rc1+dfsg-1) experimental; urgency=medium
+
+  [ Vagrant Cascadian ]
+  * Refresh omap5_distro_bootcmd patch.
+  * Refresh dreamplug cache patch, partially applied upstream.
+  * Remove mkimage patch, applied upstream.
+  * u-boot-amlogic: Updated location of documentation for odroid-c2 and
+    nanopi-k2.
+
+  [ Ivo De Decker ]
+  * Don't run tests if mkimage isn't available
+  * Add separate rules targets to build targets and tools
+  * Use CROSS_COMPILE shell variable instead of makefile variable
+  * Define TARGETARCH variable
+  * Add separate targets for build-arch and build-indep
+  * Add u-boot-qemu package for qemu/kvm (Closes: #907573).
+  * Add preliminary readme for u-boot-qemu
+  * Add qemu_riscv64 target
+  * Don't strip qemu images
+
+  [ Vagrant Cascadian ]
+  * Build-Depends-Indep: Add cross-compilers for amd64, armhf and i386
+    when building on arm64.
+  * Build-Depends: Switch libpython-dev:native, python:any, swig to
+    [linux-any], remove from Build-Depends-Indep.
+  * debian/rules: Allow building arch:all on any architecture, but skip
+    targets missing a cross-compiler.
+  * [mips] Drop qemu_mips from u-boot:mips, depending on u-boot-qemu.
+  * Add lintian overrides for u-boot-qemu.
+  * u-boot-qemu: Add qemu-riscv64_smode target.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Fri, 03 May 2019 16:58:13 -0700
+
+u-boot (2019.04+dfsg-2) experimental; urgency=medium
+
+  [ Vagrant Cascadian ]
+  * Add targeted patch fixing mkimage header verification. Drop patch
+    reverting mkimage changes.
+  * [armhf] u-boot-omap: Replace am335x_boneblack with am335x_evm, and
+    update README.Debian accordingly regarding changed partitioning
+    requirements.
+  * [armhf] u-boot-omap: Simpfy the instructions in README for specifying an
+    offset.
+  * debian/rules: Remove linux.itb and linux.its in clean target. Thanks
+    to Jonas Smedegaard.
+
+  [ Jonas Smedegaard ]
+  * Add patch by Vasily Khoruzhick to support Olimex Teres-I DIY laptop.
+  * Enable teres_i target in u-boot-sunxi (Closes: #926040).
+
+  [ Vagrant Cascadian ]
+  * Create an am335x_boneblack defconfig by adapting am335x_evm and
+    removing the extra device trees. This is needed to keep size small
+    enough to fit in a standard 1MB partition offset.
+
+  [ Frédéric Danis ]
+  * Enable orangepi_zero_plus2 target in u-boot-sunxi (Closes: #927224).
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Tue, 16 Apr 2019 15:46:00 -0700
+
+u-boot (2019.04+dfsg-1) experimental; urgency=medium
+
+  * New upstream release.
+  * Remove patches applied upstream:
+    - dreamplug/ARM-kirkwood-add-spi0-alias-for-dreamplug.patch
+    - exynos/0002-Fix-spelling-of-download.patch
+    - upstream/0001-Fix-typo-missmatched-mismatched.patch
+    - upstream/fs-ext4-Unmount-FS-in-do_fs_type.patch
+  * Refresh patches:
+    - test-imagetools-test-fixes
+    - exynos/0001-arm-config-fix-default-console-only-to-specify-the-d
+  * Add patch reverting changes to mkimage, which breaks compatibility
+    with FIT images used in the wild, and breaks the test suite.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Mon, 08 Apr 2019 23:35:43 -0700
+
+u-boot (2019.01+dfsg-7) unstable; urgency=medium
+
+  [ Sunil Mohan Adapa ]
+  * Enable pine64-lts target in u-boot-sunxi (Closes: #928947).
+
+  [ Vagrant Cascadian ]
+  * u-boot-omap: Enable am335x_evm target.
+  * Add patches to enable PocketBeagle in am335x_evm target.
+  * u-boot-omap: Fix instructions for installing beaglebone black.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Mon, 13 May 2019 19:07:44 -0700
+
+u-boot (2019.01+dfsg-6) unstable; urgency=medium
+
+  [ Domenico Andreoli ]
+  * Enable support for NanoPi NEO 2 in u-boot-sunxi (Closes: #928612).
+
+  [ Jonas Smedegaard ]
+  * Sync sunxi teres-i patch with mainline u-boot, enabling USB
+    support (Closes: #928815).
+
+  [ Vagrant Cascadian ]
+  * Apply patch from upstream fixing buffer overflow with ext4 filesystems
+    (CVE-2019-11059, Closes: #928800).
+  * Apply patch from upstream fixing randomly generated
+    UUIDs. (CVE-2019-11690, Closes: #928557).
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Sat, 11 May 2019 18:20:19 -0700
+
+u-boot (2019.01+dfsg-5) unstable; urgency=medium
+
+  [ Jonas Smedegaard ]
+  * Add patch cherry-picked upstream to add i2c initialization for sun50i.
+  * Add patch by Vasily Khoruzhick to support Olimex Teres-I DIY laptop.
+  * Enable teres_i target in u-boot-sunxi (Closes: #926040).
+
+  [ Frédéric Danis ]
+  * Enable orangepi_zero_plus2 target in u-boot-sunxi (Closes: #927224).
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Fri, 19 Apr 2019 16:43:08 -0700
+
+u-boot (2019.01+dfsg-4) unstable; urgency=medium
+
+  [ Martyn Welch ]
+  * [armhf] u-boot-imx: Enable build for NXP SABRE Lite.
+
+  [ Neil Armstrong ]
+  * [arm64] u-boot-amlogic: Enable nanopi-k2 and khadas-vim/vim2.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Mon, 08 Apr 2019 19:47:02 -0700
+
+u-boot (2019.01+dfsg-3) unstable; urgency=medium
+
+  [ Romain Perier ]
+  * [armel] u-boot-rpi: Add Raspberry Pi Zero W.
+
+  [ Vagrant Cascadian ]
+  * [armhf] u-boot-sunxi: Add bananapi_m2_berry target.
+    (Closes: #923443) Thanks to Lucas Nussbaum.
+  * [armhf] u-boot-imx: Add novena-rawsd target.
+  * Add patches to fix SPI and USB on Dreamplug (Closes: #923379).
+    Thanks to Leigh Brown and Chris Packham.
+  * u-boot-tools: Remove Synopsys lintian override.
+  * Add patch to fix spelling of "mismatched".
+  * Add patch to fix spelling of "download".
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Thu, 28 Feb 2019 20:42:31 -0800
+
+u-boot (2019.01+dfsg-2) unstable; urgency=medium
+
+  [ Frédéric Danis ]
+  * Enable libretech-cc target in u-boot-amlogic (Closes: #920947).
+
+  [ Vagrant Cascadian ]
+  * debian/patches: Add patch from upstream to unmount ext4 filesystems
+    preventing a memory leak.
+  * Add patch to fix console setting on exynos platforms.  Thanks to
+    Dongjin Kim and Benjamin Drung.  (Closes: #920116).
+  * Use wildcards for lintian overrides.
+  * Update tester for p2371-2180 (Jetson-TX1).
+  * Update tester for novena.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Tue, 19 Feb 2019 01:09:37 -0800
+
+u-boot (2019.01+dfsg-1) unstable; urgency=medium
+
+  * New upstream release (Closes: #918940).
+  * Update tester for firefly-rk3288.
+  * debian/control: Build-Depends: use debhelper-compat.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Mon, 14 Jan 2019 16:36:19 -0800
+
+u-boot (2019.01~rc3+dfsg-1) experimental; urgency=medium
+
+  * New upstream release candidate.
+  * Update upstream signing key format.
+  * Remove pinebook patches, applied upstream.
+  * Drop mipsel-native-endianness patch.
+  * [arm64] u-boot-amlogic: Update README for odroid-c2.
+  * [armhf] u-boot-rockchip: Add firefly-rk3288 target.
+  * debian/rules: Call strip --strip-unneeded and --remote-section=.note
+    to comply with Debian policy 4.3.0.
+  * debian/control: Update Standards-Version to 4.3.0.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Tue, 08 Jan 2019 15:42:38 -0800
+
+u-boot (2018.11+dfsg-2) unstable; urgency=medium
+
+  * u-boot-install-sunxi64:
+    - Detect target based on running device-tree.
+    - Prefer BL31 from arm-trusted-firmware over atf-allwinner.
+    - Error out when mkimage is not found and Recommend u-boot-tools
+      (Closes: #913879).  Thanks to Nicolas Schier.
+  * [arm64] u-boot-sunxi: Update Recommends to use arm-trusted-firmware
+    instead of atf-allwinner.
+  * [arm64] u-boot-amlogic: Add Recommends on arm-trusted-firmware.
+  * Update upstream signing key.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Sun, 09 Dec 2018 08:16:44 +0100
+
+u-boot (2018.11+dfsg-1) unstable; urgency=medium
+
+  * New upstream release.
+  * [armhf] u-boot-imx: Drop udoo patches, full support for distro_bootcmd
+    is enabled upstream.
+  * [armhf] u-boot-rockchip: Drop firefly-rk3288 target (Closes: #898520).
+  * [arm64] u-boot-sunxi: Enable a64-olinuxino target (Closes: #881564).
+    Thanks to Rodrigo Exterckötter Tjäder.
+  * Add Pinebook support patches from sunxi maintainer tree.
+  * [arm64] u-boot-sunxi: Add pinebook target.
+  * [armel] Drop openrd targets, which FTBFS and are orphaned upstream.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Wed, 14 Nov 2018 13:32:35 -0800
+
+u-boot (2018.09+dfsg-1) experimental; urgency=medium
+
+  * New upstream release.
+  * Remove patches applied upstream.
+  * Refresh udoo quad support patch.
+  * Increase verbosity of make unless DEB_BUILD_OPTIONS=terse.
+  * Update Standards-Version to 4.2.1.
+  * [armhf] u-boot-sunxi: Enable Sinovoip Banana Pi M3 (Closes: #905922).
+    Thanks to Bernhard.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Mon, 10 Sep 2018 23:59:21 -0700
+
+u-boot (2018.07+dfsg-1) experimental; urgency=medium
+
+  * New upstream release.
+  * u-boot-imx: Remove mx6cuboxi4x4 target, as ram is now properly
+    detected with mx6cuboxi.
+  * debian/watch: Add repack and compression=xz options.
+  * debian/rules: Remove get-orig-source target.
+  * debian/control: Update Standards-Version to 4.1.5.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Mon, 09 Jul 2018 13:34:06 -0700
+
+u-boot (2018.07~rc2+dfsg-1) experimental; urgency=medium
+
+  * New upstream release candidate:
+    - Fixes USB on Pine64+.
+  * [armhf] u-boot-sunxi: Enable A20-OLinuXino-Lime2-eMMC.
+    (Closes: #901666). Thanks to Andreas B. Mundt.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Wed, 20 Jun 2018 23:47:25 -0700
+
+u-boot (2018.07~rc1+dfsg-1) experimental; urgency=medium
+
+  * New upstream release candidate.
+  * Remove patches applied in 2018.07-rc1.
+  * Refresh sheevaplug/sys_thumb_build patch.
+  * Add Build-Depends on bison and flex.
+  * Update patch series for odroid distro_bootcmd support.
+  * Add patch submitted upstream to consistently set default fdtfile value
+    on rockchip systems.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Tue, 05 Jun 2018 15:07:35 -0700
+
+u-boot (2018.05+dfsg-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Refresh debian/patches for 2018.05.
+  * [armel] sheevaplug: Add patch to enable thumb build to reduce size of
+    u-boot.kwb (Closes: #897671).
+  * u-boot-rockchip: Add patch to fix serial output (Closes: #898276).
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Thu, 10 May 2018 13:24:57 -0700
+
+u-boot (2018.05~rc3+dfsg-1) experimental; urgency=medium
+
+  * New upstream release candidate.
+  * Remove patches applied or obsoleted upstream:
+    - firefly/fdtfile
+    - odroid-c2/0001-mmc-avoid-division-by-zero-in-meson_mmc_config_clock
+  * Add patch to set timestamp and umask when building multi-dtb fit
+    image (Closes: #896526).
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Tue, 01 May 2018 14:48:55 -0700
+
+u-boot (2018.05~rc2+dfsg-2) experimental; urgency=medium
+
+  * [arm64] Add u-boot-mvebu, and enable the espressobin target.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Thu, 19 Apr 2018 15:10:58 -0700
+
+u-boot (2018.05~rc2+dfsg-1) experimental; urgency=medium
+
+  * New upstream release candidate.
+  * Refresh patches:
+    - Makefile-add-kwb-target-to-all.patch
+    - am57xx/omap5_distro_bootcmd
+  * debian/control:
+    - Add Build-Depends for lzop, used on the AM57xx target.
+    - Update Standards-Version to 4.1.4, no changes.
+  * Install build configs to /usr/share/doc/*/configs.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Tue, 17 Apr 2018 16:05:55 -0700
+
+u-boot (2018.03+dfsg1-2) unstable; urgency=medium
+
+  [ Riku Voipio ]
+  * u-boot-qcom: Add dragonboard 820c build (Closes: #894212).
+
+  [ Vagrant Cascadian ]
+  * u-boot-install-sunxi64: Ignore device write checks when FORCE is set.
+  * u-boot-exynos: Update odroid patch to support distro_bootcmd, dropping
+    support for legacy boot.
+  * Add back uboot.elf, used to install jetson-tx1 (Closes: #893908).
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Sun, 01 Apr 2018 18:20:06 -0700
+
+u-boot (2018.03+dfsg1-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Update patches for new upstream release.
+  * debian/rules: Update default configuration for tools target.
+  * [arm64] u-boot-rockchip: Add puma-rk3399 target.
+  * Switch Vcs-* to use salsa.debian.org.
+  * debian/rules: Fix typo that disabled 4GB ram support for the
+    mx6cuboxi4x4 target (Closes: #893062).
+  * Add patch to fix mmc support on Odroid-C2. Thanks to Jaehoon Chung and
+    Heinrich Schuchardt.
+  * u-boot-sunxi:
+    - Add u-boot-install-sunxi64 script (Closes: #891490). Thanks to Adam
+      Borowski.
+    - [arm64] Add recommends on atf-allwinner.
+  * debian/copyright: Updated location for libfdt.
+  * Drop installation of uboot.elf, as it is stripped of debugging symbols
+    and therefor not particularly useful.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Sun, 18 Mar 2018 18:36:58 -0700
+
+u-boot (2018.01+dfsg1-2) unstable; urgency=medium
+
+  * Update to use https copyright format URL.
+  * debian/rules: Remove "dh --parallel", default in debhelper compat 11.
+  * debian/patches:
+    - Remove patch for IGEP board that was never applied.
+    - Fix typo in mx6cubox-i4x4 patch description.
+    - Add description to no-force-cross-compile-powerpc patch.
+    - Add a description for the omap5_distro_bootcmd patch.
+    - Remove patch for hurd support, as no packages are built on that
+      hurd.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Tue, 20 Feb 2018 16:49:33 -0800
+
+u-boot (2018.01+dfsg1-1) experimental; urgency=medium
+
+  * New upstream release.
+  * debian/patches: Refresh and removed.
+  * debian/control:
+    - Update to Standards-Version 4.1.3, no changes.
+    - Build-Depend on debhelper 11.
+  * debian/compat: Switch to debhelper compatibility level 11.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Mon, 08 Jan 2018 19:19:02 -0800
+
+u-boot (2017.11+dfsg1-3) unstable; urgency=medium
+
+  [ Vagrant Cascadian ]
+  * Add patch submitted upstream to fix ethernet on Olimex
+    A20-Olinuxino-Micro Rev. J (Closes: #864562).
+
+  [ Marek Vasut ]
+  * Disable DDR calibration on DH iMX6 (Closes: #884442).
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Sun, 07 Jan 2018 14:19:18 -0800
+
+u-boot (2017.11+dfsg1-2) unstable; urgency=medium
+
+  [ Vagrant Cascadian ]
+  * u-boot-tools: Fix broken FIT image generation by building tools-only
+    target with an empty defconfig.
+  * Run basic tests for mkimage/dumpimage.
+
+  [ Marek Vasut ]
+  * Backport DH iMX6 DDR configuration fix (Closes: #882123).
+
+  [ Vagrant Cascadian ]
+  * debian/control: Bump Standards-Version 4.1.2, no changes.
+  * debian/rules: Use dpkg/architecture.mk instead of manually calling
+    dpkg-architecture.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Tue, 05 Dec 2017 15:43:23 -0800
+
+u-boot (2017.11+dfsg1-1) experimental; urgency=medium
+
+  [ Vagrant Cascadian ]
+  * Remove patches applied upstream.
+  * Refresh patches.
+  * Drop beaglebone black patch for usb-mass-storage.
+
+  [ Marek Vasut ]
+  * Add DHCOM i.MX6 PDK board support (Closes: #881298).
+
+  [ Vagrant Cascadian ]
+  * u-boot-sunxi: Include documentation for pine64 using u-boot SPL
+    (Closes: #842688).
+  * u-boot-rockchip: Include rk3399-firefly.dtb instead of generic
+    u-boot.dtb file.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Fri, 17 Nov 2017 12:02:57 -0800
+
+u-boot (2017.09+dfsg1-3) unstable; urgency=medium
+
+  * Set the fdtfile variable from the value of CONFIG_DEFAULT_DEVICE_TREE
+    (Closes: #870897). Thanks to Diego Roversi for the bug report!
+  * Add patch to fix building jffs2 with gcc-7 (Closes: #877963). Thanks
+    to Adrian Bunk!
+  * Update Standards-Version of Debian Policy 4.1.1, no changes needed.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Mon, 09 Oct 2017 15:14:03 -0700
+
+u-boot (2017.09+dfsg1-2) unstable; urgency=medium
+
+  * u-boot-imx: mx6cuboxi4x4: Use a symlink for u-boot.img to mx6cuboxi,
+    as it is identical.
+  * u-boot-imx/u-boot-omap: Do not install spl/u-boot-spl.bin when the
+    target uses SPL or MLO.
+  * debian/rules: Generate mx6cuboxi4x4_defconfig based on
+    mx6cuboxi_defconfig.
+  * debian/rules: Do not install uboot.elf in mx6cuboxi4x4 target.
+  * debian/rules: Only build the SPL target on mx6cuboxi4x4.
+  * debian/patches: Fix odroid patch to actually use distro_bootcmd.
+  * u-boot-rockchip: Fix USB on firefly-rk3399 with patches from upstream.
+  * u-boot-exynos: Add patch to fix "console" environment variable
+    (Closes: #877074). Thanks to Peter Lebbing!
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Thu, 05 Oct 2017 16:09:47 -0700
+
+u-boot (2017.09+dfsg1-1) experimental; urgency=medium
+
+  * New upstream release.
+  * Refreshed patches for new upstream version.
+  * Update check for generating u-boot.rksd.
+  * [armhf] u-boot-omap: Update to use igep00x0 target, which replaced
+    igep0020.
+  * debian/rules:
+    - Use pkg-info.mk from dpkg-dev to set SOURCE_DATE_EPOCH and get the
+      package version.
+    - Switch "env" target to "envtools".
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Tue, 12 Sep 2017 13:19:29 -0700
+
+u-boot (2017.07+dfsg1-3) unstable; urgency=medium
+
+  * u-boot-rockchip:
+    - Generate u-boot.rksd used for firefly-rk3288 installation.
+    - Add README.Debian describing how to install firefly-rk3288.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Fri, 04 Aug 2017 15:56:56 -0400
+
+u-boot (2017.07+dfsg1-2) unstable; urgency=medium
+
+  * u-boot-rockchip:
+    - Ship u-boot.bin in firefly-rk3288 instead of u-boot.img.
+    - Add NEWS file explaining the change for firefly-rk3288.
+  * u-boot-imx:
+    - mx6cuboxi: Add patch from upstream to support SATA.
+    - Add patch to enable booting from SATA on wandboard.
+  * u-boot-tools:
+    - Install upstream fw_env.config, which includes several
+      well-commented examples.
+  * Consistantly use dd with conv=fsync,notrunc in Debian README files
+    (Closes: #864742). Thanks to Heinrich Schuchardt.
+  * debian/control:
+    - Update to Standards-Version 4.0.0.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Tue, 01 Aug 2017 17:10:48 -0400
+
+u-boot (2017.07+dfsg1-1) unstable; urgency=medium
+
+  * New upstream release.
+  * debian/patches:
+    - Refresh am57xx/omap5_distro_bootcmd.
+    - Refresh distro_bootcmd patches for am57xx and odroid.
+    - Sync mx6cuboxi4x4 patch with mx6cuboxi.
+  * u-boot-sunxi: Install README.sunxi64.
+  * [arm64] u-boot-sunxi: Install additional pine64 targets needed to
+    manually build an SPL image.
+  * [arm64] u-boot-rockchip: Add firefly-rk3399 target.
+  * [armhf] Add Build-Depends on libpython-dev:native and swig.
+  * [arm64] Add build-depends on libpython-dev:native, python and swig.
+  * debian/rules: Split generation of rksd images into script, supporting
+    generation for both rk3288 and rk3399 systems.
+  * debian/copyright: Remove entries from Files-Excluded no longer present
+    upstream.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Mon, 10 Jul 2017 12:46:22 -0700
+
+u-boot (2017.05+dfsg1-1) experimental; urgency=medium
+
+  * New upstream release.
+  * Remove patches, applied upstream:
+    - odroid-c2/0001-meson-gxbb-enable-MMC-as-boot-target.patch
+    - odroid-c2/0002-meson-gxbb-change-ramdisk_addr_r.patch
+  * Refresh patches:
+    - am57xx/omap5_distro_bootcmd
+    - n900-bootz-raw-initrd.diff
+  * Split Build-Depends into multiple lines.
+  * Add dependencies for cross-building arm64, armhf and armel.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Mon, 08 May 2017 17:17:42 -0700
+
+u-boot (2017.05~rc2+dfsg1-1) experimental; urgency=medium
+
+  * New upstream release candidate.
+
+  * Remove patches applied upstream:
+    - mx6cuboxi/serial_console_speed
+    - Makefile-Fix-linking-with-modern-binutils
+
+  * Refresh patches:
+    - am57xx/omap5_distro_bootcmd
+    - arndale/board-spl-rule
+
+  * [arm64] Add u-boot-amlogic
+    - Enable the odroid-c2 target.
+    - Add patches:
+      + Enable MMC boot on odroid-c2.
+      + Fix ramdisk load address on odroid-c2.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Tue, 18 Apr 2017 20:24:42 -0700
+
+u-boot (2017.05~rc1+dfsg1-1) experimental; urgency=medium
+
+  * New upstream release candidate.
+
+  * Refresh patches:
+    - beagleboneblack usb-mass-storage.
+    - mx6cuboxi4x4.
+    - Update am57xx distro_bootcmd patch and also fix for dra7xx_evm.
+
+  * Remove patches applied upstream:
+    - orangepi_zero
+    - openrd
+
+  * Add patches from upstream:
+    - Fix building with binutils.
+
+  * Update lintian overrides with openrd targets.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Wed, 12 Apr 2017 10:47:29 -0700
 
 u-boot (2016.11+dfsg1-4) unstable; urgency=medium
 
@@ -205,7 +1020,7 @@ u-boot (2016.05+dfsg1-1) experimental; urgency=medium
   [ Ryan Finnie ]
   * u-boot-rpi: Add rpi_3, rpi_3_32b target (Closes: #823524).
   * u-boot-rpi: Add arm64 arch.
- 
+
   [ Vagrant Cascadian ]
   * Remove patches applied upstream:
    - Revert-ti_armv7_common.h-Fix-U-Boot-location-on-eMMC.patch
@@ -514,7 +1329,7 @@ u-boot (2015.07+dfsg1-1) unstable; urgency=medium
     - Refresh support patch.
   * Drop no-error-on-set-but-unused-variable patch, no longer relevent.
   * Add patch to ensure that CONFIG_SANDBOX is set when running "make env".
-  
+
   * Use patch applied upstream to use SOURCE_DATE_EPOCH when set.
   * debian/rules: Use the Date from debian/changelog to set
     SOURCE_DATE_EPOCH.
@@ -565,7 +1380,7 @@ u-boot (2015.04+dfsg1-1) experimental; urgency=medium
     + mx6cuboxi: Add patch to use config_distro_bootcmd.
     + wandboard: Add patch to use config_distro_bootcmd and remove old
       environment patches.
-    
+
   * u-boot-omap:
     + am335x_boneblack: Remove patch to set voltage.
     + am335x_boneblack: Add patch to use config_distro_bootcmd and remove
@@ -665,7 +1480,7 @@ u-boot (2014.10+dfsg1-2) unstable; urgency=medium
   * Resync cubox-i patches with github.
     - fixes support for booting on the cubox-i2ultra/i2ex.
       (Closes: #766266)
-  
+
   [ Vagrant Cascadian ]
   * wandboard, cubox-i: Add patches to use variables expected by
     debian-installer bootscript.
@@ -705,7 +1520,7 @@ u-boot (2014.10~rc3+dfsg1-1) unstable; urgency=medium
   * Remove patches applied upstream:
     - bootcmd-scsi-scan-before-scsi.patch
     - sunxi/0001-sun7i-Add-support-for-Olimex-A20-OLinuXino-LIME.patch
-  * Refresh patches:  
+  * Refresh patches:
     - am335x-bootscript.diff
     - am335x-uenv.txt.diff
     - cubox-i/cubox-i-support.diff
@@ -757,11 +1572,11 @@ u-boot (2014.10~rc2+dfsg1-2~exp1) experimental; urgency=medium
     - Enable A20-OLinuXino-LIME target.
     - Disable mx6_cubox-i
     - Disable efikamx and efikasb.
-  
+
   * debian/patches:
     - Add patch from upstream to support A20-OLinuXino-LIME.
     - Disable patches for cubox-i.
-  
+
   * debian/rules:
     - Remove excess conditional architecture check, drop build-dep on
       dctrl-tools.
@@ -774,23 +1589,23 @@ u-boot (2014.10~rc2+dfsg1-2~exp1) experimental; urgency=medium
 u-boot (2014.10~rc2+dfsg1-1) experimental; urgency=medium
 
   * New upstream release candidate.
-  
+
   * Update debian/patches:
     - Remove Cubieboard and Cubietruck patches, applied upstream.
     - Remove kerma-sheevaplug-mvsdio patch, applied upstream.
     - Update openrd-mmc patch, partially applied upstream.
     - Add patch to workaround failure when building env tools.
-  
+
   * [armhf] Add Bananapi target.
 
   * debian/rules:
     - Install fw_printenv and fw_setenv symlink in platform-specific dir.
     - Create include/config/auto.conf to allow tools-only target to build.
     - Update to use defconfig target rather than config target.
-  
+
   * debian/copyright:
     - Update Files-Excluded as some files were removed upstream.
-  
+
   * Updated lintian overrides.
 
  -- Vagrant Cascadian <vagrant@debian.org>  Wed, 03 Sep 2014 23:28:59 -0700
@@ -873,7 +1688,7 @@ u-boot (2014.04+dfsg1-1) unstable; urgency=medium
 
 u-boot (2014.04-2) unstable; urgency=medium
 
-  * Fix FTBFS on powerpc by not setting CROSS_COMPILE when empty. 
+  * Fix FTBFS on powerpc by not setting CROSS_COMPILE when empty.
 
  -- Vagrant Cascadian <vagrant@debian.org>  Mon, 26 May 2014 11:32:49 -0700
 
@@ -898,7 +1713,7 @@ u-boot (2014.04-1) unstable; urgency=low
     - Build target "tools-only".
     - Drop special-casing of MLO, add MLO to debian/targets.
   * debian/patches/cubox-i-raw-initrd.diff:
-    - Patch to support raw initrd on cubox-i. 
+    - Patch to support raw initrd on cubox-i.
   * debian/watch: Use http.
   * debian/control: Bump Standards-Version to 3.9.5, no changes needed.
 
@@ -919,8 +1734,8 @@ u-boot (2014.01-2) unstable; urgency=medium
 
 u-boot (2014.01-1) unstable; urgency=low
 
-  * New upstream version. 
-  * Updated patches. 
+  * New upstream version.
+  * Updated patches.
   * debian/watch: Update to catch -rc versions.
   * debian/control: Update Vcs-* headers.
   * u-boot-tools: Strip comment sections from mkimage and fw_printenv.
@@ -947,7 +1762,7 @@ u-boot (2013.10-2) unstable; urgency=low
     - Switch back to explicitly building the specified target.
     - Allow building multiple targets per platform.
   * debian/targets:
-    - Build the spl/u-boot-spl.bin target on several armhf platforms, which 
+    - Build the spl/u-boot-spl.bin target on several armhf platforms, which
       generates the MLO file.
 
  -- Vagrant Cascadian <vagrant@debian.org>  Mon, 21 Oct 2013 11:33:01 -0700

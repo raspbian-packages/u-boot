@@ -1,14 +1,15 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (c) 2015 Paul Thacker <paul.thacker@microchip.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  *
  */
 #include <common.h>
 #include <clk.h>
 #include <dm.h>
+#include <malloc.h>
 #include <serial.h>
 #include <wait_bit.h>
+#include <linux/bitops.h>
 #include <mach/pic32.h>
 #include <dt-bindings/clock/microchip,clock.h>
 
@@ -51,8 +52,8 @@ static int pic32_serial_init(void __iomem *base, ulong clk, u32 baudrate)
 	u32 div = DIV_ROUND_CLOSEST(clk, baudrate * 16);
 
 	/* wait for TX FIFO to empty */
-	wait_for_bit(__func__, base + U_STA, UART_TX_EMPTY,
-		     true, CONFIG_SYS_HZ, false);
+	wait_for_bit_le32(base + U_STA, UART_TX_EMPTY,
+			  true, CONFIG_SYS_HZ, false);
 
 	/* send break */
 	writel(UART_TX_BRK, base + U_STASET);
@@ -141,7 +142,8 @@ static int pic32_uart_probe(struct udevice *dev)
 	int ret;
 
 	/* get address */
-	addr = fdtdec_get_addr_size(gd->fdt_blob, dev->of_offset, "reg", &size);
+	addr = fdtdec_get_addr_size(gd->fdt_blob, dev_of_offset(dev), "reg",
+				    &size);
 	if (addr == FDT_ADDR_T_NONE)
 		return -EINVAL;
 
@@ -176,7 +178,6 @@ U_BOOT_DRIVER(pic32_serial) = {
 	.of_match	= pic32_uart_ids,
 	.probe		= pic32_uart_probe,
 	.ops		= &pic32_uart_ops,
-	.flags		= DM_FLAG_PRE_RELOC,
 	.priv_auto_alloc_size = sizeof(struct pic32_uart_priv),
 };
 

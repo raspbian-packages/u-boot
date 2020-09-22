@@ -1,10 +1,12 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright (c) 2012 The Chromium OS Authors.
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef _HASH_H
 #define _HASH_H
+
+struct cmd_tbl;
 
 /*
  * Maximum digest size for all algorithms we support. Having this value
@@ -16,10 +18,6 @@ enum {
 	HASH_FLAG_VERIFY	= 1 << 0,	/* Enable verify mode */
 	HASH_FLAG_ENV		= 1 << 1,	/* Allow env vars */
 };
-
-#if defined(CONFIG_SHA1SUM_VERIFY) || defined(CONFIG_CRC32_VERIFY)
-#define CONFIG_HASH_VERIFY
-#endif
 
 struct hash_algo {
 	const char *name;			/* Name of algorithm */
@@ -89,8 +87,8 @@ struct hash_algo {
  * @argc:		Number of arguments (arg 0 must be the command text)
  * @argv:		Arguments
  */
-int hash_command(const char *algo_name, int flags, cmd_tbl_t *cmdtp, int flag,
-		 int argc, char * const argv[]);
+int hash_command(const char *algo_name, int flags, struct cmd_tbl *cmdtp,
+		 int flag, int argc, char *const argv[]);
 
 /**
  * hash_block() - Hash a block according to the requested algorithm

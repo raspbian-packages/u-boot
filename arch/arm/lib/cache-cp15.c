@@ -1,35 +1,28 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2002
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
+#include <cpu_func.h>
+#include <log.h>
 #include <asm/system.h>
 #include <asm/cache.h>
 #include <linux/compiler.h>
+#include <asm/armv7_mpu.h>
 
-#if !(defined(CONFIG_SYS_ICACHE_OFF) && defined(CONFIG_SYS_DCACHE_OFF))
+#if !(CONFIG_IS_ENABLED(SYS_ICACHE_OFF) && CONFIG_IS_ENABLED(SYS_DCACHE_OFF))
 
 DECLARE_GLOBAL_DATA_PTR;
 
+#ifdef CONFIG_SYS_ARM_MMU
 __weak void arm_init_before_mmu(void)
 {
 }
 
 __weak void arm_init_domains(void)
 {
-}
-
-static void cp_delay (void)
-{
-	volatile int i;
-
-	/* copro seems to need some delay between reading and writing */
-	for (i = 0; i < 100; i++)
-		nop();
-	asm volatile("" : : : "memory");
 }
 
 void set_section_dcache(int section, enum dcache_option option)
@@ -69,8 +62,11 @@ void mmu_set_region_dcache_behaviour(phys_addr_t start, size_t size,
 	unsigned long startpt, stoppt;
 	unsigned long upto, end;
 
-	end = ALIGN(start + size, MMU_SECTION_SIZE) >> MMU_SECTION_SHIFT;
+	/* div by 2 before start + size to avoid phys_addr_t overflow */
+	end = ALIGN((start / 2) + (size / 2), MMU_SECTION_SIZE / 2)
+	      >> (MMU_SECTION_SHIFT - 1);
 	start = start >> MMU_SECTION_SHIFT;
+
 #ifdef CONFIG_ARMV7_LPAE
 	debug("%s: start=%pa, size=%zu, option=%llx\n", __func__, &start, size,
 	      option);
@@ -99,19 +95,16 @@ __weak void dram_bank_mmu_setup(int bank)
 	bd_t *bd = gd->bd;
 	int	i;
 
+	/* bd->bi_dram is available only after relocation */
+	if ((gd->flags & GD_FLG_RELOC) == 0)
+		return;
+
 	debug("%s: bank: %d\n", __func__, bank);
 	for (i = bd->bi_dram[bank].start >> MMU_SECTION_SHIFT;
 	     i < (bd->bi_dram[bank].start >> MMU_SECTION_SHIFT) +
 		 (bd->bi_dram[bank].size >> MMU_SECTION_SHIFT);
-	     i++) {
-#if defined(CONFIG_SYS_ARM_CACHE_WRITETHROUGH)
-		set_section_dcache(i, DCACHE_WRITETHROUGH);
-#elif defined(CONFIG_SYS_ARM_CACHE_WRITEALLOC)
-		set_section_dcache(i, DCACHE_WRITEALLOC);
-#else
-		set_section_dcache(i, DCACHE_WRITEBACK);
-#endif
-	}
+	     i++)
+		set_section_dcache(i, DCACHE_DEFAULT_OPTION);
 }
 
 /* to activate the MMU we need to set up virtual memory: use 1M areas */
@@ -129,7 +122,7 @@ static inline void mmu_setup(void)
 		dram_bank_mmu_setup(i);
 	}
 
-#ifdef CONFIG_ARMV7_LPAE
+#if defined(CONFIG_ARMV7_LPAE) && __LINUX_ARM_ARCH__ != 4
 	/* Set up 4 PTE entries pointing to our 4 1GB page tables */
 	for (i = 0; i < 4; i++) {
 		u64 *page_table = (u64 *)(gd->arch.tlb_addr + (4096 * 4));
@@ -147,7 +140,7 @@ static inline void mmu_setup(void)
 #endif
 
 	if (is_hyp()) {
-		/* Set HCTR to enable LPAE */
+		/* Set HTCR to enable LPAE */
 		asm volatile("mcr p15, 4, %0, c2, c0, 2"
 			: : "r" (reg) : "memory");
 		/* Set HTTBR0 */
@@ -171,7 +164,16 @@ static inline void mmu_setup(void)
 		asm volatile("mcr p15, 0, %0, c10, c2, 0"
 			: : "r" (MEMORY_ATTRIBUTES) : "memory");
 	}
-#elif defined(CONFIG_CPU_V7)
+#elif defined(CONFIG_CPU_V7A)
+	if (is_hyp()) {
+		/* Set HTCR to disable LPAE */
+		asm volatile("mcr p15, 4, %0, c2, c0, 2"
+			: : "r" (0) : "memory");
+	} else {
+		/* Set TTBCR to disable LPAE */
+		asm volatile("mcr p15, 0, %0, c2, c0, 2"
+			: : "r" (0) : "memory");
+	}
 	/* Set TTBR0 */
 	reg = gd->arch.tlb_addr & TTBR0_BASE_ADDR_MASK;
 #if defined(CONFIG_SYS_ARM_CACHE_WRITETHROUGH)
@@ -196,7 +198,6 @@ static inline void mmu_setup(void)
 
 	/* and enable the mmu */
 	reg = get_cr();	/* get control reg. */
-	cp_delay();
 	set_cr(reg | CR_M);
 }
 
@@ -204,17 +205,24 @@ static int mmu_enabled(void)
 {
 	return get_cr() & CR_M;
 }
+#endif /* CONFIG_SYS_ARM_MMU */
 
 /* cache_bit must be either CR_I or CR_C */
 static void cache_enable(uint32_t cache_bit)
 {
 	uint32_t reg;
 
-	/* The data cache is not active unless the mmu is enabled too */
+	/* The data cache is not active unless the mmu/mpu is enabled too */
+#ifdef CONFIG_SYS_ARM_MMU
 	if ((cache_bit == CR_C) && !mmu_enabled())
 		mmu_setup();
+#elif defined(CONFIG_SYS_ARM_MPU)
+	if ((cache_bit == CR_C) && !mpu_enabled()) {
+		printf("Consider enabling MPU before enabling caches\n");
+		return;
+	}
+#endif
 	reg = get_cr();	/* get control reg. */
-	cp_delay();
 	set_cr(reg | cache_bit);
 }
 
@@ -224,35 +232,40 @@ static void cache_disable(uint32_t cache_bit)
 	uint32_t reg;
 
 	reg = get_cr();
-	cp_delay();
 
 	if (cache_bit == CR_C) {
 		/* if cache isn;t enabled no need to disable */
 		if ((reg & CR_C) != CR_C)
 			return;
+#ifdef CONFIG_SYS_ARM_MMU
 		/* if disabling data cache, disable mmu too */
 		cache_bit |= CR_M;
+#endif
 	}
 	reg = get_cr();
-	cp_delay();
+
+#ifdef CONFIG_SYS_ARM_MMU
 	if (cache_bit == (CR_C | CR_M))
+#elif defined(CONFIG_SYS_ARM_MPU)
+	if (cache_bit == CR_C)
+#endif
 		flush_dcache_all();
 	set_cr(reg & ~cache_bit);
 }
 #endif
 
-#ifdef CONFIG_SYS_ICACHE_OFF
-void icache_enable (void)
+#if CONFIG_IS_ENABLED(SYS_ICACHE_OFF)
+void icache_enable(void)
 {
 	return;
 }
 
-void icache_disable (void)
+void icache_disable(void)
 {
 	return;
 }
 
-int icache_status (void)
+int icache_status(void)
 {
 	return 0;					/* always off */
 }
@@ -273,18 +286,18 @@ int icache_status(void)
 }
 #endif
 
-#ifdef CONFIG_SYS_DCACHE_OFF
-void dcache_enable (void)
+#if CONFIG_IS_ENABLED(SYS_DCACHE_OFF)
+void dcache_enable(void)
 {
 	return;
 }
 
-void dcache_disable (void)
+void dcache_disable(void)
 {
 	return;
 }
 
-int dcache_status (void)
+int dcache_status(void)
 {
 	return 0;					/* always off */
 }

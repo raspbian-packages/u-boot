@@ -1,14 +1,16 @@
+// SPDX-License-Identifier: GPL-2.0
 /*
  * Copyright (c) 2016, NVIDIA CORPORATION.
- *
- * SPDX-License-Identifier: GPL-2.0
  */
 
 #include <common.h>
+#include <log.h>
+#include <malloc.h>
 #include <asm/io.h>
 #include <dm.h>
 #include <mailbox-uclass.h>
 #include <dt-bindings/mailbox/tegra186-hsp.h>
+#include <linux/bitops.h>
 
 #define TEGRA_HSP_INT_DIMENSIONING		0x380
 #define TEGRA_HSP_INT_DIMENSIONING_NSI_SHIFT	16
@@ -35,8 +37,6 @@ struct tegra_hsp {
 	fdt_addr_t regs;
 	uint32_t db_base;
 };
-
-DECLARE_GLOBAL_DATA_PTR;
 
 static uint32_t *tegra_hsp_reg(struct tegra_hsp *thsp, uint32_t db_id,
 			       uint32_t reg)
@@ -72,7 +72,7 @@ static int tegra_hsp_db_id(ulong chan_id)
 }
 
 static int tegra_hsp_of_xlate(struct mbox_chan *chan,
-			      struct fdtdec_phandle_args *args)
+			      struct ofnode_phandle_args *args)
 {
 	debug("%s(chan=%p)\n", __func__, chan);
 
@@ -153,7 +153,7 @@ static int tegra_hsp_probe(struct udevice *dev)
 
 	debug("%s(dev=%p)\n", __func__, dev);
 
-	thsp->regs = dev_get_addr(dev);
+	thsp->regs = devfdt_get_addr(dev);
 	if (thsp->regs == FDT_ADDR_T_NONE)
 		return -ENODEV;
 
@@ -178,7 +178,7 @@ static const struct udevice_id tegra_hsp_ids[] = {
 struct mbox_ops tegra_hsp_mbox_ops = {
 	.of_xlate = tegra_hsp_of_xlate,
 	.request = tegra_hsp_request,
-	.free = tegra_hsp_free,
+	.rfree = tegra_hsp_free,
 	.send = tegra_hsp_send,
 	.recv = tegra_hsp_recv,
 };

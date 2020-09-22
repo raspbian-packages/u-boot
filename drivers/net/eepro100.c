@@ -1,8 +1,7 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2002
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -12,6 +11,7 @@
 #include <asm/io.h>
 #include <pci.h>
 #include <miiphy.h>
+#include <linux/delay.h>
 
 #undef DEBUG
 
@@ -194,8 +194,6 @@ struct descriptor {			/* A generic descriptor. */
 
 #define TOUT_LOOP		1000000
 
-#define ETH_ALEN		6
-
 static struct RxFD rx_ring[NUM_RX_DESC];	/* RX descriptor ring	      */
 static struct TxFD tx_ring[NUM_TX_DESC];	/* TX descriptor ring	      */
 static int rx_next;			/* RX descriptor ring pointer */
@@ -207,12 +205,6 @@ static int tx_threshold;
  * There are so many options that it would be difficult to document
  * each bit. We mostly use the default or recommended settings.
  */
-static const char i82557_config_cmd[] = {
-	22, 0x08, 0, 0, 0, 0, 0x32, 0x03, 1,	/* 1=Use MII  0=Use AUI */
-	0, 0x2E, 0, 0x60, 0,
-	0xf2, 0x48, 0, 0x40, 0xf2, 0x80,	/* 0x40=Force full-duplex */
-	0x3f, 0x05,
-};
 static const char i82558_config_cmd[] = {
 	22, 0x08, 0, 1, 0, 0, 0x22, 0x03, 1,	/* 1=Use MII  0=Use AUI */
 	0, 0x2E, 0, 0x60, 0x08, 0x88,
@@ -471,7 +463,7 @@ int eepro100_initialize (bd_t * bis)
 		 */
 		pci_write_config_byte (devno, PCI_LATENCY_TIMER, 0x20);
 
-		udelay (10 * 1000);
+		udelay(10 * 1000);
 
 		read_hw_addr (dev, bis);
 	}
@@ -489,10 +481,10 @@ static int eepro100_init (struct eth_device *dev, bd_t * bis)
 	/* Reset the ethernet controller
 	 */
 	OUTL (dev, I82559_SELECTIVE_RESET, SCBPort);
-	udelay (20);
+	udelay(20);
 
 	OUTL (dev, I82559_RESET, SCBPort);
-	udelay (20);
+	udelay(20);
 
 	if (!wait_for_eepro100 (dev)) {
 		printf ("Error: Can not reset ethernet controller.\n");
@@ -730,10 +722,10 @@ static void eepro100_halt (struct eth_device *dev)
 	/* Reset the ethernet controller
 	 */
 	OUTL (dev, I82559_SELECTIVE_RESET, SCBPort);
-	udelay (20);
+	udelay(20);
 
 	OUTL (dev, I82559_RESET, SCBPort);
-	udelay (20);
+	udelay(20);
 
 	if (!wait_for_eepro100 (dev)) {
 		printf ("Error: Can not reset ethernet controller.\n");
@@ -769,19 +761,19 @@ static int read_eeprom (struct eth_device *dev, int location, int addr_len)
 		short dataval = (read_cmd & (1 << i)) ? EE_DATA_WRITE : 0;
 
 		OUTW (dev, EE_ENB | dataval, SCBeeprom);
-		udelay (1);
+		udelay(1);
 		OUTW (dev, EE_ENB | dataval | EE_SHIFT_CLK, SCBeeprom);
-		udelay (1);
+		udelay(1);
 	}
 	OUTW (dev, EE_ENB, SCBeeprom);
 
 	for (i = 15; i >= 0; i--) {
 		OUTW (dev, EE_ENB | EE_SHIFT_CLK, SCBeeprom);
-		udelay (1);
+		udelay(1);
 		retval = (retval << 1) |
 				((INW (dev, SCBeeprom) & EE_DATA_READ) ? 1 : 0);
 		OUTW (dev, EE_ENB, SCBeeprom);
-		udelay (1);
+		udelay(1);
 	}
 
 	/* Terminate the EEPROM access. */

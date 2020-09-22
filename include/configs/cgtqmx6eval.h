@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  *
  * Congatec Conga-QEVAl board configuration file.
@@ -6,29 +7,23 @@
  * Based on Freescale i.MX6Q Sabre Lite board configuration file.
  * Copyright (C) 2013, Adeneo Embedded <www.adeneo-embedded.com>
  * Leo Sartre, <lsartre@adeneo-embedded.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __CONFIG_CGTQMX6EVAL_H
 #define __CONFIG_CGTQMX6EVAL_H
+
+#include <linux/stringify.h>
 
 #include "mx6_common.h"
 
 #define CONFIG_MACH_TYPE	4122
 
 #ifdef CONFIG_SPL
-#define CONFIG_SYS_SPI_U_BOOT_OFFS	(64 * 1024)
-#define CONFIG_SPL_SPI_LOAD
 #include "imx6_spl.h"
 #endif
 
 /* Size of malloc() pool */
 #define CONFIG_SYS_MALLOC_LEN		(10 * 1024 * 1024)
-
-#define CONFIG_BOARD_EARLY_INIT_F
-#define CONFIG_BOARD_LATE_INIT
-#define CONFIG_MISC_INIT_R
 
 #define CONFIG_MXC_UART
 #define CONFIG_MXC_UART_BASE	       UART2_BASE
@@ -37,16 +32,8 @@
 #define CONFIG_SYS_FSL_ESDHC_ADDR      0
 
 /* SPI NOR */
-#define CONFIG_SPI_FLASH
 #define CONFIG_SPI_FLASH_STMICRO
 #define CONFIG_SPI_FLASH_SST
-#define CONFIG_MXC_SPI
-#define CONFIG_SF_DEFAULT_BUS		0
-#define CONFIG_SF_DEFAULT_SPEED		20000000
-#define CONFIG_SF_DEFAULT_MODE		(SPI_MODE_0)
-
-/* Miscellaneous commands */
-#define CONFIG_CMD_BMODE
 
 /* Thermal support */
 #define CONFIG_IMX_THERMAL
@@ -66,59 +53,34 @@
 #define CONFIG_POWER_PFUZE100_I2C_ADDR	0x08
 
 /* USB Configs */
-#define CONFIG_USB_EHCI
-#define CONFIG_USB_EHCI_MX6
 #define CONFIG_EHCI_HCD_INIT_AFTER_RESET
-#define CONFIG_USB_HOST_ETHER
-#define CONFIG_USB_ETHER_ASIX
 #define CONFIG_MXC_USB_PORTSC	(PORT_PTS_UTMI | PORT_PTS_PTW)
 #define CONFIG_MXC_USB_FLAGS	0
 #define CONFIG_USB_MAX_CONTROLLER_COUNT 2 /* Enabled USB controller number */
-#define CONFIG_SYS_USB_EVENT_POLL_VIA_CONTROL_EP
 
 #define CONFIG_USBD_HS
 
-#define CONFIG_USB_FUNCTION_MASS_STORAGE
-
-#define CONFIG_USB_FUNCTION_FASTBOOT
-#define CONFIG_CMD_FASTBOOT
-#define CONFIG_ANDROID_BOOT_IMAGE
-#define CONFIG_FASTBOOT_BUF_ADDR   CONFIG_SYS_LOAD_ADDR
-#define CONFIG_FASTBOOT_BUF_SIZE   0x07000000
-
 /* Framebuffer */
-#define CONFIG_VIDEO_IPUV3
 #define CONFIG_VIDEO_BMP_RLE8
 #define CONFIG_SPLASH_SCREEN
 #define CONFIG_SPLASH_SCREEN_ALIGN
 #define CONFIG_BMP_16BPP
 #define CONFIG_VIDEO_LOGO
 #define CONFIG_VIDEO_BMP_LOGO
-#ifdef CONFIG_MX6DL
-#define CONFIG_IPUV3_CLK 198000000
-#else
-#define CONFIG_IPUV3_CLK 264000000
-#endif
 #define CONFIG_IMX_HDMI
 
 /* SATA */
-#define CONFIG_CMD_SATA
-#define CONFIG_DWC_AHSATA
 #define CONFIG_SYS_SATA_MAX_DEVICE	1
 #define CONFIG_DWC_AHSATA_PORT_ID	0
 #define CONFIG_DWC_AHSATA_BASE_ADDR	SATA_ARB_BASE_ADDR
 #define CONFIG_LBA48
-#define CONFIG_LIBATA
 
 /* Ethernet */
 #define CONFIG_FEC_MXC
-#define CONFIG_MII
 #define IMX_FEC_BASE			ENET_BASE_ADDR
 #define CONFIG_FEC_XCV_TYPE		RGMII
 #define CONFIG_ETHPRIME			"FEC"
 #define CONFIG_FEC_MXC_PHYADDR		6
-#define CONFIG_PHYLIB
-#define CONFIG_PHY_ATHEROS
 
 /* Command definition */
 
@@ -127,7 +89,6 @@
 #define CONFIG_MMCROOT		"/dev/mmcblk0p2"
 #define CONFIG_SYS_MMC_ENV_DEV		0
 
-#define CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"script=boot.scr\0" \
 	"image=zImage\0" \
@@ -228,12 +189,7 @@
 		"fi; " \
 	"else run netboot; fi"
 
-#define CONFIG_SYS_MEMTEST_START       0x10000000
-#define CONFIG_SYS_MEMTEST_END	       0x10010000
-#define CONFIG_SYS_MEMTEST_SCRATCH     0x10800000
-
 /* Physical Memory Map */
-#define CONFIG_NR_DRAM_BANKS	       1
 #define PHYS_SDRAM		       MMDC0_ARB_BASE_ADDR
 
 #define CONFIG_SYS_SDRAM_BASE	       PHYS_SDRAM
@@ -247,20 +203,7 @@
 
 /* Environment organization */
 #if defined (CONFIG_ENV_IS_IN_MMC)
-#define CONFIG_ENV_OFFSET		(6 * 64 * 1024)
 #define CONFIG_SYS_MMC_ENV_DEV		0
-#endif
-
-#define CONFIG_ENV_SIZE			(8 * 1024)
-
-#define CONFIG_ENV_IS_IN_SPI_FLASH
-#if defined(CONFIG_ENV_IS_IN_SPI_FLASH)
-#define CONFIG_ENV_OFFSET		(768 * 1024)
-#define CONFIG_ENV_SECT_SIZE		(64 * 1024)
-#define CONFIG_ENV_SPI_BUS		CONFIG_SF_DEFAULT_BUS
-#define CONFIG_ENV_SPI_CS		CONFIG_SF_DEFAULT_CS
-#define CONFIG_ENV_SPI_MODE		CONFIG_SF_DEFAULT_MODE
-#define CONFIG_ENV_SPI_MAX_HZ		CONFIG_SF_DEFAULT_SPEED
 #endif
 
 #endif			       /* __CONFIG_CGTQMX6EVAL_H */
