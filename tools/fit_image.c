@@ -53,7 +53,7 @@ static int fit_add_file_data(struct image_tool_params *params, size_t size_inc,
 	}
 
 	/* for first image creation, add a timestamp at offset 0 i.e., root  */
-	if (params->datafile) {
+	if (params->datafile || params->reset_timestamp) {
 		time_t time = imagetool_get_source_date(params->cmdname,
 							sbuf.st_mtime);
 		ret = fit_set_timestamp(ptr, 0, time);
@@ -606,8 +606,8 @@ static int fit_import_data(struct image_tool_params *params, const char *fname)
 			continue;
 		debug("Importing data size %x\n", len);
 
-		ret = fdt_setprop(fdt, node, "data", fdt + data_base + buf_ptr,
-				  len);
+		ret = fdt_setprop(fdt, node, "data",
+				  old_fdt + data_base + buf_ptr, len);
 		if (ret) {
 			debug("%s: Failed to write property: %s\n", __func__,
 			      fdt_strerror(ret));

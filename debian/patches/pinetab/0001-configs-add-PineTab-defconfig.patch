@@ -1,0 +1,45 @@
+From 2c346cacb4b0841051bceb27a57058020860ab8b Mon Sep 17 00:00:00 2001
+From: Arnaud Ferraris <arnaud.ferraris@collabora.com>
+Date: Wed, 2 Sep 2020 09:53:50 +0200
+Subject: [PATCH] configs: add PineTab defconfig
+Forwarded: https://patchwork.ozlabs.org/project/uboot/list/?series=232582
+
+The PineTab device-tree is already in u-boot, this commit adds the corresponding
+defconfig, based on pinephone_defconfig.
+
+Signed-off-by: Arnaud Ferraris <arnaud.ferraris@collabora.com>
+
+---
+ configs/pinetab_defconfig | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+ create mode 100644 configs/pinetab_defconfig
+
+diff --git a/configs/pinetab_defconfig b/configs/pinetab_defconfig
+new file mode 100644
+index 0000000000..71dda9f5d9
+--- /dev/null
++++ b/configs/pinetab_defconfig
+@@ -0,0 +1,20 @@
++CONFIG_ARM=y
++CONFIG_ARCH_SUNXI=y
++CONFIG_SPL=y
++CONFIG_IDENT_STRING=""
++CONFIG_MACH_SUN50I=y
++CONFIG_SUNXI_DRAM_LPDDR3_STOCK=y
++CONFIG_DRAM_CLK=552
++CONFIG_DRAM_ZQ=3881949
++CONFIG_MMC_SUNXI_SLOT_EXTRA=2
++# CONFIG_VIDEO_DE2 is not set
++CONFIG_DEFAULT_DEVICE_TREE="sun50i-a64-pinetab"
++# CONFIG_SYS_MALLOC_CLEAR_ON_INIT is not set
++CONFIG_SYS_CONSOLE_INFO_QUIET=y
++# CONFIG_DISPLAY_CPUINFO is not set
++# CONFIG_DISPLAY_BOARDINFO is not set
++# CONFIG_SPL_RAW_IMAGE_SUPPORT is not set
++# CONFIG_SPL_BANNER_PRINT is not set
++# CONFIG_SPL_POWER_SUPPORT is not set
++# CONFIG_NET is not set
++# CONFIG_EFI_LOADER is not set
+-- 
+2.28.0
+

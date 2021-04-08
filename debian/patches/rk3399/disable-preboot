@@ -1,0 +1,34 @@
+Disable USE_PREBOOT as a workaround to boot failure triggered by
+initializing USB. (Closes: #973323, #980434)
+
+Reported upstream:
+
+  https://lists.denx.de/pipermail/u-boot/2021-January/438098.html
+
+Index: u-boot/configs/rockpro64-rk3399_defconfig
+===================================================================
+--- u-boot.orig/configs/rockpro64-rk3399_defconfig
++++ u-boot/configs/rockpro64-rk3399_defconfig
+@@ -12,7 +12,7 @@ CONFIG_SPL_SPI_FLASH_SUPPORT=y
+ CONFIG_SPL_SPI_SUPPORT=y
+ CONFIG_DEFAULT_DEVICE_TREE="rk3399-rockpro64"
+ CONFIG_DEBUG_UART=y
+-CONFIG_USE_PREBOOT=y
++CONFIG_USE_PREBOOT=n
+ CONFIG_DEFAULT_FDT_FILE="rockchip/rk3399-rockpro64.dtb"
+ CONFIG_DISPLAY_BOARDINFO_LATE=y
+ CONFIG_MISC_INIT_R=y
+
+Index: u-boot/configs/pinebook-pro-rk3399_defconfig
+===================================================================
+--- u-boot.orig/configs/pinebook-pro-rk3399_defconfig
++++ u-boot/configs/pinebook-pro-rk3399_defconfig
+@@ -12,7 +12,7 @@ CONFIG_SPL_SPI_SUPPORT=y
+ CONFIG_DEFAULT_DEVICE_TREE="rk3399-pinebook-pro"
+ CONFIG_DEBUG_UART=y
+ CONFIG_BOOTDELAY=3
+-CONFIG_USE_PREBOOT=y
++CONFIG_USE_PREBOOT=n
+ CONFIG_DEFAULT_FDT_FILE="rockchip/rk3399-pinebook-pro.dtb"
+ CONFIG_DISPLAY_BOARDINFO_LATE=y
+ CONFIG_MISC_INIT_R=y

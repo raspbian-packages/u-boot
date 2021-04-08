@@ -1,13 +1,10 @@
 add-debian-revision-to-u-boot-version
-no-force-CROSS_COMPILE-powerpc.diff
+
 tools-generic-builds.patch
-Makefile-add-kwb-target-to-all.patch
 
 mx53loco
 
 arndale/board-spl-rule.diff
-
-sh4-fix-linker-name-prefix.patch
 
 ensure-config-sandbox-for-make-env.patch
 
@@ -21,4 +18,6 @@ riscv64/qemu-riscv64_smode-sifive-fu540-fix-extlinux-define-.patch
 
 n900/bootz_and_raw_initrd.patch
 
-reproducible/0001-fit_image-Use-calloc-to-fix-reproducibility-issue.patch
+rk3399/disable-preboot
+
+pinetab/0001-configs-add-PineTab-defconfig.patch
