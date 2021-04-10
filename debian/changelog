@@ -3,7 +3,11 @@ u-boot (2021.01+dfsg-4+rpi1) bullseye-staging; urgency=medium
   [changes brought forward from 2014.10+dfsg1-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Fri, 28 Nov 2014 06:00:07 +0000]
   * Don't build versions for various armv7 devices, build rpi version instead.
 
- -- Raspbian forward porter <root@raspbian.org>  Thu, 08 Apr 2021 12:17:54 +0000
+  [changes introduced in 2021.01+dfsg-4+rpi1 by Peter Michael Green]
+  * Don't build powerpc targets for qemu, my attempts to build the nessacery
+    cross-compiler in raspbian failed.
+
+ -- Peter Michael Green <plugwash@raspbian.org>  Thu, 08 Apr 2021 12:17:54 +0000
 
 u-boot (2021.01+dfsg-4) unstable; urgency=medium
 
