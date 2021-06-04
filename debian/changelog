@@ -1,4 +1,4 @@
-u-boot (2021.01+dfsg-4+rpi1) bullseye-staging; urgency=medium
+u-boot (2021.01+dfsg-5+rpi1) bullseye-staging; urgency=medium
 
   [changes brought forward from 2014.10+dfsg1-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Fri, 28 Nov 2014 06:00:07 +0000]
   * Don't build versions for various armv7 devices, build rpi version instead.
@@ -7,7 +7,15 @@ u-boot (2021.01+dfsg-4+rpi1) bullseye-staging; urgency=medium
   * Don't build powerpc targets for qemu, my attempts to build the nessacery
     cross-compiler in raspbian failed.
 
- -- Peter Michael Green <plugwash@raspbian.org>  Thu, 08 Apr 2021 12:17:54 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Fri, 04 Jun 2021 00:18:15 +0000
+
+u-boot (2021.01+dfsg-5) unstable; urgency=medium
+
+  * debian/patches: Fix boot failure caused by efi loader switching to
+    non-secure mode too early. Thanks to Bastian Germann and Heinrich
+    Schuchardt. (Closes: #988217)
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Sat, 22 May 2021 21:32:45 -0700
 
 u-boot (2021.01+dfsg-4) unstable; urgency=medium
 

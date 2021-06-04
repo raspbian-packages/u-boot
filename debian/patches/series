@@ -21,3 +21,5 @@ n900/bootz_and_raw_initrd.patch
 rk3399/disable-preboot
 
 pinetab/0001-configs-add-PineTab-defconfig.patch
+
+upstream/0001-efi_loader-switch-to-non-secure-mode-later.patch
