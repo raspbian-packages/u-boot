@@ -1,0 +1,2 @@
+debian/bin/u-boot-install-rockchip      usr/bin
+debian/build/rockchip_make_fit_atf      usr/bin
