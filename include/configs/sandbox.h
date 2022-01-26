@@ -46,6 +46,9 @@
 #ifdef __ASSEMBLY__
 #define BOOTENV
 #else
+#ifndef CONFIG_SANDBOX
+#define CONFIG_SANDBOX 1
+#endif
 #include <config_distro_bootcmd.h>
 #endif
 
