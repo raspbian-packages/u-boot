@@ -1,0 +1,13 @@
+Enable booting of zImage/vmlinuz and initrd without requiring the use
+of mkimage to create uImage/uInitrd.
+
+Index: u-boot/configs/nokia_rx51_defconfig
+===================================================================
+--- u-boot.orig/configs/nokia_rx51_defconfig
++++ u-boot/configs/nokia_rx51_defconfig
+@@ -71,3 +71,5 @@ CONFIG_SPLASH_SCREEN=y
+ CONFIG_WATCHDOG_TIMEOUT_MSECS=31000
+ CONFIG_WDT=y
+ # CONFIG_GZIP is not set
++CONFIG_CMD_BOOTZ=y
++CONFIG_SUPPORT_RAW_INITRD=y
