@@ -1,0 +1,42 @@
+From 9184b89aa1bbda6a474357908c09d75ebf98f6db Mon Sep 17 00:00:00 2001
+From: Vagrant Cascadian <vagrant@debian.org>
+Date: Wed, 6 Apr 2022 13:42:03 -0700
+Subject: [PATCH 1/2] rockchip: Enable SCSI in distro bootcmd for rk3399.
+Origin: https://patchwork.ozlabs.org/project/uboot/patch/20220406204204.60328-2-vagrant@debian.org/
+
+Include SCSI in the list of boot targets if CONFIG_CMD_SCSI is
+enabled.
+
+Signed-off-by: Vagrant Cascadian <vagrant@debian.org>
+---
+ include/configs/rockchip-common.h | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/include/configs/rockchip-common.h b/include/configs/rockchip-common.h
+index ba7061a287..0c08776ae2 100644
+--- a/include/configs/rockchip-common.h
++++ b/include/configs/rockchip-common.h
+@@ -29,6 +29,12 @@
+ 	#define BOOT_TARGET_NVME(func)
+ #endif
+ 
++#if CONFIG_IS_ENABLED(CMD_SCSI)
++	#define BOOT_TARGET_SCSI(func) func(SCSI, scsi, 0)
++#else
++	#define BOOT_TARGET_SCSI(func)
++#endif
++
+ #if CONFIG_IS_ENABLED(CMD_USB)
+ 	#define BOOT_TARGET_USB(func) func(USB, usb, 0)
+ #else
+@@ -57,6 +63,7 @@
+ #define BOOT_TARGET_DEVICES(func) \
+ 	BOOT_TARGET_MMC(func) \
+ 	BOOT_TARGET_NVME(func) \
++	BOOT_TARGET_SCSI(func) \
+ 	BOOT_TARGET_USB(func) \
+ 	BOOT_TARGET_PXE(func) \
+ 	BOOT_TARGET_DHCP(func) \
+-- 
+2.35.1
+
