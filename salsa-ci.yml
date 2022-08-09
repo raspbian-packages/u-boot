@@ -1,0 +1,40 @@
+---
+include:
+  - https://salsa.debian.org/salsa-ci-team/pipeline/raw/master/recipes/debian.yml
+
+variables:
+  # no autopkgtest tests
+  SALSA_CI_DISABLE_AUTOPKGTEST: 1
+
+test-crossbuild-arm64:
+  allow_failure: true
+
+blhc:
+  allow_failure: true
+
+test-crossbuild-armel:
+  allow_failure: true
+  extends:
+    - .test-crossbuild-package-arm64
+  variables:
+    HOST_ARCH: armel
+  except:
+    variables:
+      - $CI_COMMIT_TAG != null && $SALSA_CI_ENABLE_PIPELINE_ON_TAGS !~ /^(1|yes|true)$/
+      - $SALSA_CI_DISABLE_CROSSBUILD_ARMEL =~ /^(1|yes|true)$/
+      - $BUILD_ARCH == $HOST_ARCH
+      - $HOST_ARCH == ""
+
+test-crossbuild-armhf:
+  allow_failure: true
+  extends:
+    - .test-crossbuild-package-arm64
+  variables:
+    HOST_ARCH: armhf
+    DEB_BUILD_PROFILES: pkg.uboot.notools
+  except:
+    variables:
+      - $CI_COMMIT_TAG != null && $SALSA_CI_ENABLE_PIPELINE_ON_TAGS !~ /^(1|yes|true)$/
+      - $SALSA_CI_DISABLE_CROSSBUILD_ARMHF =~ /^(1|yes|true)$/
+      - $BUILD_ARCH == $HOST_ARCH
+      - $HOST_ARCH == ""
