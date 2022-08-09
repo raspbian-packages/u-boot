@@ -2108,6 +2108,9 @@ spl/u-boot-spl: tools prepare $(if $(CONFIG_SPL_OF_CONTROL),dts/dt.dtb)
 spl/sunxi-spl.bin: spl/u-boot-spl
 	@:
 
+spl/arndale-spl.bin: spl/u-boot-spl
+	@:
+
 spl/sunxi-spl-with-ecc.bin: spl/sunxi-spl.bin
 	@:
 
