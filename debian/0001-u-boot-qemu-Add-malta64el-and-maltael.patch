@@ -1,0 +1,45 @@
+From 5e81b8161625dac608376348abe371de511ca83b Mon Sep 17 00:00:00 2001
+From: Vagrant Cascadian <vagrant@debian.org>
+Date: Fri, 13 May 2022 14:47:02 -0700
+Subject: [PATCH] u-boot-qemu: Add malta64el and maltael.
+
+---
+ debian/control    | 2 ++
+ debian/targets.mk | 8 ++++++++
+ 2 files changed, 10 insertions(+)
+
+diff --git a/debian/control b/debian/control
+index e7ba5a19bc..531c0e6377 100644
+--- a/debian/control
++++ b/debian/control
+@@ -36,6 +36,8 @@ Build-Depends-Indep:
+  gcc-riscv64-linux-gnu [!riscv64],
+  gcc-x86-64-linux-gnu [!amd64],
+  gcc-powerpc-linux-gnu [!powerpc],
++ gcc-mips64el-linux-gnuabi64 [!mips64el],
++ gcc-mipsel-linux-gnu [!mipsel],
+ Rules-Requires-Root: no
+ Standards-Version: 4.6.0
+ Homepage: https://www.denx.de/wiki/U-Boot/
+diff --git a/debian/targets.mk b/debian/targets.mk
+index 333488b8c0..889ea93df4 100644
+--- a/debian/targets.mk
++++ b/debian/targets.mk
+@@ -569,6 +569,14 @@ endif
+ 
+ # u-boot-qemu (Architecture: all)
+ 
++  u-boot-qemu_platforms += malta64el
++  malta64el_CROSS_COMPILE := mips64el-linux-gnuabi64-
++  malta64el_targets := u-boot.bin uboot.elf
++
++  u-boot-qemu_platforms += maltael
++  maltael_CROSS_COMPILE := mipsel-linux-gnu-
++  maltael_targets := u-boot.bin uboot.elf
++
+   u-boot-qemu_platforms += qemu-ppce500
+   qemu-ppce500_CROSS_COMPILE := powerpc-linux-gnu-
+   qemu-ppce500_targets := u-boot.bin uboot.elf
+-- 
+2.30.2
+
