@@ -52,7 +52,10 @@ void read_tlbcam_entry(int idx, u32 *valid, u32 *tsize, unsigned long *epn,
 	u32 _mas1;
 
 	mtspr(MAS0, FSL_BOOKE_MAS0(1, idx, 0));
-	asm volatile("tlbre;isync");
+	asm volatile(".machine push;\n"
+		     ".machine e500;\n"
+		     "tlbre;isync;\n"
+		     ".machine pop;\n");
 	_mas1 = mfspr(MAS1);
 
 	*valid = (_mas1 & MAS1_VALID);
@@ -111,7 +114,10 @@ void init_used_tlb_cams(void)
 	/* walk all the entries */
 	for (i = 0; i < num_cam; i++) {
 		mtspr(MAS0, FSL_BOOKE_MAS0(1, i, 0));
-		asm volatile("tlbre;isync");
+		asm volatile(".machine push;\n"
+			     ".machine e500;\n"
+			     "tlbre;isync;\n"
+			     ".machine pop;");
 		if (mfspr(MAS1) & MAS1_VALID)
 			use_tlb_cam(i);
 	}
@@ -185,7 +191,10 @@ void disable_tlb(u8 esel)
 #ifdef CONFIG_ENABLE_36BIT_PHYS
 	mtspr(MAS7, 0);
 #endif
-	asm volatile("isync;msync;tlbwe;isync");
+	asm volatile(".machine push;\n"
+		     ".machine e500;\n"
+		     "isync;msync;tlbwe;isync;\n"
+		     ".machine pop;\n");
 
 #ifdef CONFIG_ADDR_MAP
 	if (gd->flags & GD_FLG_RELOC)
@@ -195,7 +204,11 @@ void disable_tlb(u8 esel)
 
 static void tlbsx (const volatile unsigned *addr)
 {
-	__asm__ __volatile__ ("tlbsx 0,%0" : : "r" (addr), "m" (*addr));
+	__asm__ __volatile__ (".machine push;\n"
+			      ".machine e500;\n"
+			      "tlbsx 0,%0;\n"
+			      ".machine pop;\n"
+			      : : "r" (addr), "m" (*addr));
 }
 
 /* return -1 if we didn't find anything */
