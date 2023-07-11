@@ -1,0 +1,17 @@
+EXTRAVERSION was not updated correctly for released version.
+
+https://lists.denx.de/pipermail/u-boot/2023-July/522256.html
+
+diff --git a/Makefile b/Makefile
+index 73b71b61c7..ca8a7340f4 100644
+--- a/Makefile
++++ b/Makefile
+@@ -3,7 +3,7 @@
+ VERSION = 2023
+ PATCHLEVEL = 07
+ SUBLEVEL =
+-EXTRAVERSION = -rc6
++EXTRAVERSION =
+ NAME =
+ 
+ # *DOCUMENTATION*

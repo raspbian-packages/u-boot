@@ -1,0 +1,16 @@
+arndale/board-spl-rule.diff
+
+test-imagetools-test-fixes
+
+exynos/0001-arm-config-fix-default-console-only-to-specify-the-d.patch
+
+riscv64/unmatched-prevent-relocating-initrd-and-fdt.patch
+
+disable-fit-image-tests
+
+rockchip/rockchip-inno-usb.patch
+
+qemu/efi-secure-boot.patch
+
+Makefile-Use-relative-paths-for-debugging-symbols.patch
+Makefile-fix-upstream-version.patch
