@@ -7,6 +7,8 @@
 
 #ifdef CONFIG_TARGET_AM625_R5_EVM
 
+#if 0
+
 &binman {
 	tiboot3-am62x-hs-evm.bin {
 		filename = "tiboot3-am62x-hs-evm.bin";
@@ -150,10 +152,14 @@
 
 #endif
 
+#endif
+
 #ifdef CONFIG_TARGET_AM625_A53_EVM
 
 #define SPL_AM625_SK_DTB "spl/dts/ti/k3-am625-sk.dtb"
 #define AM625_SK_DTB "u-boot.dtb"
+
+#if 0
 
 &binman {
 	ti-dm {
@@ -482,5 +488,7 @@
 		image-guid = AM62X_SK_UBOOT_IMAGE_GUID_STR;
 	};
 };
+
+#endif
 
 #endif
