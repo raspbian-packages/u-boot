@@ -5,6 +5,7 @@
 
 #include "k3-security.h"
 
+
 / {
 	binman: binman {
 		multiple-images;
@@ -27,6 +28,7 @@
 	};
 };
 
+#if 0
 #ifndef CONFIG_ARM64
 
 &binman {
@@ -490,5 +492,7 @@
 	};
 
 };
+
+#endif
 
 #endif
