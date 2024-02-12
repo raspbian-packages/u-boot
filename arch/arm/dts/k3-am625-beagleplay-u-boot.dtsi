@@ -176,6 +176,8 @@
 #define SPL_AM625_BEAGLEPLAY_DTB "spl/dts/k3-am625-beagleplay.dtb"
 #define AM625_BEAGLEPLAY_DTB "arch/arm/dts/k3-am625-beagleplay.dtb"
 
+#if 0
+
 &spl_am625_sk_dtb {
 	filename = SPL_AM625_BEAGLEPLAY_DTB;
 };
@@ -191,5 +193,7 @@
 &am625_sk_dtb_unsigned {
 	filename = AM625_BEAGLEPLAY_DTB;
 };
+
+#endif
 
 #endif
