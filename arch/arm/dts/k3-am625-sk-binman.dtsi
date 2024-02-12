@@ -7,6 +7,8 @@
 
 #ifdef CONFIG_TARGET_AM625_R5_EVM
 
+#if 0
+
 &binman {
 	tiboot3-am62x-hs-evm.bin {
 		filename = "tiboot3-am62x-hs-evm.bin";
@@ -139,6 +141,8 @@
 
 #endif
 
+#endif
+
 #ifdef CONFIG_TARGET_AM625_A53_EVM
 
 #define SPL_NODTB "spl/u-boot-spl-nodtb.bin"
@@ -146,6 +150,8 @@
 
 #define UBOOT_NODTB "u-boot-nodtb.bin"
 #define AM625_SK_DTB "u-boot.dtb"
+
+#if 0
 
 &binman {
 	ti-dm {
@@ -460,4 +466,6 @@
 		};
 	};
 };
+#endif
+
 #endif
