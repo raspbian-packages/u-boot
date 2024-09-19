@@ -7,6 +7,10 @@ u-boot (2024.01+dfsg-5+rpi1) trixie-staging; urgency=medium
   * Don't build powerpc targets for qemu, my attempts to build the nessacery
     cross-compiler in raspbian failed.
 
+  [changes introduced in 2024.01+dfsg-5+rpi1 by Peter Michael Green]
+  * Don't build mips* targets for quemu either. I don't want to add
+    more cross-compilers to raspbian.
+
  -- Peter Michael Green <plugwash@raspbian.org>  Thu, 19 Sep 2024 15:59:18 +0000
 
 u-boot (2024.01+dfsg-5) unstable; urgency=medium

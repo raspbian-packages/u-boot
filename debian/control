@@ -38,8 +38,6 @@ Build-Depends-Indep:
  gcc-aarch64-linux-gnu [!arm64],
  gcc-riscv64-linux-gnu [!riscv64],
  gcc-x86-64-linux-gnu [!amd64],
- gcc-mips64el-linux-gnuabi64 [!mips64el],
- gcc-mipsel-linux-gnu [!mipsel],
 Rules-Requires-Root: no
 Standards-Version: 4.6.2
 Homepage: https://www.denx.de/wiki/U-Boot/
