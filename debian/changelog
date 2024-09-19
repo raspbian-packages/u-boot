@@ -10,6 +10,8 @@ u-boot (2024.01+dfsg-5+rpi1) trixie-staging; urgency=medium
   [changes introduced in 2024.01+dfsg-5+rpi1 by Peter Michael Green]
   * Don't build mips* targets for quemu either. I don't want to add
     more cross-compilers to raspbian.
+  * Always pass armv7 flags when building for armv7 (don't use cc-option,
+    whatever that is).
 
  -- Peter Michael Green <plugwash@raspbian.org>  Thu, 19 Sep 2024 15:59:18 +0000
 
