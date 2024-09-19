@@ -14,10 +14,15 @@
 #include <time.h>
 #include <timer.h>
 #include <watchdog.h>
+#include <asm/global_data.h>
 #include <asm/ptrace.h>
 #include <linux/bitops.h>
 
 DECLARE_GLOBAL_DATA_PTR;
+
+#ifndef CFG_SYS_WATCHDOG_FREQ
+#define CFG_SYS_WATCHDOG_FREQ (CONFIG_SYS_HZ / 2)
+#endif
 
 /**
  * struct mpc83xx_timer_priv - Private data structure for MPC83xx timer driver
@@ -170,8 +175,8 @@ void timer_interrupt(struct pt_regs *regs)
 	priv->timestamp++;
 
 #if defined(CONFIG_WATCHDOG) || defined(CONFIG_HW_WATCHDOG)
-	if ((timestamp % (CONFIG_SYS_WATCHDOG_FREQ)) == 0)
-		WATCHDOG_RESET();
+	if (CFG_SYS_WATCHDOG_FREQ && (priv->timestamp % (CFG_SYS_WATCHDOG_FREQ)) == 0)
+		schedule();
 #endif    /* CONFIG_WATCHDOG || CONFIG_HW_WATCHDOG */
 
 #ifdef CONFIG_LED_STATUS
@@ -184,7 +189,7 @@ void wait_ticks(ulong ticks)
 	ulong end = get_ticks() + ticks;
 
 	while (end > get_ticks())
-		WATCHDOG_RESET();
+		schedule();
 }
 
 static u64 mpc83xx_timer_get_count(struct udevice *dev)
@@ -206,7 +211,7 @@ static u64 mpc83xx_timer_get_count(struct udevice *dev)
 
 static int mpc83xx_timer_probe(struct udevice *dev)
 {
-	struct timer_dev_priv *uc_priv = dev->uclass_priv;
+	struct timer_dev_priv *uc_priv = dev_get_uclass_priv(dev);
 	struct clk clock;
 	int ret;
 
@@ -244,5 +249,5 @@ U_BOOT_DRIVER(mpc83xx_timer) = {
 	.of_match = mpc83xx_timer_ids,
 	.probe = mpc83xx_timer_probe,
 	.ops	= &mpc83xx_timer_ops,
-	.priv_auto_alloc_size = sizeof(struct mpc83xx_timer_priv),
+	.priv_auto	= sizeof(struct mpc83xx_timer_priv),
 };

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
- * Copyright (C) 2017 Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (C) 2017 Texas Instruments Incorporated - https://www.ti.com/
  * Written by Jean-Jacques Hiblot  <jjhiblot@ti.com>
  */
 
@@ -13,6 +13,7 @@
 #include <asm/arch/psc_defs.h>
 #include <linux/bitops.h>
 #include <linux/delay.h>
+#include <linux/printk.h>
 
 /* USB PHY control register offsets */
 #define USB_PHY_CTL_UTMI		0x0000
@@ -130,5 +131,5 @@ U_BOOT_DRIVER(keystone_usb_phy) = {
 	.of_match = keystone_usb_phy_ids,
 	.ops = &keystone_usb_phy_ops,
 	.probe = keystone_usb_phy_probe,
-	.priv_auto_alloc_size = sizeof(struct keystone_usb_phy),
+	.priv_auto	= sizeof(struct keystone_usb_phy),
 };

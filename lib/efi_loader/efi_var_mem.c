@@ -10,7 +10,13 @@
 #include <efi_variable.h>
 #include <u-boot/crc.h>
 
-struct efi_var_file __efi_runtime_data *efi_var_buf;
+/*
+ * The variables efi_var_file and efi_var_entry must be static to avoid
+ * referencing them via the global offset table (section .got). The GOT
+ * is neither mapped as EfiRuntimeServicesData nor do we support its
+ * relocation during SetVirtualAddressMap().
+ */
+static struct efi_var_file __efi_runtime_data *efi_var_buf;
 static struct efi_var_entry __efi_runtime_data *efi_current_var;
 
 /**
@@ -35,11 +41,13 @@ efi_var_mem_compare(struct efi_var_entry *var, const efi_guid_t *guid,
 	     i < sizeof(efi_guid_t) && match; ++i)
 		match = (guid1[i] == guid2[i]);
 
-	for (data = var->name, var_name = name;; ++data, ++var_name) {
+	for (data = var->name, var_name = name;; ++data) {
 		if (match)
 			match = (*data == *var_name);
 		if (!*data)
 			break;
+		if (*var_name)
+			++var_name;
 	}
 
 	++data;
@@ -128,7 +136,7 @@ void __efi_runtime efi_var_mem_del(struct efi_var_entry *var)
 }
 
 efi_status_t __efi_runtime efi_var_mem_ins(
-				u16 *variable_name,
+				const u16 *variable_name,
 				const efi_guid_t *vendor, u32 attributes,
 				const efi_uintn_t size1, const void *data1,
 				const efi_uintn_t size2, const void *data2,
@@ -140,9 +148,7 @@ efi_status_t __efi_runtime efi_var_mem_ins(
 
 	var = (struct efi_var_entry *)
 	      ((uintptr_t)efi_var_buf + efi_var_buf->length);
-	for (var_name_len = 0; variable_name[var_name_len]; ++var_name_len)
-		;
-	++var_name_len;
+	var_name_len = u16_strlen(variable_name) + 1;
 	data = var->name + var_name_len;
 
 	if ((uintptr_t)data - (uintptr_t)efi_var_buf + size1 + size2 >
@@ -171,6 +177,10 @@ efi_status_t __efi_runtime efi_var_mem_ins(
 
 u64 __efi_runtime efi_var_mem_free(void)
 {
+	if (efi_var_buf->length + sizeof(struct efi_var_entry) >=
+	    EFI_VAR_BUF_SIZE)
+		return 0;
+
 	return EFI_VAR_BUF_SIZE - efi_var_buf->length -
 	       sizeof(struct efi_var_entry);
 }
@@ -268,8 +278,9 @@ efi_status_t efi_var_mem_init(void)
 }
 
 efi_status_t __efi_runtime
-efi_get_variable_mem(u16 *variable_name, const efi_guid_t *vendor, u32 *attributes,
-		     efi_uintn_t *data_size, void *data, u64 *timep)
+efi_get_variable_mem(const u16 *variable_name, const efi_guid_t *vendor,
+		     u32 *attributes, efi_uintn_t *data_size, void *data,
+		     u64 *timep)
 {
 	efi_uintn_t old_size;
 	struct efi_var_entry *var;
@@ -308,14 +319,14 @@ efi_get_next_variable_name_mem(efi_uintn_t *variable_name_size,
 			       u16 *variable_name, efi_guid_t *vendor)
 {
 	struct efi_var_entry *var;
-	efi_uintn_t old_size;
+	efi_uintn_t len, old_size;
 	u16 *pdata;
 
 	if (!variable_name_size || !variable_name || !vendor)
 		return EFI_INVALID_PARAMETER;
 
-	if (u16_strnlen(variable_name, *variable_name_size) ==
-	    *variable_name_size)
+	len = *variable_name_size >> 1;
+	if (u16_strnlen(variable_name, len) == len)
 		return EFI_INVALID_PARAMETER;
 
 	if (!efi_var_mem_find(vendor, variable_name, &var) && *variable_name)
@@ -338,4 +349,9 @@ efi_get_next_variable_name_mem(efi_uintn_t *variable_name_size,
 	efi_memcpy_runtime(vendor, &var->guid, sizeof(efi_guid_t));
 
 	return EFI_SUCCESS;
+}
+
+void efi_var_buf_update(struct efi_var_file *var_buf)
+{
+	memcpy(efi_var_buf, var_buf, EFI_VAR_BUF_SIZE);
 }

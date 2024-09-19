@@ -140,7 +140,7 @@
 #define ATMEL_CPU_NAME	get_cpu_name()
 
 /* Timer */
-#define CONFIG_SYS_TIMER_COUNTER	0xfffffe4c
+#define CFG_SYS_TIMER_COUNTER	0xfffffe4c
 
 /*
  * Other misc defines
@@ -154,8 +154,8 @@
 /*
  * PMECC table in ROM
  */
-#define ATMEL_PMECC_INDEX_OFFSET_512	0x8000
-#define ATMEL_PMECC_INDEX_OFFSET_1024	0x10000
+#define ATMEL_PMECC_INDEX_OFFSET_512	0x0000
+#define ATMEL_PMECC_INDEX_OFFSET_1024	0x8000
 
 /*
  * SAM9X60 specific prototypes

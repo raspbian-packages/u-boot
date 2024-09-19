@@ -24,10 +24,8 @@
 enum {
 	FASTBOOT_COMMAND_GETVAR = 0,
 	FASTBOOT_COMMAND_DOWNLOAD,
-#if CONFIG_IS_ENABLED(FASTBOOT_FLASH)
 	FASTBOOT_COMMAND_FLASH,
 	FASTBOOT_COMMAND_ERASE,
-#endif
 	FASTBOOT_COMMAND_BOOT,
 	FASTBOOT_COMMAND_CONTINUE,
 	FASTBOOT_COMMAND_REBOOT,
@@ -35,10 +33,12 @@ enum {
 	FASTBOOT_COMMAND_REBOOT_FASTBOOTD,
 	FASTBOOT_COMMAND_REBOOT_RECOVERY,
 	FASTBOOT_COMMAND_SET_ACTIVE,
-#if CONFIG_IS_ENABLED(FASTBOOT_CMD_OEM_FORMAT)
 	FASTBOOT_COMMAND_OEM_FORMAT,
-#endif
-
+	FASTBOOT_COMMAND_OEM_PARTCONF,
+	FASTBOOT_COMMAND_OEM_BOOTBUS,
+	FASTBOOT_COMMAND_OEM_RUN,
+	FASTBOOT_COMMAND_ACMD,
+	FASTBOOT_COMMAND_UCMD,
 	FASTBOOT_COMMAND_COUNT
 };
 
@@ -50,15 +50,6 @@ enum fastboot_reboot_reason {
 	FASTBOOT_REBOOT_REASON_FASTBOOTD,
 	FASTBOOT_REBOOT_REASON_RECOVERY,
 	FASTBOOT_REBOOT_REASONS_COUNT
-};
-
-/**
- * BCB boot commands
- */
-static const char * const fastboot_boot_cmds[] = {
-	[FASTBOOT_REBOOT_REASON_BOOTLOADER] = "bootonce-bootloader",
-	[FASTBOOT_REBOOT_REASON_FASTBOOTD] = "boot-fastboot",
-	[FASTBOOT_REBOOT_REASON_RECOVERY] = "boot-recovery"
 };
 
 /**
@@ -133,6 +124,15 @@ void fastboot_init(void *buf_addr, u32 buf_size);
 void fastboot_boot(void);
 
 /**
+ * fastboot_handle_boot() - Shared implementation of system reaction to
+ * fastboot commands
+ *
+ * Making desceisions about device boot state (stay in fastboot, reboot
+ * to bootloader, reboot to OS, etc).
+ */
+void fastboot_handle_boot(int command, bool success);
+
+/**
  * fastboot_handle_command() - Handle fastboot command
  *
  * @cmd_string: Pointer to command string
@@ -172,4 +172,5 @@ void fastboot_data_download(const void *fastboot_data,
  */
 void fastboot_data_complete(char *response);
 
+void fastboot_acmd_complete(void);
 #endif /* _FASTBOOT_H_ */

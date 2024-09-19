@@ -14,6 +14,7 @@
 #include <dm/device-internal.h>
 #include <dm/uclass-internal.h>
 #include <linux/bitops.h>
+#include <linux/printk.h>
 #include <power/regulator.h>
 #include <clk.h>
 #include <linux/delay.h>
@@ -508,5 +509,5 @@ U_BOOT_DRIVER(meson_dw_hdmi) = {
 	.of_match = meson_dw_hdmi_ids,
 	.ops = &meson_dw_hdmi_ops,
 	.probe = meson_dw_hdmi_probe,
-	.priv_auto_alloc_size = sizeof(struct meson_dw_hdmi),
+	.priv_auto	= sizeof(struct meson_dw_hdmi),
 };

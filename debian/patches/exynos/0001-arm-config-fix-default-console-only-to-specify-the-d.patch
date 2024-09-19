@@ -76,7 +76,7 @@ Index: u-boot/include/configs/odroid.h
 ===================================================================
 --- u-boot.orig/include/configs/odroid.h
 +++ u-boot/include/configs/odroid.h
-@@ -155,7 +155,7 @@
+@@ -128,7 +128,7 @@
  		"elif test -e mmc ${mmcbootdev} uImage; then; " \
  			"run boot_uimg;" \
  		"fi;\0" \
@@ -89,20 +89,20 @@ Index: u-boot/include/configs/odroid_xu3.h
 ===================================================================
 --- u-boot.orig/include/configs/odroid_xu3.h
 +++ u-boot/include/configs/odroid_xu3.h
-@@ -98,7 +98,7 @@
+@@ -76,7 +76,7 @@
  	MEM_LAYOUT_ENV_SETTINGS \
  	BOOTENV \
  	"rootfstype=ext4\0" \
 -	"console=console=ttySAC2,115200n8\0" \
 +	"console=ttySAC2,115200n8\0" \
  	"fdtfile=exynos5422-odroidxu3.dtb\0" \
+ 	"board=odroid\0" \
  	"board_name=odroidxu3\0" \
- 	"mmcbootdev=0\0" \
 Index: u-boot/include/configs/s5p_goni.h
 ===================================================================
 --- u-boot.orig/include/configs/s5p_goni.h
 +++ u-boot/include/configs/s5p_goni.h
-@@ -132,7 +132,7 @@
+@@ -100,7 +100,7 @@
  	"bootchart=set opts init=/sbin/bootchartd; run bootcmd\0" \
  	"verify=n\0" \
  	"rootfstype=ext4\0" \
@@ -115,20 +115,20 @@ Index: u-boot/include/configs/s5pc210_universal.h
 ===================================================================
 --- u-boot.orig/include/configs/s5pc210_universal.h
 +++ u-boot/include/configs/s5pc210_universal.h
-@@ -106,7 +106,7 @@
+@@ -74,7 +74,7 @@
  	"mmcoops=mmc read 0 0x40000000 0x40 8; md 0x40000000 0x400\0" \
  	"verify=n\0" \
  	"rootfstype=ext4\0" \
 -	"console=console=ttySAC1,115200n8\0" \
 +	"console=ttySAC1,115200n8\0" \
- 	"mtdparts=" CONFIG_MTDPARTS_DEFAULT \
  	"mbrparts=" MBRPARTS_DEFAULT \
  	"meminfo=crashkernel=32M@0x50000000\0" \
+ 	"nfsroot=/nfsroot/arm\0" \
 Index: u-boot/include/configs/trats.h
 ===================================================================
 --- u-boot.orig/include/configs/trats.h
 +++ u-boot/include/configs/trats.h
-@@ -118,7 +118,7 @@
+@@ -87,7 +87,7 @@
  	"mmcoops=mmc read 0 0x40000000 0x40 8; md 0x40000000 0x400\0" \
  	"verify=n\0" \
  	"rootfstype=ext4\0" \
@@ -136,12 +136,12 @@ Index: u-boot/include/configs/trats.h
 +	"console=ttySAC2,115200n8\0" \
  	"meminfo=crashkernel=32M@0x50000000\0" \
  	"nfsroot=/nfsroot/arm\0" \
- 	"bootblock=" CONFIG_BOOTBLOCK "\0" \
+ 	"bootblock=10\0" \
 Index: u-boot/include/configs/trats2.h
 ===================================================================
 --- u-boot.orig/include/configs/trats2.h
 +++ u-boot/include/configs/trats2.h
-@@ -101,7 +101,7 @@
+@@ -76,7 +76,7 @@
  	"boottrace=setenv opts initcall_debug; run bootcmd\0" \
  	"verify=n\0" \
  	"rootfstype=ext4\0" \

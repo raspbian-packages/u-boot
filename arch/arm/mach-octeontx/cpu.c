@@ -7,6 +7,7 @@
 
 #include <common.h>
 #include <asm/armv8/mmu.h>
+#include <asm/global_data.h>
 #include <asm/io.h>
 #include <asm/arch/board.h>
 
@@ -45,7 +46,7 @@ struct mm_region *mem_map = otx_mem_map;
 void mem_map_fill(void)
 {
 	int banks = OTX_MEM_MAP_USED;
-	u32 dram_start = CONFIG_SYS_TEXT_BASE;
+	u32 dram_start = CONFIG_TEXT_BASE;
 
 	if (otx_is_soc(CN83XX)) {
 		otx_mem_map[banks].virt = 0x8c0000000000UL;
@@ -71,6 +72,6 @@ u64 get_page_table_size(void)
 	return 0x80000;
 }
 
-void reset_cpu(ulong addr)
+void reset_cpu(void)
 {
 }

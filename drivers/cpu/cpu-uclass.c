@@ -4,6 +4,8 @@
  * Written by Simon Glass <sjg@chromium.org>
  */
 
+#define LOG_CATEGORY UCLASS_CPU
+
 #include <common.h>
 #include <cpu.h>
 #include <dm.h>
@@ -12,28 +14,19 @@
 #include <dm/lists.h>
 #include <dm/root.h>
 #include <linux/err.h>
+#include <relocate.h>
+
+DECLARE_GLOBAL_DATA_PTR;
 
 int cpu_probe_all(void)
 {
-	struct udevice *cpu;
-	int ret;
+	int ret = uclass_probe_all(UCLASS_CPU);
 
-	ret = uclass_first_device(UCLASS_CPU, &cpu);
 	if (ret) {
-		debug("%s: No CPU found (err = %d)\n", __func__, ret);
-		return ret;
+		debug("%s: Error while probing CPUs (err = %d %s)\n",
+		      __func__, ret, errno_str(ret));
 	}
-
-	while (cpu) {
-		ret = uclass_next_device(&cpu);
-		if (ret) {
-			debug("%s: Error while probing CPU (err = %d)\n",
-			      __func__, ret);
-			return ret;
-		}
-	}
-
-	return 0;
+	return ret;
 }
 
 int cpu_is_current(struct udevice *cpu)
@@ -115,7 +108,7 @@ int cpu_get_vendor(const struct udevice *dev, char *buf, int size)
 U_BOOT_DRIVER(cpu_bus) = {
 	.name	= "cpu_bus",
 	.id	= UCLASS_SIMPLE_BUS,
-	.per_child_platdata_auto_alloc_size = sizeof(struct cpu_platdata),
+	.per_child_plat_auto	= sizeof(struct cpu_plat),
 };
 
 static int uclass_cpu_init(struct uclass *uc)

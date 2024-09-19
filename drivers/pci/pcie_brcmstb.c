@@ -33,6 +33,9 @@
 #define PCIE_RC_CFG_PRIV1_ID_VAL3			0x043c
 #define  CFG_PRIV1_ID_VAL3_CLASS_CODE_MASK		0xffffff
 
+#define PCIE_RC_CFG_PRIV1_LINK_CAPABILITY			0x04dc
+#define  PCIE_RC_CFG_PRIV1_LINK_CAPABILITY_ASPM_SUPPORT_MASK	0xc00
+
 #define PCIE_RC_DL_MDIO_ADDR				0x1100
 #define PCIE_RC_DL_MDIO_WR_DATA				0x1104
 #define PCIE_RC_DL_MDIO_RD_DATA				0x1108
@@ -88,7 +91,6 @@
 	 PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LIMIT_HI + ((win) * 8)
 
 #define PCIE_MISC_HARD_PCIE_HARD_DEBUG			0x4204
-#define  PCIE_HARD_DEBUG_CLKREQ_DEBUG_ENABLE_MASK	0x2
 #define  PCIE_HARD_DEBUG_SERDES_IDDQ_MASK		0x08000000
 
 #define PCIE_MSI_INTR2_CLR				0x4508
@@ -97,9 +99,6 @@
 #define PCIE_EXT_CFG_DATA				0x8000
 
 #define PCIE_EXT_CFG_INDEX				0x9000
-#define  PCIE_EXT_BUSNUM_SHIFT				20
-#define  PCIE_EXT_SLOT_SHIFT				15
-#define  PCIE_EXT_FUNC_SHIFT				12
 
 #define PCIE_RGR1_SW_INIT_1				0x9210
 #define  RGR1_SW_INIT_1_PERST_MASK			0x1
@@ -226,10 +225,12 @@ static int brcm_pcie_config_address(const struct udevice *dev, pci_dev_t bdf,
 		return 0;
 	}
 
+	/* An access to our HW w/o link-up will cause a CPU Abort */
+	if (!brcm_pcie_link_up(pcie))
+		return -EINVAL;
+
 	/* For devices, write to the config space index register */
-	idx = (pci_bus << PCIE_EXT_BUSNUM_SHIFT)
-		| (pci_dev << PCIE_EXT_SLOT_SHIFT)
-		| (pci_func << PCIE_EXT_FUNC_SHIFT);
+	idx = PCIE_ECAM_OFFSET(pci_bus, pci_dev, pci_func, 0);
 
 	writel(idx, pcie->base + PCIE_EXT_CFG_INDEX);
 	*paddress = pcie->base + PCIE_EXT_CFG_DATA + offset;
@@ -432,6 +433,7 @@ static int brcm_pcie_probe(struct udevice *dev)
 	struct pci_controller *hose = dev_get_uclass_priv(ctlr);
 	struct brcm_pcie *pcie = dev_get_priv(dev);
 	void __iomem *base = pcie->base;
+	struct pci_region region;
 	bool ssc_good = false;
 	int num_out_wins = 0;
 	u64 rc_bar2_offset, rc_bar2_size;
@@ -468,13 +470,10 @@ static int brcm_pcie_probe(struct udevice *dev)
 			MISC_CTRL_SCB_ACCESS_EN_MASK |
 			MISC_CTRL_CFG_READ_UR_MODE_MASK |
 			MISC_CTRL_MAX_BURST_SIZE_128);
-	/*
-	 * TODO: When support for other SoCs than BCM2711 is added we may
-	 * need to use the base address and size(s) provided in the dma-ranges
-	 * property.
-	 */
-	rc_bar2_offset = 0;
-	rc_bar2_size = 0xc0000000;
+
+	pci_get_dma_regions(dev, &region, 0);
+	rc_bar2_offset = region.bus_start - region.phys_start;
+	rc_bar2_size = 1ULL << fls64(region.size - 1);
 
 	tmp = lower_32_bits(rc_bar2_offset);
 	u32p_replace_bits(&tmp, brcm_pcie_encode_ibar_size(rc_bar2_size),
@@ -511,6 +510,12 @@ static int brcm_pcie_probe(struct udevice *dev)
 	/* Unassert the fundamental reset */
 	clrbits_le32(pcie->base + PCIE_RGR1_SW_INIT_1,
 		     RGR1_SW_INIT_1_PERST_MASK);
+
+	/*
+	 * Wait for 100ms after PERST# deassertion; see PCIe CEM specification
+	 * sections 2.2, PCIe r5.0, 6.6.1.
+	 */
+	mdelay(100);
 
 	/* Give the RC/EP time to wake up, before trying to configure RC.
 	 * Intermittently check status for link-up, up to a total of 100ms.
@@ -569,17 +574,41 @@ static int brcm_pcie_probe(struct udevice *dev)
 	clrsetbits_le32(base + PCIE_RC_CFG_VENDOR_SPECIFIC_REG1,
 			VENDOR_SPECIFIC_REG1_ENDIAN_MODE_BAR2_MASK,
 			VENDOR_SPECIFIC_REG1_LITTLE_ENDIAN);
+
 	/*
-	 * Refclk from RC should be gated with CLKREQ# input when ASPM L0s,L1
-	 * is enabled => setting the CLKREQ_DEBUG_ENABLE field to 1.
+	 * We used to enable the CLKREQ# input here, but a few PCIe cards don't
+	 * attach anything to the CLKREQ# line, so we shouldn't assume that
+	 * it's connected and working. The controller does allow detecting
+	 * whether the port on the other side of our link is/was driving this
+	 * signal, so we could check before we assume. But because this signal
+	 * is for power management, which doesn't make sense in a bootloader,
+	 * let's instead just unadvertise ASPM support.
 	 */
-	setbits_le32(base + PCIE_MISC_HARD_PCIE_HARD_DEBUG,
-		     PCIE_HARD_DEBUG_CLKREQ_DEBUG_ENABLE_MASK);
+	clrbits_le32(base + PCIE_RC_CFG_PRIV1_LINK_CAPABILITY,
+		     PCIE_RC_CFG_PRIV1_LINK_CAPABILITY_ASPM_SUPPORT_MASK);
 
 	return 0;
 }
 
-static int brcm_pcie_ofdata_to_platdata(struct udevice *dev)
+static int brcm_pcie_remove(struct udevice *dev)
+{
+	struct brcm_pcie *pcie = dev_get_priv(dev);
+	void __iomem *base = pcie->base;
+
+	/* Assert fundamental reset */
+	setbits_le32(base + PCIE_RGR1_SW_INIT_1, RGR1_SW_INIT_1_PERST_MASK);
+
+	/* Turn off SerDes */
+	setbits_le32(base + PCIE_MISC_HARD_PCIE_HARD_DEBUG,
+		     PCIE_HARD_DEBUG_SERDES_IDDQ_MASK);
+
+	/* Shutdown bridge */
+	setbits_le32(base + PCIE_RGR1_SW_INIT_1, RGR1_SW_INIT_1_INIT_MASK);
+
+	return 0;
+}
+
+static int brcm_pcie_of_to_plat(struct udevice *dev)
 {
 	struct brcm_pcie *pcie = dev_get_priv(dev);
 	ofnode dn = dev_ofnode(dev);
@@ -618,6 +647,8 @@ U_BOOT_DRIVER(pcie_brcm_base) = {
 	.ops			= &brcm_pcie_ops,
 	.of_match		= brcm_pcie_ids,
 	.probe			= brcm_pcie_probe,
-	.ofdata_to_platdata	= brcm_pcie_ofdata_to_platdata,
-	.priv_auto_alloc_size	= sizeof(struct brcm_pcie),
+	.remove			= brcm_pcie_remove,
+	.of_to_plat	= brcm_pcie_of_to_plat,
+	.priv_auto	= sizeof(struct brcm_pcie),
+	.flags		= DM_FLAG_OS_PREPARE,
 };

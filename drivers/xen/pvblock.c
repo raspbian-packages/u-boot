@@ -3,6 +3,9 @@
  * (C) 2007-2008 Samuel Thibault.
  * (C) Copyright 2020 EPAM Systems Inc.
  */
+
+#define LOG_CATEGORY UCLASS_PVBLOCK
+
 #include <blk.h>
 #include <common.h>
 #include <dm.h>
@@ -11,6 +14,7 @@
 #include <part.h>
 
 #include <asm/armv8/mmu.h>
+#include <asm/global_data.h>
 #include <asm/io.h>
 #include <asm/xen/system.h>
 
@@ -70,7 +74,7 @@ struct blkfront_dev {
 	u8 *bounce_buffer;
 };
 
-struct blkfront_platdata {
+struct blkfront_plat {
 	unsigned int devid;
 };
 
@@ -600,7 +604,7 @@ static ulong pvblock_iop(struct udevice *udev, lbaint_t blknr,
 			 lbaint_t blkcnt, void *buffer, int write)
 {
 	struct blkfront_dev *blk_dev = dev_get_priv(udev);
-	struct blk_desc *desc = dev_get_uclass_platdata(udev);
+	struct blk_desc *desc = dev_get_uclass_plat(udev);
 	struct blkfront_aiocb aiocb;
 	lbaint_t blocks_todo;
 	bool unaligned;
@@ -658,17 +662,17 @@ ulong pvblock_blk_write(struct udevice *udev, lbaint_t blknr, lbaint_t blkcnt,
 
 static int pvblock_blk_bind(struct udevice *udev)
 {
-	struct blk_desc *desc = dev_get_uclass_platdata(udev);
+	struct blk_desc *desc = dev_get_uclass_plat(udev);
 	int devnum;
 
-	desc->if_type = IF_TYPE_PVBLOCK;
+	desc->uclass_id = UCLASS_PVBLOCK;
 	/*
 	 * Initialize the devnum to -ENODEV. This is to make sure that
 	 * blk_next_free_devnum() works as expected, since the default
 	 * value 0 is a valid devnum.
 	 */
 	desc->devnum = -ENODEV;
-	devnum = blk_next_free_devnum(IF_TYPE_PVBLOCK);
+	devnum = blk_next_free_devnum(UCLASS_PVBLOCK);
 	if (devnum < 0)
 		return devnum;
 	desc->devnum = devnum;
@@ -685,12 +689,12 @@ static int pvblock_blk_bind(struct udevice *udev)
 static int pvblock_blk_probe(struct udevice *udev)
 {
 	struct blkfront_dev *blk_dev = dev_get_priv(udev);
-	struct blkfront_platdata *platdata = dev_get_platdata(udev);
-	struct blk_desc *desc = dev_get_uclass_platdata(udev);
+	struct blkfront_plat *plat = dev_get_plat(udev);
+	struct blk_desc *desc = dev_get_uclass_plat(udev);
 	int ret, devid;
 
-	devid = platdata->devid;
-	free(platdata);
+	devid = plat->devid;
+	free(plat);
 
 	ret = init_blkfront(devid, blk_dev);
 	if (ret < 0)
@@ -723,7 +727,7 @@ U_BOOT_DRIVER(pvblock_blk) = {
 	.bind			= pvblock_blk_bind,
 	.probe			= pvblock_blk_probe,
 	.remove			= pvblock_blk_remove,
-	.priv_auto_alloc_size	= sizeof(struct blkfront_dev),
+	.priv_auto	= sizeof(struct blkfront_dev),
 	.flags			= DM_FLAG_OS_PREPARE,
 };
 
@@ -737,27 +741,27 @@ static int on_new_vbd(struct udevice *parent, unsigned int devid)
 {
 	struct driver_info info;
 	struct udevice *udev;
-	struct blkfront_platdata *platdata;
+	struct blkfront_plat *plat;
 	int ret;
 
 	debug("New " DRV_NAME_BLK ", device ID %d\n", devid);
 
-	platdata = malloc(sizeof(struct blkfront_platdata));
-	if (!platdata) {
+	plat = malloc(sizeof(struct blkfront_plat));
+	if (!plat) {
 		printf("Failed to allocate platform data\n");
 		return -ENOMEM;
 	}
 
-	platdata->devid = devid;
+	plat->devid = devid;
 
 	info.name = DRV_NAME_BLK;
-	info.platdata = platdata;
+	info.plat = plat;
 
 	ret = device_bind_by_name(parent, false, &info, &udev);
 	if (ret < 0) {
 		printf("Failed to bind " DRV_NAME_BLK " to device with ID %d, ret: %d\n",
 		       devid, ret);
-		free(platdata);
+		free(plat);
 	}
 	return ret;
 }
@@ -800,9 +804,9 @@ static void print_pvblock_devices(void)
 	const char *class_name;
 
 	class_name = uclass_get_name(UCLASS_PVBLOCK);
-	for (blk_first_device(IF_TYPE_PVBLOCK, &udev); udev;
+	for (blk_first_device(UCLASS_PVBLOCK, &udev); udev;
 	     blk_next_device(&udev), first = false) {
-		struct blk_desc *desc = dev_get_uclass_platdata(udev);
+		struct blk_desc *desc = dev_get_uclass_plat(udev);
 
 		if (!first)
 			puts(", ");
@@ -814,8 +818,6 @@ static void print_pvblock_devices(void)
 void pvblock_init(void)
 {
 	struct driver_info info;
-	struct udevice *udev;
-	struct uclass *uc;
 	int ret;
 
 	/*
@@ -824,15 +826,12 @@ void pvblock_init(void)
 	 * virtual block devices.
 	 */
 	info.name = DRV_NAME;
-	ret = device_bind_by_name(gd->dm_root, false, &info, &udev);
+	ret = device_bind_by_name(gd->dm_root, false, &info, NULL);
 	if (ret < 0)
 		printf("Failed to bind " DRV_NAME ", ret: %d\n", ret);
 
 	/* Bootstrap virtual block devices class driver */
-	ret = uclass_get(UCLASS_PVBLOCK, &uc);
-	if (ret)
-		return;
-	uclass_foreach_dev_probe(UCLASS_PVBLOCK, udev);
+	uclass_probe_all(UCLASS_PVBLOCK);
 
 	print_pvblock_devices();
 }
@@ -848,10 +847,7 @@ static int pvblock_probe(struct udevice *udev)
 	ret = uclass_get(UCLASS_BLK, &uc);
 	if (ret)
 		return ret;
-	uclass_foreach_dev_probe(UCLASS_BLK, udev) {
-		if (_ret)
-			return _ret;
-	};
+	uclass_foreach_dev_probe(UCLASS_BLK, udev);
 	return 0;
 }
 

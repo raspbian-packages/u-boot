@@ -8,13 +8,13 @@
  * TsiChung Liew (Tsi-Chung.Liew@freescale.com)
  */
 
-#include <common.h>
 #include <init.h>
 #include <net.h>
 #include <vsprintf.h>
 #include <watchdog.h>
 #include <command.h>
 #include <netdev.h>
+#include <asm/global_data.h>
 #include <linux/delay.h>
 
 #include <asm/immap.h>
@@ -109,7 +109,7 @@ int print_cpuinfo(void)
 #if defined(CONFIG_MCFFEC)
 /* Default initializations for MCFFEC controllers.  To override,
  * create a board-specific function called:
- * 	int board_eth_init(struct bd_info *bis)
+ *	int board_eth_init(struct bd_info *bis)
  */
 
 int cpu_eth_init(struct bd_info *bis)

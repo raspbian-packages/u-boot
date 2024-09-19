@@ -1,4 +1,4 @@
-u-boot (2021.01+dfsg-5+rpi1) bullseye-staging; urgency=medium
+u-boot (2024.01+dfsg-5+rpi1) trixie-staging; urgency=medium
 
   [changes brought forward from 2014.10+dfsg1-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Fri, 28 Nov 2014 06:00:07 +0000]
   * Don't build versions for various armv7 devices, build rpi version instead.
@@ -7,7 +7,545 @@ u-boot (2021.01+dfsg-5+rpi1) bullseye-staging; urgency=medium
   * Don't build powerpc targets for qemu, my attempts to build the nessacery
     cross-compiler in raspbian failed.
 
- -- Raspbian forward porter <root@raspbian.org>  Fri, 04 Jun 2021 00:18:15 +0000
+ -- Peter Michael Green <plugwash@raspbian.org>  Thu, 19 Sep 2024 15:59:18 +0000
+
+u-boot (2024.01+dfsg-5) unstable; urgency=medium
+
+  * Upload to unstable.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Fri, 19 Apr 2024 11:32:03 -0700
+
+u-boot (2024.01+dfsg-4) experimental; urgency=medium
+
+  [ Martyn Welch ]
+  * d/targets: Enable support for am625-sk
+
+  [ Vagrant Cascadian ]
+  * debian/control: Add missing Build-Depends-Arch on
+    gcc-arm-linux-gnueabihf for am625-sk targets.
+  * Move u-boot-exynos (odroid, odroid-xu3) platforms to
+    u-boot-exynos-binaries in contrib.
+  * Move u-boot-amlogic platforms to u-boot-amlogic-binaries in contrib.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Thu, 18 Apr 2024 15:50:25 -0700
+
+u-boot (2024.01+dfsg-3) unstable; urgency=medium
+
+  * Switch away from dh-builtusing to fix build failure on armhf.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Wed, 20 Mar 2024 11:38:00 -0700
+
+u-boot (2024.01+dfsg-2) unstable; urgency=medium
+
+  [ Philippe Coval ]
+  * debian/patches: Add Olimex A20-Olinuxino Micro reboot patch
+    (Closes: #1060752)
+
+  [ Aurelien Jarno ]
+  * debian/patches: Apply patches from upstream to fix USB crash on
+    VisionFive 2. (Closes: #1062664)
+  * debian/patches: Apply patch from upstream to improve VisionFive 2 1.2A
+    support.
+  * debian/patches: Apply patch from upstream to support saving
+    environment on VisionFive 2.
+  * debian/patches: Apply patch submitted upstream fixing device-tree
+    corruption on riscv64. (Closes: #1060682)
+  * debian/patches: Apply patch submitted upstream fixing data corruption
+    on HiFive Unmatched.
+
+  [ Андрей Лухнов ]
+  * debian/targets.mk: add orangepi_pc_plus to sunxi platforms
+    (Closes: #1061432)
+
+  [ Nicolas Boulenguez ]
+  * Delegate the Built-Using field to the dh-builtusing debhelper tool
+    (Closes: #1051098)
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Tue, 19 Mar 2024 16:27:45 -0700
+
+u-boot (2024.01+dfsg-1) unstable; urgency=medium
+
+  * New upstream version.
+  * debian/control: Update versioned dependency on opensbi to 1.3 for
+    VisionFive 2 support. Thanks to Heinrich Schuchardt.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Wed, 10 Jan 2024 13:34:04 -0800
+
+u-boot (2024.01~rc6+dfsg-2) experimental; urgency=medium
+
+  [ Vagrant Cascadian ]
+  * debian/copyright: Fixes for 2024.01-rc6.
+  * u-boot-omap: Fix removal of nokia rx51.
+
+  [ undef ]
+  * Add Starfive Visionfive2 board support (Closes: #1053359)
+
+  [ Andreas Henriksson ]
+  * Add u-boot-asahi building apple_m1_defconfig (Closes: #1056576)
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Sat, 06 Jan 2024 20:26:46 -0800
+
+u-boot (2024.01~rc6+dfsg-1) experimental; urgency=medium
+
+  * New upstream release candidate.
+
+  [ harry88@gmx.ph ]
+  * Remove check for mkimage in u-boot-install-sunxi. (Closes: #1041827)
+
+  [ Vagrant Cascadian ]
+  * debian/rules: Disable hardening branch feature to fix arch:all build.
+    (Closes: #1052724)
+  * debian/patches: Drop Makefile-fix-upstream-version, fixed upstream.
+  * debian/patches: Refresh qemu/efi-secure-boot.patch.
+  * debian/copyright: Updated for new version.
+  * debian/targets.mk: Remove nokia_rx51, no longer supported upstream.
+    Thanks to xypron for noticing!
+  * debian/patches: Drop riscv64
+    unmatched-prevent-relocating-initrd-and-fdt, no longer needed. Thanks
+    to xypron for testing!
+
+  [ harry88@gmx.ph ]
+  * Clarify error message in u-boot-install-sunxi. (Closes: #1056289)
+
+  [ Guillem Jover ]
+  * Remove avr32 arch support removed in dpkg 1.22.0. (Closes: #1056750)
+
+  [ Harry 88 ]
+  * Include u-boot-sunxi-with-spl.bin for all sunxi boards
+    (Closes: #979688)
+
+  [ Vagrant Cascadian ]
+  * debian/patches: Update qemu efi-secure-boot patch.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Fri, 05 Jan 2024 14:17:59 -0800
+
+u-boot (2023.07+dfsg-1) unstable; urgency=medium
+
+  * New upstream release.
+  * debian/patches: Adjust Makefile to report correct version.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Mon, 10 Jul 2023 19:54:17 -0700
+
+u-boot (2023.07~rc5+dfsg-1) experimental; urgency=medium
+
+  * New upstream release candidate.
+
+  [ harry88@gmx.ph ]
+  * debian/targets.mk: Use no_pmic variant of TF-A on Orange Pi One
+    Plus. (Closes: #1039033)
+
+ -- Vagrant Cascadian <vagrant@reproducible-builds.org>  Thu, 29 Jun 2023 16:13:47 -0700
+
+u-boot (2023.07~rc4+dfsg-1) experimental; urgency=medium
+
+  * New upstream release candidate.
+  * debian/patches: Remove fix-qemu-ppce500-with-binutils-2.38, fixed
+    upstream. Thanks to Pali Rohár.
+  * debian/control: Update Build-Depends on arm-trusted-firmware to 2.9
+    from experimental.
+  * debian/targets.mk: Drop installation of rk3399-rock-pi-4b.dtb, removed
+    upstream.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Tue, 20 Jun 2023 14:21:44 -0700
+
+u-boot (2023.04+dfsg-1) experimental; urgency=medium
+
+  * New upstream release.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Tue, 04 Apr 2023 22:55:36 -0700
+
+u-boot (2023.04~rc5+dfsg-1) experimental; urgency=medium
+
+  * debian/patches: Refresh qemu/efi-secure-boot for v2023.04-rc3.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Tue, 28 Mar 2023 07:31:21 -0700
+
+u-boot (2023.04~rc2+dfsg-1) experimental; urgency=medium
+
+  * New upstream release candidate.
+  * debian/patches: Update for v2023.04-rc2.
+  * Drop rockchip make_fit_atf, no longer used or available upstream.
+  * debian/control: Add python3-pyelftools to Build-Depends.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Wed, 15 Feb 2023 14:00:22 -0800
+
+u-boot (2023.01+dfsg-2) unstable; urgency=medium
+
+  * debian/patches: Apply patch submitted upstream fixing booting with
+    qemu-riscv64. (Closes: #1028343)
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Tue, 17 Jan 2023 17:57:16 -0800
+
+u-boot (2023.01+dfsg-1) unstable; urgency=medium
+
+  * New upstream release. (Closes: #1027176)
+  * u-boot-amlogic: Drop "noefi" variants.
+  * debian/control: Add Build-Depends-Arch with libgnutls28-dev:native and
+    uuid-dev:native for arm64. Thanks to Helmut Grohne.
+  * debian/patches: Disable CONFIG_VIDEO_LOGO to fix cross-building.
+    Thanks to Helmut Grohne.
+  * salsa-ci: Enable cross-building of u-boot-tools.
+  * debian/control: Drop libc6 cross build dependency workaround.
+  * debian/control: Drop Build-Depends on python3-distutils and
+    python3-pkg-resources, no longer needed.
+  * debian/control: Move several Build-Depends to Build-Depends-Arch:
+    arm-trusted-firmware, crust-firmware, device-tree-compiler,
+    libfdt-dev, libgnutls28-dev, libncurses-dev, libssl-dev, lzop,
+    opensbi, and uuid-dev.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Mon, 09 Jan 2023 19:18:09 -0800
+
+u-boot (2023.01~rc4+dfsg-2) unstable; urgency=medium
+
+  [ Frédéric Danis ]
+  * u-boot-amlogic: Build libretech-cc-noefi variant to work around
+    https://bugs.debian.org/1027176
+
+  [ Vagrant Cascadian ]
+  * debian/targets.mk: Remove testers who no longer have access to boards
+    or who are not reachable.
+  * u-boot-amlogic: Enable "noefi" variants for all amlogic platforms to
+    work around https://bugs.debian.org/1027176
+  * debian/control: Drop u-boot meta-package for armhf and mips.
+  * u-boot-amlogic: Add README.Debian describing the difference between
+    the default and "noefi" variants of each platform.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Thu, 05 Jan 2023 19:38:24 -0800
+
+u-boot (2023.01~rc4+dfsg-1) experimental; urgency=medium
+
+  * New upstream release candidate.
+  * debian/patches: Refresh rockchip-inno-usb.patch for 2023.01-rc4.
+  * debian/patches: Refresh roc-pc-rk3399 efuse support for 2023.01-rc4.
+  * debian/control: Update to Standards Version 4.6.2, no changes.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Fri, 23 Dec 2022 19:13:23 -0800
+
+u-boot (2023.01~rc3+dfsg-1) experimental; urgency=medium
+
+  * New upstream release candidate.
+
+  [ Sean Anderson ]
+  * Package dumpimage man page
+
+  [ Christopher Obbard ]
+  * d/patches: rockchip: roc-pc-rk3399: Enable rockchip efuse support
+
+  [ Vagrant Cascadian ]
+  * debian/patches: Refresh
+    rockchip-roc-pc-rk3399-Enable-rockchip-efuse-support.
+  * debian/patches: Drop n900 patch, now upstream. Thanks to Pali Rohár.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Sat, 10 Dec 2022 21:21:11 -0800
+
+u-boot (2023.01~rc2+dfsg-1) experimental; urgency=medium
+
+  * New upstream release candidate.
+    Fixes CVE-2022-2347 (Closes: #1014959)
+
+  [ Vagrant Cascadian ]
+  * debian/patches: Drop riscv64/update-isa-spec, fixed upstream.
+  * debian/control: Add Build-Depends on python3-setuptools.
+
+  [ Luca Boccassi ]
+  * qemu arm64/amd64: enable secure boot
+
+  [ Manuel Traut ]
+  * u-boot-imx: Add colibri_imx6 (Closes: #1023443)
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Fri, 25 Nov 2022 12:31:33 -0800
+
+u-boot (2022.10+dfsg-2) unstable; urgency=medium
+
+  * debian/patches: Apply patch from upstream fixing booting on Pinebook
+    Pro.
+  * debian/control: Update to Standards Version 4.6.2, no changes.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Fri, 23 Dec 2022 15:18:44 -0800
+
+u-boot (2022.10+dfsg-1) unstable; urgency=medium
+
+  * New upstream release. (Closes: #1019004)
+
+  [ Vagrant Cascadian ]
+  * debian/control: Add libcurses-dev:native to Build-Depends.
+
+  [ Daniel Serpell ]
+  * u-boot-sunxi: Add A20-OLinuXino_MICRO-eMMC. (Closes: #1019880)
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Mon, 03 Oct 2022 17:06:38 -0700
+
+u-boot (2022.10~rc2+dfsg-2) experimental; urgency=medium
+
+  * Team upload.
+  * debian/patches: Use relative paths for debuging symbols.
+
+ -- Vagrant Cascadian <vagrant@reproducible-builds.org>  Tue, 16 Aug 2022 19:18:15 -0700
+
+u-boot (2022.10~rc2+dfsg-1) experimental; urgency=medium
+
+  * debian/patches: Refresh for 2022.10-rc2.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Fri, 12 Aug 2022 07:18:56 -0700
+
+u-boot (2022.07+dfsg-1) unstable; urgency=medium
+
+  [ Dave Jones ]
+  * Fix Unleashed name typo
+
+  [ Vagrant Cascadian ]
+  * debian/patches: Refresh exynos console patch.
+  * Drop update-lintian-overrides helper script.
+  * Update lintian overrides.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Tue, 09 Aug 2022 16:59:45 -0700
+
+u-boot (2022.07~rc4+dfsg-1) experimental; urgency=medium
+
+  [ Tianon Gravi ]
+  * Add u-boot-sifive.README.Debian with Unmatched install instructions
+
+  [ Christopher Obbard ]
+  * Add Firefly ROC-RK3399-PC support
+
+  [ Vagrant Cascadian ]
+  * debian/patches: Refresh
+    riscv64/unmatched-prevent-relocating-initrd-and-fdt.patch
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Wed, 08 Jun 2022 12:06:20 -0700
+
+u-boot (2022.07~rc3+dfsg-2) experimental; urgency=medium
+
+  [ Arnaud Ferraris ]
+  * debian: Add new package for STM32 boards
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Tue, 24 May 2022 11:08:22 -0700
+
+u-boot (2022.07~rc3+dfsg-1) experimental; urgency=medium
+
+  [ Christopher Obbard ]
+  * Add Radxa ROCK Pi E support
+
+  [ Nicolas Boulenguez ]
+  * Simplify the parts displaying a Debian-specific revision during boot.
+    (Closes: #1009638)
+
+  [ Vagrant Cascadian ]
+  * debian/patches: Refresh arndale/board-spl-rule for 2022.07-rc3.
+  * debian/patches: Drop patches applied in 2022.07-rc3.
+  * u-boot-qemu: Add malta64el and maltael. Thanks to Johannes Schauer
+    Marin Rodrigues. (Closes: #1010917)
+  * debian/rules: Switch to using tools-all target.
+  * debian/patches: Drop tools-generic-builds.
+  * debian/control: Update Standards-Version to 4.6.1.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Tue, 24 May 2022 10:49:36 -0700
+
+u-boot (2022.04+dfsg-2) unstable; urgency=medium
+
+  * debian/watch: Exclude erroneous upstream version.
+  * debian/patches: Add patches submitted upstream to enable SCSI on
+    rockpro64.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Sun, 10 Apr 2022 16:28:14 -0700
+
+u-boot (2022.04+dfsg-1) unstable; urgency=medium
+
+  * New upstream release.
+  * debian/upstream/signing-key: Update key.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Tue, 05 Apr 2022 09:26:39 -0700
+
+u-boot (2022.04~rc4+dfsg-1) experimental; urgency=medium
+
+  * New upstream release candidate.
+  * u-boot-omap.docs: Update location for nokia rx51.
+  * debian/control: Build-Depends on libncurses-dev.
+  * debian/control: Drop versioned build-depends on binutils.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Thu, 24 Mar 2022 14:28:03 -0700
+
+u-boot (2022.04~rc2+dfsg-1) experimental; urgency=medium
+
+  * New upstream release candidate.
+  * debian/patches: Drop obsolete patch
+    ensure-config-sandbox-for-make-env.
+  * debian/control: Add Build-Depends on libgnutls28-dev and uuid-dev,
+    used to build mkeficapsule.
+  * u-boot-tools: Install mkeficapsule. (Closes: #988413)
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Wed, 23 Feb 2022 17:10:03 -0800
+
+u-boot (2022.01+dfsg-2) unstable; urgency=medium
+
+  * debian/patches: Fix building qemu-ppce500 target with binutils
+    2.38. Thanks to Aurelien Jarno! (Closes: #1003490)
+  * debian/patches: Update to newer riscv64 default ISA spec.
+    Thanks to Aurelien Jarno! (Closes: #1003490)
+  * debian/control: Add versioned Build-Depends on binutils.
+  * debian/control: Update versioned Build-Depends on opensbi.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Wed, 26 Jan 2022 11:58:27 -0800
+
+u-boot (2022.01+dfsg-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Mon, 10 Jan 2022 14:07:13 -0800
+
+u-boot (2022.01~rc4+dfsg-1) experimental; urgency=medium
+
+  * New upstream release candidate.
+  * debian/targets.mk: Fix typo in nanopc-t4-rk3399.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Mon, 20 Dec 2021 18:38:20 -0800
+
+u-boot (2022.01~rc2+dfsg-1) experimental; urgency=medium
+
+  [ Helmut Grohne ]
+  * Fix FTCBFS: missing build dependency on libssl-dev (Closes: #996497).
+
+  [ Steev Klimaszewski ]
+  * Add NanoPC T4 support
+  * Add NanoPi NEO4 support
+
+  [ Vagrant Cascadian ]
+  * u-boot-install-rockchip: Align with tabs.
+  * debian/patches: Refresh exynos default console patch.
+  * debian/patches: Remove patches applied upstream.
+  * debian/control: Update versioned build-dependency on opensbi.
+  * debian/control: Update versioned dependency on arm-trusted-firmware.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Sun, 21 Nov 2021 20:05:15 -0800
+
+u-boot (2021.10+dfsg-1) unstable; urgency=medium
+
+  * Upload new upstream version to unstable.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Sat, 09 Oct 2021 21:20:52 -0700
+
+u-boot (2021.10~rc5+dfsg-1) experimental; urgency=medium
+
+  * debian/rules: Fix installation of the platform specific config files.
+  * debian/patches: Remove patches am57xx/omap5_distro_bootcmd and
+    riscv64/riscv-sifive-Set-default-fdtfile-names.patch, applied
+    upstream.
+  * debian/patches: Refresh n900/bootz_and_raw_initrd.
+  * debian/patches: Refresh tools-generic-builds.
+  * debian/control: Build-Depends on libssl-dev:native.
+  * debian/rules: No longer adjust .config file during build.
+  * debian/copyright: Removed board.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Tue, 28 Sep 2021 10:29:12 -0700
+
+u-boot (2021.07+dfsg-2) unstable; urgency=medium
+
+  [ Vagrant Cascadian ]
+  * debian/control: Update Standards-Version to 4.6.0, no changes.
+
+  [ Nicolas Boulenguez ]
+  * debian/rules: Replace exports with assignments visible in build logs
+    (Closes: #990202)
+
+  [ Vagrant Cascadian ]
+  * [arm64] u-boot-sunxi: Add sopine_baseboard target. Thanks to
+    amarpreet. (Closes: #992816)
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Wed, 08 Sep 2021 19:58:55 -0700
+
+u-boot (2021.07+dfsg-1) experimental; urgency=medium
+
+  * debian/patches: Add patch to fix USB (de)initialization on
+    rockpro64/pinebook-pro.  Drop patch disabling preboot on these
+    platforms.
+  * [riscv64] debian/patches: Set default fdtfile names on sifive platforms.
+  * [riscv64] debian/patches: Apply patch fixing boot on unmatched
+    board. Thanks to Heinrich Schuchardt (xypron).
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Sat, 24 Jul 2021 18:35:37 -0700
+
+u-boot (2021.07~rc4+dfsg-1) experimental; urgency=medium
+
+  [ Nicolas Boulenguez ]
+  * Write only once that rockchip depends on rockchip_make_fit_atf
+    (Closes: #985908)
+  * Refactor pkg.uboot.subarch and pkg.uboot.platform build profiles
+    (Closes: #985911)
+
+  [ Vagrant Cascadian ]
+  * debian/control: Make Build-Depends on libssl-dev only when building
+    tools.
+  * Update for rename of sifive_fu540 to sifive_unleashed
+  * u-boot-sifive: Update documentation for rename of fu540 to unleashed.
+
+  [ Nicolas Boulenguez ]
+  * u-boot-sunxi: embed crust-firmware on supported platforms.
+    (Closes: #985981)
+
+  [ Vagrant Cascadian ]
+  * debian/control: Fix Build-Depends on crust-firmware.
+  * debian/targets.mk: Update usbarmory targets for new versions.
+
+  [ Filip Moc ]
+  * debian/targets.mk: rockchip: add u-boot-tpl.bin
+
+  [ Vagrant Cascadian ]
+  * u-boot-install-rockchip: Allow overriding UBOOT_OFFSET for
+    puma-rk3399.
+  * u-boot-install-rockchip: Allow overriding the loader offset.
+  * [riscv64] u-boot-sifive: Use OpenSBI to build the sifive_unleashed target.
+  * [riscv64] u-boot-sifive: Add sifive_unmatched board.
+  * [riscv64] u-boot-sifive: Add Built-Using for opensbi.
+  * u-boot-sifive: Install unmatched documentation.
+  * u-boot-sunxi, u-boot-rockchip: Move arm-trusted-firmware to Suggests.
+  * debian/control: Update versioned Build-Depends on arm-trusted-firmware
+    to 2.5.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Sat, 19 Jun 2021 15:11:34 -0700
+
+u-boot (2021.04~rc4+dfsg-1) experimental; urgency=medium
+
+  [ Vagrant Cascadian ]
+  * New upstream release candidate.
+  * debian/patches: Refresh mx53loco patch.
+  * debian/targets: mx53loco: Update to install u-boot-dtb.imx.
+
+  [ Nicolas Boulenguez ]
+  * Set CROSS_COMPILE on the Make command line instead of exporting
+    (Closes: #980236)
+  * Encode the GNU type instead of the Debian arch alias for qemu
+    (Closes: #980360)
+  * Name the platform list temp file after subpackage instead of subarch
+    (Closes: #980362)
+  * Install configurations with dh_installdocs instead of dh_install
+    (Closes: #980359)
+  * Pass distinct substvars to gencontrol on the command line
+    (Closes: #980358)
+  * Store all dh_install commands into the same file (Closes: #980361)
+  * Set BL31 SCP on the command line instead of the environment
+    (Closes: #980363)
+  * Replace many shell constructs with Make constructs (Closes: #979296)
+
+  [ Vagrant Cascadian ]
+  * debian/targets.mk: Use a single debian/build/rockchip_make_fit_atf
+    rule for all architectures.
+  * debian/rules: Depend on rockchip_make_fit_atf for
+    override_dh_auto_build-arch target.
+  * debian/rules: When pkg.uboot.platform.* is in DEB_BUILD_PROFILES, only
+    build specified platform.
+  * debian/patches: Refresh disable-fit-image-tests.
+  * debian/targets.mk: Fix u-boot-sunxi variables for arm64 assigns and
+    dpkg-gencontrol. Thanks to Nicolas Boulenguez.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Sat, 20 Mar 2021 18:09:04 -0700
+
+u-boot (2021.04~rc3+dfsg-1) experimental; urgency=medium
+
+  * New upstream release candidate. Fixes CVE-2021-27097 and
+    CVE-2021-27138. (Closes: #983270, #983269)
+  * Disable tests for FIT images
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Fri, 12 Mar 2021 16:22:35 -0800
 
 u-boot (2021.01+dfsg-5) unstable; urgency=medium
 

@@ -4,10 +4,12 @@
  *
  */
 
+#include <asm/global_data.h>
 #include <asm/io.h>
 #include <common.h>
 #include <config.h>
 #include <dm.h>
+#include <linux/printk.h>
 #include "errno.h"
 #include <i2c.h>
 #include "iproc_i2c.h"
@@ -672,7 +674,7 @@ static int iproc_i2c_probe(struct udevice *bus)
 	return iproc_i2c_init(bus);
 }
 
-static int iproc_i2c_ofdata_to_platdata(struct udevice *bus)
+static int iproc_i2c_of_to_plat(struct udevice *bus)
 {
 	struct iproc_i2c *bus_prvdata = dev_get_priv(bus);
 	int node = dev_of_offset(bus);
@@ -705,9 +707,9 @@ U_BOOT_DRIVER(iproc_i2c) = {
 	.name	= "iproc_i2c",
 	.id	= UCLASS_I2C,
 	.of_match = iproc_i2c_ids,
-	.ofdata_to_platdata = iproc_i2c_ofdata_to_platdata,
+	.of_to_plat = iproc_i2c_of_to_plat,
 	.probe	= iproc_i2c_probe,
-	.priv_auto_alloc_size = sizeof(struct iproc_i2c),
+	.priv_auto	= sizeof(struct iproc_i2c),
 	.ops	= &iproc_i2c_ops,
 	.flags  = DM_FLAG_PRE_RELOC,
 };

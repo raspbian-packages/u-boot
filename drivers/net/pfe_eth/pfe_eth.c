@@ -51,7 +51,7 @@ static inline void pfe_gemac_disable(void *gemac_base)
 
 static inline void pfe_gemac_set_speed(void *gemac_base, u32 speed)
 {
-	struct ccsr_scfg *scfg = (struct ccsr_scfg *)CONFIG_SYS_FSL_SCFG_ADDR;
+	struct ccsr_scfg *scfg = (struct ccsr_scfg *)CFG_SYS_FSL_SCFG_ADDR;
 	u32 ecr = readl(gemac_base + EMAC_ECNTRL_REG) & ~EMAC_ECNTRL_SPEED;
 	u32 rcr = readl(gemac_base + EMAC_RCNTRL_REG) & ~EMAC_RCNTRL_RMII_10T;
 	u32 rgmii_pcr = in_be32(&scfg->rgmiipcr) &
@@ -87,7 +87,7 @@ static int pfe_eth_write_hwaddr(struct udevice *dev)
 {
 	struct pfe_eth_dev *priv = dev_get_priv(dev);
 	struct gemac_s *gem = priv->gem;
-	struct eth_pdata *pdata = dev_get_platdata(dev);
+	struct eth_pdata *pdata = dev_get_plat(dev);
 	uchar *mac = pdata->enetaddr;
 
 	writel((mac[0] << 24) + (mac[1] << 16) + (mac[2] << 8) + mac[3],
@@ -101,7 +101,7 @@ static int pfe_eth_write_hwaddr(struct udevice *dev)
  *
  * @param[in]   edev    Pointer to eth device structure.
  *
- * @return      none
+ * Return:      none
  */
 static inline void pfe_eth_stop(struct udevice *dev)
 {
@@ -157,7 +157,7 @@ static int pfe_eth_start(struct udevice *dev)
 
 static int pfe_eth_send(struct udevice *dev, void *packet, int length)
 {
-	struct pfe_eth_dev *priv = (struct pfe_eth_dev *)dev->priv;
+	struct pfe_eth_dev *priv = (struct pfe_eth_dev *)dev_get_priv(dev);
 
 	int rc;
 	int i = 0;
@@ -215,7 +215,7 @@ static int pfe_eth_probe(struct udevice *dev)
 {
 	struct pfe_eth_dev *priv = dev_get_priv(dev);
 	struct pfe_ddr_address pfe_addr;
-	struct pfe_eth_pdata *pdata = dev_get_platdata(dev);
+	struct pfe_eth_pdata *pdata = dev_get_plat(dev);
 	int ret = 0;
 	static int init_done;
 
@@ -266,7 +266,7 @@ static int pfe_eth_probe(struct udevice *dev)
 
 static int pfe_eth_bind(struct udevice *dev)
 {
-	struct pfe_eth_pdata *pdata = dev_get_platdata(dev);
+	struct pfe_eth_pdata *pdata = dev_get_plat(dev);
 	char name[20];
 
 	sprintf(name, "pfe_eth%u", pdata->pfe_eth_pdata_mac.phy_interface);
@@ -290,6 +290,6 @@ U_BOOT_DRIVER(pfe_eth) = {
 	.probe	= pfe_eth_probe,
 	.remove = pfe_eth_remove,
 	.ops	= &pfe_eth_ops,
-	.priv_auto_alloc_size = sizeof(struct pfe_eth_dev),
-	.platdata_auto_alloc_size = sizeof(struct pfe_eth_pdata)
+	.priv_auto	= sizeof(struct pfe_eth_dev),
+	.plat_auto	= sizeof(struct pfe_eth_pdata)
 };

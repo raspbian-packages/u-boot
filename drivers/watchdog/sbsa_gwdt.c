@@ -5,6 +5,7 @@
  * Copyright 2020 NXP
  */
 
+#include <asm/global_data.h>
 #include <asm/io.h>
 #include <common.h>
 #include <dm/device.h>
@@ -88,22 +89,22 @@ static int sbsa_gwdt_expire_now(struct udevice *dev, ulong flags)
 
 static int sbsa_gwdt_probe(struct udevice *dev)
 {
-	debug("%s: Probing wdt%u (sbsa-gwdt)\n", __func__, dev->seq);
+	debug("%s: Probing wdt%u (sbsa-gwdt)\n", __func__, dev_seq(dev));
 
 	return 0;
 }
 
-static int sbsa_gwdt_ofdata_to_platdata(struct udevice *dev)
+static int sbsa_gwdt_of_to_plat(struct udevice *dev)
 {
 	struct sbsa_gwdt_priv *priv = dev_get_priv(dev);
 
-	priv->reg_control = (void __iomem *)dev_read_addr_index(dev, 0);
-	if (IS_ERR(priv->reg_control))
-		return PTR_ERR(priv->reg_control);
+	priv->reg_control = dev_read_addr_index_ptr(dev, 0);
+	if (!priv->reg_control)
+		return -EINVAL;
 
-	priv->reg_refresh = (void __iomem *)dev_read_addr_index(dev, 1);
-	if (IS_ERR(priv->reg_refresh))
-		return PTR_ERR(priv->reg_refresh);
+	priv->reg_refresh = dev_read_addr_index_ptr(dev, 1);
+	if (!priv->reg_refresh)
+		return -EINVAL;
 
 	return 0;
 }
@@ -125,7 +126,7 @@ U_BOOT_DRIVER(sbsa_gwdt) = {
 	.id = UCLASS_WDT,
 	.of_match = sbsa_gwdt_ids,
 	.probe = sbsa_gwdt_probe,
-	.priv_auto_alloc_size = sizeof(struct sbsa_gwdt_priv),
-	.ofdata_to_platdata = sbsa_gwdt_ofdata_to_platdata,
+	.priv_auto	= sizeof(struct sbsa_gwdt_priv),
+	.of_to_plat = sbsa_gwdt_of_to_plat,
 	.ops = &sbsa_gwdt_ops,
 };

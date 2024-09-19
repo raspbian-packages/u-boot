@@ -9,6 +9,7 @@
 #include <usb.h>
 #include <asm/arch/stm32prog.h>
 #include <asm/arch/sys_proto.h>
+#include <linux/printk.h>
 #include "stm32prog.h"
 
 static int stm32prog_set_phase(struct stm32prog_data *data, u8 phase,
@@ -41,24 +42,24 @@ static int stm32prog_set_phase(struct stm32prog_data *data, u8 phase,
 static int stm32prog_cmd_write(u64 offset, void *buf, long *len)
 {
 	u8 phase;
-	u32 address;
+	uintptr_t address;
 	u8 *pt = buf;
 	void (*entry)(void);
 	int ret;
 
 	if (*len < 5) {
-		pr_err("size not allowed\n");
+		log_err("size not allowed\n");
 		return  -EINVAL;
 	}
 	if (offset) {
-		pr_err("invalid offset\n");
+		log_err("invalid offset\n");
 		return  -EINVAL;
 	}
 	phase = pt[0];
 	address = (pt[1] << 24) | (pt[2] << 16) | (pt[3] << 8) | pt[4];
 	if (phase == PHASE_RESET) {
 		entry = (void *)address;
-		printf("## Starting application at 0x%x ...\n", address);
+		printf("## Starting application at 0x%p ...\n", entry);
 		(*entry)();
 		printf("## Application terminated\n");
 		return 0;
@@ -66,7 +67,7 @@ static int stm32prog_cmd_write(u64 offset, void *buf, long *len)
 	/* set phase and offset */
 	ret = stm32prog_set_phase(stm32prog_data, phase, address);
 	if (ret)
-		pr_err("failed: %d\n", ret);
+		log_err("failed: %d\n", ret);
 	return ret;
 }
 
@@ -81,7 +82,7 @@ static int stm32prog_cmd_read(u64 offset, void *buf, long *len)
 	int length;
 
 	if (*len < PHASE_MIN_SIZE) {
-		pr_err("request exceeds allowed area\n");
+		log_err("request exceeds allowed area\n");
 		return  -EINVAL;
 	}
 	if (offset) {
@@ -90,7 +91,7 @@ static int stm32prog_cmd_read(u64 offset, void *buf, long *len)
 	}
 	phase = stm32prog_data->phase;
 	if (phase == PHASE_FLASHLAYOUT)
-		destination = STM32_DDR_BASE;
+		destination = CONFIG_SYS_LOAD_ADDR;
 	dfu_offset = stm32prog_data->offset;
 
 	/* mandatory header, size = PHASE_MIN_SIZE */
@@ -171,17 +172,17 @@ int stm32prog_get_medium_size_virt(struct dfu_entity *dfu, u64 *size)
 {
 	if (dfu->dev_type != DFU_DEV_VIRT) {
 		*size = 0;
-		pr_debug("%s, invalid dev_type = %d\n",
-			 __func__, dfu->dev_type);
+		log_debug("%s, invalid dev_type = %d\n",
+			  __func__, dfu->dev_type);
 		return -EINVAL;
 	}
 
 	switch (dfu->data.virt.dev_num) {
 	case PHASE_CMD:
-		*size = 512;
+		*size = CMD_SIZE;
 		break;
 	case PHASE_OTP:
-		*size = OTP_SIZE;
+		*size = stm32prog_data->tee ? OTP_SIZE_TA : OTP_SIZE_SMC;
 		break;
 	case PHASE_PMIC:
 		*size = PMIC_SIZE;
@@ -206,14 +207,14 @@ bool stm32prog_usb_loop(struct stm32prog_data *data, int dev)
 	g_dnl_set_product(product);
 
 	if (stm32prog_data->phase == PHASE_FLASHLAYOUT) {
+		/* forget any previous Control C */
+		clear_ctrlc();
 		ret = run_usb_dnl_gadget(dev, "usb_dnl_dfu");
-		if (ret || stm32prog_data->phase == PHASE_DO_RESET)
-			return ret;
+		/* DFU reset received, no error or CtrlC */
+		if (ret || stm32prog_data->phase != PHASE_FLASHLAYOUT || had_ctrlc())
+			return ret; /* true = reset on DFU error */
 		/* prepare the second enumeration with the FlashLayout */
-		if (stm32prog_data->phase == PHASE_FLASHLAYOUT)
-			stm32prog_dfu_init(data);
-		/* found next selected partition */
-		stm32prog_next_phase(data);
+		stm32prog_dfu_init(data);
 	}
 
 	ret = run_usb_dnl_gadget(dev, "usb_dnl_dfu");
@@ -227,6 +228,6 @@ bool stm32prog_usb_loop(struct stm32prog_data *data, int dev)
 
 int g_dnl_get_board_bcd_device_number(int gcnum)
 {
-	pr_debug("%s\n", __func__);
+	log_debug("%s\n", __func__);
 	return 0x200;
 }

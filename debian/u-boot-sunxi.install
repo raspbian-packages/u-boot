@@ -1,4 +1,1 @@
-#!/bin/sh
-debian/bin/u-boot-install-targets sunxi
-
-echo debian/bin/u-boot-install-sunxi /usr/bin/
+debian/bin/u-boot-install-sunxi         usr/bin

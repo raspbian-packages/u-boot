@@ -2,7 +2,7 @@
 /*
  * Texas Instruments' K3 DSP Remoteproc driver
  *
- * Copyright (C) 2018-2020 Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (C) 2018-2020 Texas Instruments Incorporated - https://www.ti.com/
  *	Lokesh Vutla <lokeshvutla@ti.com>
  *	Suman Anna <s-anna@ti.com>
  */
@@ -456,5 +456,5 @@ U_BOOT_DRIVER(k3_dsp) = {
 	.ops = &k3_dsp_ops,
 	.probe = k3_dsp_probe,
 	.remove = k3_dsp_remove,
-	.priv_auto_alloc_size = sizeof(struct k3_dsp_privdata),
+	.priv_auto	= sizeof(struct k3_dsp_privdata),
 };

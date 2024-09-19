@@ -16,6 +16,7 @@
 #include <asm/arch-rockchip/hardware.h>
 #include <asm/arch-rockchip/grf_rk3328.h>
 #include <asm/io.h>
+#include <dm/device-internal.h>
 #include <dm/lists.h>
 #include <dt-bindings/clock/rk3328-cru.h>
 #include <linux/bitops.h>
@@ -680,6 +681,7 @@ static ulong rk3328_clk_set_rate(struct clk *clk, ulong rate)
 	case ACLK_GMAC:
 	case PCLK_GMAC:
 	case SCLK_USB3OTG_SUSPEND:
+	case USB480M:
 		return 0;
 	default:
 		return -ENOENT;
@@ -770,6 +772,7 @@ static int rk3328_clk_set_parent(struct clk *clk, struct clk *parent)
 	case SCLK_MAC2IO_EXT:
 		return rk3328_gmac2io_ext_set_parent(clk, parent);
 	case DCLK_LCDC:
+	case USB480M:
 	case SCLK_PDM:
 	case SCLK_RTC32K:
 	case SCLK_UART0:
@@ -797,7 +800,7 @@ static int rk3328_clk_probe(struct udevice *dev)
 	return 0;
 }
 
-static int rk3328_clk_ofdata_to_platdata(struct udevice *dev)
+static int rk3328_clk_of_to_plat(struct udevice *dev)
 {
 	struct rk3328_clk_priv *priv = dev_get_priv(dev);
 
@@ -823,14 +826,14 @@ static int rk3328_clk_bind(struct udevice *dev)
 						    glb_srst_fst_value);
 		priv->glb_srst_snd_value = offsetof(struct rk3328_cru,
 						    glb_srst_snd_value);
-		sys_child->priv = priv;
+		dev_set_priv(sys_child, priv);
 	}
 
 #if CONFIG_IS_ENABLED(RESET_ROCKCHIP)
 	ret = offsetof(struct rk3328_cru, softrst_con[0]);
 	ret = rockchip_reset_bind(dev, ret, 12);
 	if (ret)
-		debug("Warning: software reset driver bind faile\n");
+		debug("Warning: software reset driver bind failed\n");
 #endif
 
 	return ret;
@@ -845,8 +848,8 @@ U_BOOT_DRIVER(rockchip_rk3328_cru) = {
 	.name		= "rockchip_rk3328_cru",
 	.id		= UCLASS_CLK,
 	.of_match	= rk3328_clk_ids,
-	.priv_auto_alloc_size = sizeof(struct rk3328_clk_priv),
-	.ofdata_to_platdata = rk3328_clk_ofdata_to_platdata,
+	.priv_auto	= sizeof(struct rk3328_clk_priv),
+	.of_to_plat = rk3328_clk_of_to_plat,
 	.ops		= &rk3328_clk_ops,
 	.bind		= rk3328_clk_bind,
 	.probe		= rk3328_clk_probe,

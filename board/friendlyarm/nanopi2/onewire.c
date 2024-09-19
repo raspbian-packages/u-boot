@@ -9,8 +9,8 @@
 #include <errno.h>
 #include <asm/io.h>
 #include <asm/arch/clk.h>
+#include <asm/arch/pwm.h>
 #include <i2c.h>
-#include <pwm.h>
 
 #include <irq_func.h>
 
@@ -35,7 +35,7 @@ static int bus_type = -1;
 static int lcd_id = -1;
 static unsigned short lcd_fwrev;
 static int current_brightness = -1;
-#ifdef CONFIG_DM_I2C
+#if CONFIG_IS_ENABLED(DM_I2C)
 static struct udevice *i2c_dev;
 #endif
 
@@ -102,7 +102,7 @@ static int onewire_init_timer(void)
 	/* range: 1080~1970 */
 	period_ns -= 1525;
 
-	return pwm_config(PWM_CH, period_ns >> 1, period_ns);
+	return s5p_pwm_config(PWM_CH, period_ns >> 1, period_ns);
 }
 
 static void wait_one_tick(void)
@@ -182,7 +182,7 @@ static int onewire_i2c_do_request(unsigned char req, unsigned char *buf)
 	tx[0] = req;
 	tx[1] = crc8_ow(req << 24, 8);
 
-#ifdef CONFIG_DM_I2C
+#if CONFIG_IS_ENABLED(DM_I2C)
 	if (dm_i2c_write(i2c_dev, 0, tx, 2))
 		return -EIO;
 
@@ -214,7 +214,7 @@ static void onewire_i2c_init(void)
 	unsigned char buf[4];
 	int ret;
 
-#ifdef CONFIG_DM_I2C
+#if CONFIG_IS_ENABLED(DM_I2C)
 	ret = i2c_get_chip_for_busnum(ONEWIRE_I2C_BUS,
 				      ONEWIRE_I2C_ADDR, 0, &i2c_dev);
 #else

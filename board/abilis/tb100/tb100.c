@@ -3,13 +3,12 @@
  * (C) Copyright 2014 Pierrick Hascoet, Abilis Systems
  */
 
-#include <common.h>
 #include <cpu_func.h>
 #include <net.h>
 #include <netdev.h>
 #include <asm/io.h>
 
-void reset_cpu(ulong addr)
+void reset_cpu(void)
 {
 #define CRM_SWRESET	0xff101044
 	writel(0x1, (void *)CRM_SWRESET);

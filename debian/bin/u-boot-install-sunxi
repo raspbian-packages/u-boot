@@ -1,9 +1,6 @@
 #!/bin/sh
 set -e
 
-splfiles="sunxi-spl.bin u-boot-sunxi-with-spl.bin"
-itbfiles="u-boot.itb u-boot-sunxi-with-spl.fit.itb"
-
 dtmodel="/sys/firmware/devicetree/base/model"
 if [ -z "$TARGET" ] && [ -f "${dtmodel}" ]; then
 	dtmodelname=$(cat $dtmodel)
@@ -32,6 +29,7 @@ if [ -z "$TARGET" ] && [ -f "${dtmodel}" ]; then
 		"Olimex A20-OLinuXino-LIME2") TARGET="/usr/lib/u-boot/A20-OLinuXino-Lime2" ;;
 		"Olimex A20-OLinuXino-LIME2-eMMC") TARGET="/usr/lib/u-boot/A20-OLinuXino-Lime2-eMMC" ;;
 		"Olimex A20-Olinuxino Micro") TARGET="/usr/lib/u-boot/A20-OLinuXino_MICRO" ;;
+		"Olimex A20-OLinuXino-MICRO-eMMC") TARGET="/usr/lib/u-boot/A20-OLinuXino_MICRO-eMMC" ;;
 		"Olimex A64-Olinuxino") TARGET="/usr/lib/u-boot/a64-olinuxino/" ;;
 		"Olimex A64-Olinuxino-eMMC") TARGET="/usr/lib/u-boot/a64-olinuxino-emmc" ;;
 		"Olimex A64 Teres-I") TARGET="/usr/lib/u-boot/teres_i/" ;;
@@ -44,11 +42,12 @@ if [ -z "$TARGET" ] && [ -f "${dtmodel}" ]; then
 		"Pine64+") TARGET="/usr/lib/u-boot/pine64_plus" ;;
 		"Pine64 LTS") TARGET="/usr/lib/u-boot/pine64-lts" ;;
 		"PineRiver Mini X-Plus") TARGET="/usr/lib/u-boot/Mini-X" ;;
+		"SoPine with baseboard") TARGET="/usr/lib/u-boot/sopine_baseboard" ;;
 		"Xunlong Orange Pi Plus / Plus 2") TARGET="/usr/lib/u-boot/orangepi_plus" ;;
 		"Xunlong Orange Pi Zero") TARGET="/usr/lib/u-boot/orangepi_zero" ;;
 		*)
 			echo >&2 "ERROR: Unknown system: ${dtmodelname}"
-			echo >&2 "Specify target: TARGET=/usr/lib/u-boot/UBOOT"
+			echo >&2 "Specify target: TARGET=/usr/lib/u-boot/<board_name>/"
 			exit 1
 			;;
 	esac
@@ -62,11 +61,6 @@ case "$1" in
 	echo >&2 "$0: unknown option '$1'"
 	exit 1;;
 esac
-
-if [ -z "$(which mkimage)" ]; then
-	echo >&2 "$0: mkimage: command not found. Please install u-boot-tools."
-	exit 1
-fi
 
 DEV="$1"
 if [ -z "$DEV" ] || ! shift || [ -n "$*" ]; then
@@ -100,35 +94,11 @@ if [ -z "$FORCE" ]; then
     fi
 fi
 
-spl=
-for i in $splfiles ; do
-    i=${TARGET}/$i
-    if [ -f "$i" ]; then
-        spl=$i
-    fi
-done
-
-if [ -z "$spl" ]; then
-    echo >&2 "$0: no known .spl file in ${TARGET}"
+imfile="${TARGET}/u-boot-sunxi-with-spl.bin"
+if [ ! -f "$imfile" ]; then
+    echo >&2 "$0: no image file at ${imfile}"
     exit 1
 fi
 
-if [ -n "$itbfiles" ]; then
-    itb=
-    for i in $itbfiles ; do
-        i=${TARGET}/$i
-        if [ -f "$i" ]; then
-            itb=$i
-        fi
-    done
-fi
-
-echo "Writing u-boot SPL image"
-dd conv=notrunc if=${spl} of="$DEV" bs=8k seek=1
-
-if [ -n "$itb" ]; then
-    echo "Writing u-boot FIT image"
-    dd conv=notrunc if=${itb} of="$DEV" bs=8k seek=5
-fi
-
-sync "$DEV"
+echo "Writing U-Boot image ${imfile} to ${DEV}"
+dd conv=fsync,notrunc if="$imfile" of="$DEV" bs=8K seek=1

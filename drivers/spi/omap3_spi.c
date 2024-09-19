@@ -6,7 +6,7 @@
  * Copyright (C) 2010 Dirk Behme <dirk.behme@googlemail.com>
  *
  * Driver for McSPI controller on OMAP3. Based on davinci_spi.c
- * Copyright (C) 2009 Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (C) 2009 Texas Instruments Incorporated - https://www.ti.com/
  *
  * Copyright (C) 2007 Atmel Corporation
  *
@@ -20,6 +20,7 @@
 #include <dm.h>
 #include <spi.h>
 #include <malloc.h>
+#include <asm/global_data.h>
 #include <asm/io.h>
 #include <linux/bitops.h>
 #include <omap3_spi.h>
@@ -37,6 +38,8 @@ struct omap3_spi_priv {
 	unsigned int mode;
 	unsigned int wordlen;
 	unsigned int pin_dir:1;
+
+	bool bus_claimed;
 };
 
 static void omap3_spi_write_chconf(struct omap3_spi_priv *priv, int val)
@@ -139,7 +142,7 @@ static int omap3_spi_read(struct omap3_spi_priv *priv, unsigned int len,
 			}
 		}
 
-		/* Disable the channel to prevent furher receiving */
+		/* Disable the channel to prevent further receiving */
 		if (i == (len - 1))
 			omap3_spi_set_enable(priv, OMAP3_MCSPI_CHCTRL_DIS);
 
@@ -344,20 +347,28 @@ static void _omap3_spi_set_wordlen(struct omap3_spi_priv *priv)
 	omap3_spi_write_chconf(priv, confr);
 }
 
-static void spi_reset(struct mcspi *regs)
+static void spi_reset(struct omap3_spi_priv *priv)
 {
 	unsigned int tmp;
 
-	writel(OMAP3_MCSPI_SYSCONFIG_SOFTRESET, &regs->sysconfig);
+	writel(OMAP3_MCSPI_SYSCONFIG_SOFTRESET, &priv->regs->sysconfig);
 	do {
-		tmp = readl(&regs->sysstatus);
+		tmp = readl(&priv->regs->sysstatus);
 	} while (!(tmp & OMAP3_MCSPI_SYSSTATUS_RESETDONE));
 
 	writel(OMAP3_MCSPI_SYSCONFIG_AUTOIDLE |
 	       OMAP3_MCSPI_SYSCONFIG_ENAWAKEUP |
-	       OMAP3_MCSPI_SYSCONFIG_SMARTIDLE, &regs->sysconfig);
+	       OMAP3_MCSPI_SYSCONFIG_SMARTIDLE, &priv->regs->sysconfig);
 
-	writel(OMAP3_MCSPI_WAKEUPENABLE_WKEN, &regs->wakeupenable);
+	writel(OMAP3_MCSPI_WAKEUPENABLE_WKEN, &priv->regs->wakeupenable);
+
+	/*
+	 * Set the same default mode for each channel, especially CS polarity
+	 * which must be common for all SPI slaves before any transfer.
+	 */
+	for (priv->cs = 0 ; priv->cs < OMAP4_MCSPI_CHAN_NB ; priv->cs++)
+		_omap3_spi_set_mode(priv);
+	priv->cs = 0;
 }
 
 static void _omap3_spi_claim_bus(struct omap3_spi_priv *priv)
@@ -372,18 +383,23 @@ static void _omap3_spi_claim_bus(struct omap3_spi_priv *priv)
 	conf |= OMAP3_MCSPI_MODULCTRL_SINGLE;
 
 	writel(conf, &priv->regs->modulctrl);
+
+	priv->bus_claimed = true;
 }
 
 static int omap3_spi_claim_bus(struct udevice *dev)
 {
 	struct udevice *bus = dev->parent;
 	struct omap3_spi_priv *priv = dev_get_priv(bus);
-	struct dm_spi_slave_platdata *slave_plat = dev_get_parent_platdata(dev);
+	struct dm_spi_slave_plat *slave_plat = dev_get_parent_plat(dev);
 
 	priv->cs = slave_plat->cs;
-	priv->freq = slave_plat->max_hz;
+	if (!priv->freq)
+		priv->freq = slave_plat->max_hz;
 
 	_omap3_spi_claim_bus(priv);
+	_omap3_spi_set_speed(priv);
+	_omap3_spi_set_mode(priv);
 
 	return 0;
 }
@@ -395,6 +411,8 @@ static int omap3_spi_release_bus(struct udevice *dev)
 
 	writel(OMAP3_MCSPI_MODULCTRL_MS, &priv->regs->modulctrl);
 
+	priv->bus_claimed = false;
+
 	return 0;
 }
 
@@ -402,7 +420,7 @@ static int omap3_spi_set_wordlen(struct udevice *dev, unsigned int wordlen)
 {
 	struct udevice *bus = dev->parent;
 	struct omap3_spi_priv *priv = dev_get_priv(bus);
-	struct dm_spi_slave_platdata *slave_plat = dev_get_parent_platdata(dev);
+	struct dm_spi_slave_plat *slave_plat = dev_get_parent_plat(dev);
 
 	priv->cs = slave_plat->cs;
 	priv->wordlen = wordlen;
@@ -414,13 +432,13 @@ static int omap3_spi_set_wordlen(struct udevice *dev, unsigned int wordlen)
 static int omap3_spi_probe(struct udevice *dev)
 {
 	struct omap3_spi_priv *priv = dev_get_priv(dev);
-	struct omap3_spi_plat *plat = dev_get_platdata(dev);
+	struct omap3_spi_plat *plat = dev_get_plat(dev);
 
 	priv->regs = plat->regs;
 	priv->pin_dir = plat->pin_dir;
 	priv->wordlen = SPI_DEFAULT_WORDLEN;
 
-	spi_reset(priv->regs);
+	spi_reset(priv);
 
 	return 0;
 }
@@ -440,7 +458,8 @@ static int omap3_spi_set_speed(struct udevice *dev, unsigned int speed)
 	struct omap3_spi_priv *priv = dev_get_priv(dev);
 
 	priv->freq = speed;
-	_omap3_spi_set_speed(priv);
+	if (priv->bus_claimed)
+		_omap3_spi_set_speed(priv);
 
 	return 0;
 }
@@ -451,7 +470,8 @@ static int omap3_spi_set_mode(struct udevice *dev, uint mode)
 
 	priv->mode = mode;
 
-	_omap3_spi_set_mode(priv);
+	if (priv->bus_claimed)
+		_omap3_spi_set_mode(priv);
 
 	return 0;
 }
@@ -469,7 +489,7 @@ static const struct dm_spi_ops omap3_spi_ops = {
 	 */
 };
 
-#if CONFIG_IS_ENABLED(OF_CONTROL) && !CONFIG_IS_ENABLED(OF_PLATDATA)
+#if CONFIG_IS_ENABLED(OF_REAL)
 static struct omap2_mcspi_platform_config omap2_pdata = {
 	.regs_offset = 0,
 };
@@ -478,11 +498,11 @@ static struct omap2_mcspi_platform_config omap4_pdata = {
 	.regs_offset = OMAP4_MCSPI_REG_OFFSET,
 };
 
-static int omap3_spi_ofdata_to_platdata(struct udevice *dev)
+static int omap3_spi_of_to_plat(struct udevice *dev)
 {
 	struct omap2_mcspi_platform_config *data =
 		(struct omap2_mcspi_platform_config *)dev_get_driver_data(dev);
-	struct omap3_spi_plat *plat = dev_get_platdata(dev);
+	struct omap3_spi_plat *plat = dev_get_plat(dev);
 
 	plat->regs = (struct mcspi *)(dev_read_addr(dev) + data->regs_offset);
 
@@ -504,12 +524,12 @@ U_BOOT_DRIVER(omap3_spi) = {
 	.name   = "omap3_spi",
 	.id     = UCLASS_SPI,
 	.flags	= DM_FLAG_PRE_RELOC,
-#if CONFIG_IS_ENABLED(OF_CONTROL) && !CONFIG_IS_ENABLED(OF_PLATDATA)
+#if CONFIG_IS_ENABLED(OF_REAL)
 	.of_match = omap3_spi_ids,
-	.ofdata_to_platdata = omap3_spi_ofdata_to_platdata,
-	.platdata_auto_alloc_size = sizeof(struct omap3_spi_plat),
+	.of_to_plat = omap3_spi_of_to_plat,
+	.plat_auto	= sizeof(struct omap3_spi_plat),
 #endif
 	.probe = omap3_spi_probe,
 	.ops    = &omap3_spi_ops,
-	.priv_auto_alloc_size = sizeof(struct omap3_spi_priv),
+	.priv_auto	= sizeof(struct omap3_spi_priv),
 };

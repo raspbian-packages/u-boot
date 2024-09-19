@@ -26,6 +26,7 @@
 #include <cpu_func.h>
 #include <dm.h>
 #include <errno.h>
+#include <event.h>
 #include <init.h>
 #include <irq.h>
 #include <log.h>
@@ -37,6 +38,7 @@
 #include <asm/control_regs.h>
 #include <asm/coreboot_tables.h>
 #include <asm/cpu.h>
+#include <asm/global_data.h>
 #include <asm/lapic.h>
 #include <asm/microcode.h>
 #include <asm/mp.h>
@@ -177,12 +179,15 @@ int default_print_cpuinfo(void)
 	return 0;
 }
 
+#if CONFIG_IS_ENABLED(SHOW_BOOT_PROGRESS)
 void show_boot_progress(int val)
 {
 	outb(val, POST_PORT);
 }
+#endif
 
-#if !defined(CONFIG_SYS_COREBOOT) && !defined(CONFIG_EFI_STUB)
+#if !defined(CONFIG_SYS_COREBOOT) && !defined(CONFIG_EFI_STUB) && \
+	!defined(CONFIG_SPL_BUILD)
 /*
  * Implement a weak default function for boards that need to do some final init
  * before the system is ready.
@@ -199,7 +204,7 @@ __weak void board_final_cleanup(void)
 {
 }
 
-int last_stage_init(void)
+static int last_stage_init(void)
 {
 	struct acpi_fadt __maybe_unused *fadt;
 	int ret;
@@ -242,7 +247,9 @@ int last_stage_init(void)
 
 	return 0;
 }
-#endif
+EVENT_SPY_SIMPLE(EVT_LAST_STAGE_INIT, last_stage_init);
+
+#endif  /* !SYS_COREBOOT && !EFI_STUB && !SPL_BUILD */
 
 static int x86_init_cpus(void)
 {
@@ -312,7 +319,7 @@ int reserve_arch(void)
 		if (IS_ENABLED(CONFIG_HAVE_FSP)) {
 			/*
 			 * Save stack address to CMOS so that at next S3 boot,
-			 * we can use it as the stack address for fsp_contiue()
+			 * we can use it as the stack address for fsp_continue()
 			 */
 			fsp_save_s3_stack();
 		}
@@ -348,8 +355,8 @@ long locate_coreboot_table(void)
 {
 	long addr;
 
-	/* We look for LBIO in the first 4K of RAM and again at 960KB */
-	addr = detect_coreboot_table_at(0x0, 0x1000);
+	/* We look for LBIO from addresses 1K-4K and again at 960KB */
+	addr = detect_coreboot_table_at(0x400, 0xc00);
 	if (addr < 0)
 		addr = detect_coreboot_table_at(0xf0000, 0x1000);
 

@@ -10,9 +10,11 @@
 #include <cpu_func.h>
 #include <dm.h>
 #include <errno.h>
+#include <event.h>
 #include <init.h>
 #include <irq_func.h>
 #include <asm/cache.h>
+#include <asm/global_data.h>
 #include <asm/system.h>
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -62,7 +64,7 @@ static void copy_exception_trampoline(void)
 }
 #endif
 
-int arch_cpu_init_dm(void)
+static int nios_cpu_setup(void)
 {
 	struct udevice *dev;
 	int ret;
@@ -71,13 +73,14 @@ int arch_cpu_init_dm(void)
 	if (ret)
 		return ret;
 
-	gd->ram_size = CONFIG_SYS_SDRAM_SIZE;
+	gd->ram_size = CFG_SYS_SDRAM_SIZE;
 #ifndef CONFIG_ROM_STUBS
 	copy_exception_trampoline();
 #endif
 
 	return 0;
 }
+EVENT_SPY_SIMPLE(EVT_DM_POST_INIT_F, nios_cpu_setup);
 
 static int altera_nios2_get_desc(const struct udevice *dev, char *buf,
 				 int size)

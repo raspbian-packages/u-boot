@@ -369,7 +369,7 @@ static struct mmc_part *get_partition(AvbOps *ops, const char *partition)
 	}
 
 	ret = part_get_info_by_name(mmc_blk, partition, &part->info);
-	if (!ret) {
+	if (ret < 0) {
 		printf("Can't find partition '%s'\n", partition);
 		goto err;
 	}
@@ -619,10 +619,11 @@ static int get_open_session(struct AvbOpsData *ops_data)
 		memset(&arg, 0, sizeof(arg));
 		tee_optee_ta_uuid_to_octets(arg.uuid, &uuid);
 		rc = tee_open_session(tee, &arg, 0, NULL);
-		if (!rc) {
-			ops_data->tee = tee;
-			ops_data->session = arg.session;
-		}
+		if (rc || arg.ret)
+			continue;
+
+		ops_data->tee = tee;
+		ops_data->session = arg.session;
 	}
 
 	return 0;

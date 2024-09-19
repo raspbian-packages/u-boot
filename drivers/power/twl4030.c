@@ -25,6 +25,7 @@
 #include <command.h>
 #include <twl4030.h>
 #include <linux/delay.h>
+#include <linux/printk.h>
 
 /*
  * Power Reset
@@ -182,7 +183,7 @@ int do_poweroff(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
 }
 #endif
 
-#ifdef CONFIG_DM_I2C
+#if CONFIG_IS_ENABLED(DM_I2C)
 int twl4030_i2c_write_u8(u8 chip_no, u8 reg, u8 val)
 {
 	struct udevice *dev;

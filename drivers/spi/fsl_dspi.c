@@ -9,6 +9,7 @@
  * Haikun Wang (B53464@freescale.com)
  */
 
+#include <asm/global_data.h>
 #include <linux/math64.h>
 #include <common.h>
 #include <dm.h>
@@ -25,13 +26,14 @@
 #include <fsl_dspi.h>
 #include <linux/bitops.h>
 #include <linux/delay.h>
+#include <linux/printk.h>
 
 /* linux/include/time.h */
 #define NSEC_PER_SEC	1000000000L
 
 DECLARE_GLOBAL_DATA_PTR;
 
-/* fsl_dspi_platdata flags */
+/* fsl_dspi_plat flags */
 #define DSPI_FLAG_REGMAP_ENDIAN_BIG	BIT(0)
 
 /* idle data value */
@@ -65,14 +67,14 @@ DECLARE_GLOBAL_DATA_PTR;
 					DSPI_CTAR_DT(15))
 
 /**
- * struct fsl_dspi_platdata - platform data for Freescale DSPI
+ * struct fsl_dspi_plat - platform data for Freescale DSPI
  *
  * @flags: Flags for DSPI DSPI_FLAG_...
  * @speed_hz: Default SCK frequency
  * @num_chipselect: Number of DSPI chipselect signals
  * @regs_addr: Base address of DSPI registers
  */
-struct fsl_dspi_platdata {
+struct fsl_dspi_plat {
 	uint flags;
 	uint speed_hz;
 	uint num_chipselect;
@@ -448,7 +450,7 @@ static int fsl_dspi_cfg_speed(struct fsl_dspi_priv *priv, uint speed)
 
 static int fsl_dspi_child_pre_probe(struct udevice *dev)
 {
-	struct dm_spi_slave_platdata *slave_plat = dev_get_parent_platdata(dev);
+	struct dm_spi_slave_plat *slave_plat = dev_get_parent_plat(dev);
 	struct fsl_dspi_priv *priv = dev_get_priv(dev->parent);
 	u32 cs_sck_delay = 0, sck_cs_delay = 0;
 	unsigned char pcssck = 0, cssck = 0;
@@ -460,8 +462,10 @@ static int fsl_dspi_child_pre_probe(struct udevice *dev)
 		return -EINVAL;
 	}
 
-	ofnode_read_u32(dev->node, "fsl,spi-cs-sck-delay", &cs_sck_delay);
-	ofnode_read_u32(dev->node, "fsl,spi-sck-cs-delay", &sck_cs_delay);
+	ofnode_read_u32(dev_ofnode(dev), "fsl,spi-cs-sck-delay",
+			&cs_sck_delay);
+	ofnode_read_u32(dev_ofnode(dev), "fsl,spi-sck-cs-delay",
+			&sck_cs_delay);
 
 	/* Set PCS to SCK delay scale values */
 	ns_delay_scale(&pcssck, &cssck, cs_sck_delay, priv->bus_clk);
@@ -481,14 +485,14 @@ static int fsl_dspi_child_pre_probe(struct udevice *dev)
 
 static int fsl_dspi_probe(struct udevice *bus)
 {
-	struct fsl_dspi_platdata *plat = dev_get_platdata(bus);
+	struct fsl_dspi_plat *plat = dev_get_plat(bus);
 	struct fsl_dspi_priv *priv = dev_get_priv(bus);
 	struct dm_spi_bus *dm_spi_bus;
 	uint mcr_cfg_val;
 
-	dm_spi_bus = bus->uclass_priv;
+	dm_spi_bus = dev_get_uclass_priv(bus);
 
-	/* cpu speical pin muxing configure */
+	/* cpu special pin muxing configure */
 	cpu_dspi_port_conf();
 
 	/* get input clk frequency */
@@ -511,7 +515,7 @@ static int fsl_dspi_probe(struct udevice *bus)
 		DSPI_MCR_CRXF | DSPI_MCR_CTXF;
 	fsl_dspi_init_mcr(priv, mcr_cfg_val);
 
-	debug("%s probe done, bus-num %d.\n", bus->name, bus->seq);
+	debug("%s probe done, bus-num %d.\n", bus->name, dev_seq(bus));
 
 	return 0;
 }
@@ -521,13 +525,13 @@ static int fsl_dspi_claim_bus(struct udevice *dev)
 	uint sr_val;
 	struct fsl_dspi_priv *priv;
 	struct udevice *bus = dev->parent;
-	struct dm_spi_slave_platdata *slave_plat =
-		dev_get_parent_platdata(dev);
+	struct dm_spi_slave_plat *slave_plat =
+		dev_get_parent_plat(dev);
 
 	priv = dev_get_priv(bus);
 
 	/* processor special preparation work */
-	cpu_dspi_claim_bus(bus->seq, slave_plat->cs);
+	cpu_dspi_claim_bus(dev_seq(bus), slave_plat->cs);
 
 	/* configure transfer mode */
 	fsl_dspi_cfg_ctar_mode(priv, slave_plat->cs, priv->mode);
@@ -552,14 +556,14 @@ static int fsl_dspi_release_bus(struct udevice *dev)
 {
 	struct udevice *bus = dev->parent;
 	struct fsl_dspi_priv *priv = dev_get_priv(bus);
-	struct dm_spi_slave_platdata *slave_plat =
-		dev_get_parent_platdata(dev);
+	struct dm_spi_slave_plat *slave_plat =
+		dev_get_parent_plat(dev);
 
 	/* halt module */
 	dspi_halt(priv, 1);
 
 	/* processor special release work */
-	cpu_dspi_release_bus(bus->seq, slave_plat->cs);
+	cpu_dspi_release_bus(dev_seq(bus), slave_plat->cs);
 
 	return 0;
 }
@@ -569,22 +573,23 @@ static int fsl_dspi_release_bus(struct udevice *dev)
  */
 static int fsl_dspi_bind(struct udevice *bus)
 {
-	debug("%s assigned req_seq %d.\n", bus->name, bus->req_seq);
+	debug("%s assigned seq %d.\n", bus->name, dev_seq(bus));
 	return 0;
 }
 
-static int fsl_dspi_ofdata_to_platdata(struct udevice *bus)
+static int fsl_dspi_of_to_plat(struct udevice *bus)
 {
 	fdt_addr_t addr;
-	struct fsl_dspi_platdata *plat = bus->platdata;
+	struct fsl_dspi_plat *plat = dev_get_plat(bus);
 	const void *blob = gd->fdt_blob;
 	int node = dev_of_offset(bus);
 
 	if (fdtdec_get_bool(blob, node, "big-endian"))
 		plat->flags |= DSPI_FLAG_REGMAP_ENDIAN_BIG;
 
-	plat->num_chipselect =
-		fdtdec_get_int(blob, node, "num-cs", FSL_DSPI_MAX_CHIPSELECT);
+	plat->num_chipselect = fdtdec_get_int(blob, node,
+					      "spi-num-chipselects",
+					      FSL_DSPI_MAX_CHIPSELECT);
 
 	addr = dev_read_addr(bus);
 	if (addr == FDT_ADDR_T_NONE) {
@@ -596,7 +601,7 @@ static int fsl_dspi_ofdata_to_platdata(struct udevice *bus)
 	plat->speed_hz = fdtdec_get_int(blob,
 			node, "spi-max-frequency", FSL_DSPI_DEFAULT_SCK_FREQ);
 
-	debug("DSPI: regs=%pa, max-frequency=%d, endianess=%s, num-cs=%d\n",
+	debug("DSPI: regs=%pa, max-frequency=%d, endianness=%s, num-cs=%d\n",
 	      &plat->regs_addr, plat->speed_hz,
 	      plat->flags & DSPI_FLAG_REGMAP_ENDIAN_BIG ? "be" : "le",
 	      plat->num_chipselect);
@@ -608,7 +613,7 @@ static int fsl_dspi_xfer(struct udevice *dev, unsigned int bitlen,
 		const void *dout, void *din, unsigned long flags)
 {
 	struct fsl_dspi_priv *priv;
-	struct dm_spi_slave_platdata *slave_plat = dev_get_parent_platdata(dev);
+	struct dm_spi_slave_plat *slave_plat = dev_get_parent_plat(dev);
 	struct udevice *bus;
 
 	bus = dev->parent;
@@ -651,6 +656,7 @@ static const struct dm_spi_ops fsl_dspi_ops = {
 
 static const struct udevice_id fsl_dspi_ids[] = {
 	{ .compatible = "fsl,vf610-dspi" },
+	{ .compatible = "fsl,ls1021a-v1.0-dspi" },
 	{ }
 };
 
@@ -659,9 +665,9 @@ U_BOOT_DRIVER(fsl_dspi) = {
 	.id	= UCLASS_SPI,
 	.of_match = fsl_dspi_ids,
 	.ops	= &fsl_dspi_ops,
-	.ofdata_to_platdata = fsl_dspi_ofdata_to_platdata,
-	.platdata_auto_alloc_size = sizeof(struct fsl_dspi_platdata),
-	.priv_auto_alloc_size = sizeof(struct fsl_dspi_priv),
+	.of_to_plat = fsl_dspi_of_to_plat,
+	.plat_auto	= sizeof(struct fsl_dspi_plat),
+	.priv_auto	= sizeof(struct fsl_dspi_priv),
 	.probe	= fsl_dspi_probe,
 	.child_pre_probe = fsl_dspi_child_pre_probe,
 	.bind = fsl_dspi_bind,

@@ -1,5 +1,5 @@
 Obtaining the source
-=====================
+====================
 
 The source of the U-Boot project is maintained in a Git repository.
 
@@ -7,7 +7,7 @@ You can download the source via
 
 .. code-block:: bash
 
-    git clone https://gitlab.denx.de/u-boot/u-boot.git
+    git clone https://source.denx.de/u-boot/u-boot.git
 
 A mirror of the source is maintained on Github
 

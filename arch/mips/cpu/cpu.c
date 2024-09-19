@@ -4,7 +4,6 @@
  * Wolfgang Denk, DENX Software Engineering, <wd@denx.de>
  */
 
-#include <common.h>
 #include <command.h>
 #include <init.h>
 #include <linux/compiler.h>
@@ -12,10 +11,10 @@
 #include <asm/mipsregs.h>
 #include <asm/reboot.h>
 
-#ifndef CONFIG_SYSRESET
+#if !CONFIG_IS_ENABLED(SYSRESET)
 void __weak _machine_restart(void)
 {
-	fprintf(stderr, "*** reset failed ***\n");
+	puts("*** reset failed ***\n");
 
 	while (1)
 		/* NOP */;

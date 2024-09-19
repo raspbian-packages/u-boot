@@ -7,16 +7,8 @@
 #include "rk3399-sdram-lpddr4-100.dtsi"
 
 / {
-	aliases {
-		spi0 = &spi1;
-	};
-
 	chosen {
 		u-boot,spl-boot-order = "same-as-spl", &spi_flash, &sdhci, &sdmmc;
-	};
-
-	config {
-		u-boot,spl-payload-offset = <0x60000>; /* @ 384KB */
 	};
 
 	vcc_hub_en: vcc_hub_en-regulator {
@@ -46,7 +38,7 @@
 
 &spi1 {
 	spi_flash: flash@0 {
-		u-boot,dm-pre-reloc;
+		bootph-all;
 	};
 };
 

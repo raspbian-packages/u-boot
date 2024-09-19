@@ -16,6 +16,7 @@
 #include <asm/fsp/fsp_support.h>
 #include <asm/fsp2/fsp_api.h>
 #include <asm/fsp2/fsp_internal.h>
+#include <asm/global_data.h>
 #include <linux/sizes.h>
 
 int dram_init(void)
@@ -76,7 +77,7 @@ int dram_init(void)
 	return 0;
 }
 
-ulong board_get_usable_ram_top(ulong total_size)
+phys_addr_t board_get_usable_ram_top(phys_size_t total_size)
 {
 	if (!ll_boot_init())
 		return gd->ram_size;

@@ -22,7 +22,6 @@
  */
 
 #include <config.h>
-#include <asm/global_data.h>
 #include <asm/post.h>
 #include <asm/processor.h>
 #include <asm/processor-flags.h>
@@ -77,7 +76,7 @@ _start:
 	lgdt	gdt_ptr2
 #endif
 
-	/* Load the segement registers to match the GDT loaded in start16.S */
+	/* Load the segment registers to match the GDT loaded in start16.S */
 	movl	$(X86_GDT_ENTRY_32BIT_DS * X86_GDT_ENTRY_SIZE), %eax
 	movw	%ax, %fs
 	movw	%ax, %ds
@@ -238,15 +237,15 @@ multiboot_header:
 	/* checksum */
 	.long	-0x1BADB002 - (1 << 16)
 	/* header addr */
-	.long	multiboot_header - _x86boot_start + CONFIG_SYS_TEXT_BASE
+	.long	multiboot_header - _x86boot_start + CONFIG_TEXT_BASE
 	/* load addr */
-	.long	CONFIG_SYS_TEXT_BASE
+	.long	CONFIG_TEXT_BASE
 	/* load end addr */
 	.long	0
 	/* bss end addr */
 	.long	0
 	/* entry addr */
-	.long	CONFIG_SYS_TEXT_BASE
+	.long	CONFIG_TEXT_BASE
 
 #ifdef CONFIG_X86_LOAD_FROM_32_BIT
 	/*

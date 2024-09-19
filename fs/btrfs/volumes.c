@@ -956,6 +956,7 @@ int __btrfs_map_block(struct btrfs_fs_info *fs_info, int rw,
 	struct btrfs_mapping_tree *map_tree = &fs_info->mapping_tree;
 	struct cache_extent *ce;
 	struct map_lookup *map;
+	u64 orig_len = *length;
 	u64 offset;
 	u64 stripe_offset;
 	u64 *raid_map = NULL;
@@ -1030,7 +1031,7 @@ again:
 	 */
 	stripe_nr = stripe_nr / map->stripe_len;
 
-	stripe_offset = stripe_nr * map->stripe_len;
+	stripe_offset = stripe_nr * (u64)map->stripe_len;
 	BUG_ON(offset < stripe_offset);
 
 	/* stripe_offset is the offset of this block in its stripe*/
@@ -1047,6 +1048,7 @@ again:
 	} else {
 		*length = ce->size - offset;
 	}
+	*length = min_t(u64, *length, orig_len);
 
 	if (!multi_ret)
 		goto out;
@@ -1103,7 +1105,7 @@ again:
 			rot = stripe_nr % map->num_stripes;
 
 			/* Fill in the logical address of each stripe */
-			tmp = stripe_nr * nr_data_stripes(map);
+			tmp = (u64)stripe_nr * nr_data_stripes(map);
 
 			for (i = 0; i < nr_data_stripes(map); i++)
 				raid_map[(i+rot) % map->num_stripes] =

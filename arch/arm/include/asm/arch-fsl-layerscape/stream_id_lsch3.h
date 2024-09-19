@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0+ */
 /*
- * Copyright 2015-2020 NXP
+ * Copyright 2015-2021 NXP
  * Copyright 2014 Freescale Semiconductor, Inc.
  *
  */
@@ -23,7 +23,7 @@
  *
  *  -PCIe
  *     -there is a range of stream IDs set aside for PCI in this
- *      file.  U-boot will scan the PCI bus and for each device discovered:
+ *      file.  U-Boot will scan the PCI bus and for each device discovered:
  *         -allocate a streamID
  *         -set a PEXn LUT table entry mapping 'requester ID' to 'stream ID'
  *         -set a msi-map entry in the PEXn controller node in the
@@ -103,7 +103,7 @@
 #define FSL_DPAA2_STREAM_ID_END		63
 
 /* PCI IEPs, this overlaps DPAA2 but these two are exclusive at least for now */
-#define FSL_ECAM_STREAM_ID_START	32
+#define FSL_ECAM_STREAM_ID_START	41
 #define FSL_ECAM_STREAM_ID_END		63
 
 #define FSL_SEC_STREAM_ID		64

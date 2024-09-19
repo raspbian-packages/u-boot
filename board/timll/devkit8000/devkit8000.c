@@ -22,6 +22,7 @@
 #include <malloc.h>
 #include <ns16550.h>
 #include <twl4030.h>
+#include <asm/global_data.h>
 #include <asm/io.h>
 #include <asm/arch/mmc_host_def.h>
 #include <asm/arch/mux.h>
@@ -47,14 +48,14 @@ static u32 gpmc_net_config[GPMC_MAX_REG] = {
 	0
 };
 
-static const struct ns16550_platdata devkit8000_serial = {
+static const struct ns16550_plat devkit8000_serial = {
 	.base = OMAP34XX_UART3,
 	.reg_shift = 2,
 	.clock = V_NS16550_CLK,
 	.fcr = UART_FCR_DEFVAL,
 };
 
-U_BOOT_DEVICE(devkit8000_uart) = {
+U_BOOT_DRVINFO(devkit8000_uart) = {
 	"ns16550_serial",
 	&devkit8000_serial
 };
@@ -75,10 +76,11 @@ int board_init(void)
 }
 
 /* Configure GPMC registers for DM9000 */
+#define DM9000_BASE	0x2c000000
 static void gpmc_dm9000_config(void)
 {
 	enable_gpmc_cs_config(gpmc_net_config, &gpmc_cfg->cs[6],
-		CONFIG_DM9000_BASE, GPMC_SIZE_16M);
+		DM9000_BASE, GPMC_SIZE_16M);
 }
 
 /*
@@ -99,9 +101,7 @@ int misc_init_r(void)
 #endif
 
 #ifdef CONFIG_DRIVER_DM9000
-	/* Configure GPMC registers for DM9000 */
-	enable_gpmc_cs_config(gpmc_net_config, &gpmc_cfg->cs[6],
-			CONFIG_DM9000_BASE, GPMC_SIZE_16M);
+	gpmc_dm9000_config();
 
 	/* Use OMAP DIE_ID as MAC address */
 	if (!eth_env_get_enetaddr("ethaddr", enetaddr)) {

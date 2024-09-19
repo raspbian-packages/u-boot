@@ -12,6 +12,7 @@
 #include <lmb.h>
 #include <log.h>
 #include <mapmem.h>
+#include <asm/global_data.h>
 #include <linux/kernel.h>
 #include <linux/sizes.h>
 
@@ -20,7 +21,7 @@ DECLARE_GLOBAL_DATA_PTR;
  * Image booting support
  */
 static int booti_start(struct cmd_tbl *cmdtp, int flag, int argc,
-		       char *const argv[], bootm_headers_t *images)
+		       char *const argv[], struct bootm_headers *images)
 {
 	int ret;
 	ulong ld;
@@ -42,7 +43,7 @@ static int booti_start(struct cmd_tbl *cmdtp, int flag, int argc,
 		debug("*  kernel: default image load address = 0x%08lx\n",
 				image_load_addr);
 	} else {
-		ld = simple_strtoul(argv[0], NULL, 16);
+		ld = hextoul(argv[0], NULL);
 		debug("*  kernel: cmdline image address = 0x%08lx\n", ld);
 	}
 
@@ -126,6 +127,7 @@ int do_booti(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
 #ifdef CONFIG_SYS_BOOT_RAMDISK_HIGH
 			      BOOTM_STATE_RAMDISK |
 #endif
+			      BOOTM_STATE_MEASURE |
 			      BOOTM_STATE_OS_PREP | BOOTM_STATE_OS_FAKE_GO |
 			      BOOTM_STATE_OS_GO,
 			      &images, 1);
@@ -133,8 +135,7 @@ int do_booti(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
 	return ret;
 }
 
-#ifdef CONFIG_SYS_LONGHELP
-static char booti_help_text[] =
+U_BOOT_LONGHELP(booti,
 	"[addr [initrd[:size]] [fdt]]\n"
 	"    - boot Linux flat or compressed 'Image' stored at 'addr'\n"
 	"\tThe argument 'initrd' is optional and specifies the address\n"
@@ -150,8 +151,7 @@ static char booti_help_text[] =
 	"\tis required. To boot a kernel with a device-tree blob but\n"
 	"\twithout an initrd image, use a '-' for the initrd argument.\n"
 #endif
-	"";
-#endif
+	);
 
 U_BOOT_CMD(
 	booti,	CONFIG_SYS_MAXARGS,	1,	do_booti,

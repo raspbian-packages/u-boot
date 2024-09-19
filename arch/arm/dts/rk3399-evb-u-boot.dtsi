@@ -13,16 +13,12 @@
 	};
 };
 
-&rng {
-	status = "okay";
-};
-
 &i2c0 {
-	u-boot,dm-pre-reloc;
+	bootph-all;
 };
 
 &rk808 {
-	u-boot,dm-pre-reloc;
+	bootph-all;
 };
 
 &tcphy1 {
@@ -38,8 +34,12 @@
 	status = "okay";
 };
 
+&vdd_center {
+	regulator-init-microvolt = <900000>;
+};
+
 &sdmmc {
-	u-boot,dm-pre-reloc;
+	bootph-all;
 	bus-width = <4>;
 	cap-mmc-highspeed;
 	cap-sd-highspeed;

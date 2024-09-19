@@ -24,91 +24,6 @@
 #include <asm/sections.h>
 
 #ifdef CONFIG_EFI_SECURE_BOOT
-static u8 pkcs7_hdr[] = {
-	/* SEQUENCE */
-	0x30, 0x82, 0x05, 0xc7,
-	/* OID: pkcs7-signedData */
-	0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x02,
-	/* Context Structured? */
-	0xa0, 0x82, 0x05, 0xb8,
-};
-
-/**
- * efi_variable_parse_signature - parse a signature in variable
- * @buf:	Pointer to variable's value
- * @buflen:	Length of @buf
- * @tmpbuf:	Pointer to temporary buffer
- *
- * Parse a signature embedded in variable's value and instantiate
- * a pkcs7_message structure. Since pkcs7_parse_message() accepts only
- * pkcs7's signedData, some header needed be prepended for correctly
- * parsing authentication data, particularly for variable's.
- * A temporary buffer will be allocated if needed, and it should be
- * kept valid during the authentication because some data in the buffer
- * will be referenced by efi_signature_verify().
- *
- * Return:	Pointer to pkcs7_message structure on success, NULL on error
- */
-static struct pkcs7_message *efi_variable_parse_signature(const void *buf,
-							  size_t buflen,
-							  u8 **tmpbuf)
-{
-	u8 *ebuf;
-	size_t ebuflen, len;
-	struct pkcs7_message *msg;
-
-	/*
-	 * This is the best assumption to check if the binary is
-	 * already in a form of pkcs7's signedData.
-	 */
-	if (buflen > sizeof(pkcs7_hdr) &&
-	    !memcmp(&((u8 *)buf)[4], &pkcs7_hdr[4], 11)) {
-		msg = pkcs7_parse_message(buf, buflen);
-		if (IS_ERR(msg))
-			return NULL;
-		return msg;
-	}
-
-	/*
-	 * Otherwise, we should add a dummy prefix sequence for pkcs7
-	 * message parser to be able to process.
-	 * NOTE: EDK2 also uses similar hack in WrapPkcs7Data()
-	 * in CryptoPkg/Library/BaseCryptLib/Pk/CryptPkcs7VerifyCommon.c
-	 * TODO:
-	 * The header should be composed in a more refined manner.
-	 */
-	EFI_PRINT("Makeshift prefix added to authentication data\n");
-	ebuflen = sizeof(pkcs7_hdr) + buflen;
-	if (ebuflen <= 0x7f) {
-		EFI_PRINT("Data is too short\n");
-		return NULL;
-	}
-
-	ebuf = malloc(ebuflen);
-	if (!ebuf) {
-		EFI_PRINT("Out of memory\n");
-		return NULL;
-	}
-
-	memcpy(ebuf, pkcs7_hdr, sizeof(pkcs7_hdr));
-	memcpy(ebuf + sizeof(pkcs7_hdr), buf, buflen);
-	len = ebuflen - 4;
-	ebuf[2] = (len >> 8) & 0xff;
-	ebuf[3] = len & 0xff;
-	len = ebuflen - 0x13;
-	ebuf[0x11] = (len >> 8) & 0xff;
-	ebuf[0x12] = len & 0xff;
-
-	msg = pkcs7_parse_message(ebuf, ebuflen);
-
-	if (IS_ERR(msg)) {
-		free(ebuf);
-		return NULL;
-	}
-
-	*tmpbuf = ebuf;
-	return msg;
-}
 
 /**
  * efi_variable_authenticate - authenticate a variable
@@ -130,7 +45,7 @@ static struct pkcs7_message *efi_variable_parse_signature(const void *buf,
  *
  * Return:	status code
  */
-static efi_status_t efi_variable_authenticate(u16 *variable,
+static efi_status_t efi_variable_authenticate(const u16 *variable,
 					      const efi_guid_t *vendor,
 					      efi_uintn_t *data_size,
 					      const void **data, u32 given_attr,
@@ -215,10 +130,10 @@ static efi_status_t efi_variable_authenticate(u16 *variable,
 		goto err;
 
 	/* ebuf should be kept valid during the authentication */
-	var_sig = efi_variable_parse_signature(auth->auth_info.cert_data,
-					       auth->auth_info.hdr.dwLength
-						   - sizeof(auth->auth_info),
-					       &ebuf);
+	var_sig = efi_parse_pkcs7_header(auth->auth_info.cert_data,
+					 auth->auth_info.hdr.dwLength
+					 - sizeof(auth->auth_info),
+					 &ebuf);
 	if (!var_sig) {
 		EFI_PRINT("Parsing variable's signature failed\n");
 		goto err;
@@ -230,15 +145,15 @@ static efi_status_t efi_variable_authenticate(u16 *variable,
 	case EFI_AUTH_VAR_PK:
 	case EFI_AUTH_VAR_KEK:
 		/* with PK */
-		truststore = efi_sigstore_parse_sigdb(L"PK");
+		truststore = efi_sigstore_parse_sigdb(u"PK");
 		if (!truststore)
 			goto err;
 		break;
 	case EFI_AUTH_VAR_DB:
 	case EFI_AUTH_VAR_DBX:
 		/* with PK and KEK */
-		truststore = efi_sigstore_parse_sigdb(L"KEK");
-		truststore2 = efi_sigstore_parse_sigdb(L"PK");
+		truststore = efi_sigstore_parse_sigdb(u"KEK");
+		truststore2 = efi_sigstore_parse_sigdb(u"PK");
 		if (!truststore) {
 			if (!truststore2)
 				goto err;
@@ -279,7 +194,7 @@ err:
 	return ret;
 }
 #else
-static efi_status_t efi_variable_authenticate(u16 *variable,
+static efi_status_t efi_variable_authenticate(const u16 *variable,
 					      const efi_guid_t *vendor,
 					      efi_uintn_t *data_size,
 					      const void **data, u32 given_attr,
@@ -290,7 +205,7 @@ static efi_status_t efi_variable_authenticate(u16 *variable,
 #endif /* CONFIG_EFI_SECURE_BOOT */
 
 efi_status_t __efi_runtime
-efi_get_variable_int(u16 *variable_name, const efi_guid_t *vendor,
+efi_get_variable_int(const u16 *variable_name, const efi_guid_t *vendor,
 		     u32 *attributes, efi_uintn_t *data_size, void *data,
 		     u64 *timep)
 {
@@ -304,7 +219,8 @@ efi_get_next_variable_name_int(efi_uintn_t *variable_name_size,
 	return efi_get_next_variable_name_mem(variable_name_size, variable_name, vendor);
 }
 
-efi_status_t efi_set_variable_int(u16 *variable_name, const efi_guid_t *vendor,
+efi_status_t efi_set_variable_int(const u16 *variable_name,
+				  const efi_guid_t *vendor,
 				  u32 attributes, efi_uintn_t data_size,
 				  const void *data, bool ro_check)
 {
@@ -314,8 +230,30 @@ efi_status_t efi_set_variable_int(u16 *variable_name, const efi_guid_t *vendor,
 	u64 time = 0;
 	enum efi_auth_var_type var_type;
 
-	if (!variable_name || !*variable_name || !vendor ||
-	    ((attributes & EFI_VARIABLE_RUNTIME_ACCESS) &&
+	if (!variable_name || !*variable_name || !vendor)
+		return EFI_INVALID_PARAMETER;
+
+	if (data_size && !data)
+		return EFI_INVALID_PARAMETER;
+
+	/* EFI_VARIABLE_AUTHENTICATED_WRITE_ACCESS is deprecated */
+	if (attributes & EFI_VARIABLE_AUTHENTICATED_WRITE_ACCESS)
+		return EFI_UNSUPPORTED;
+
+	/* Make sure if runtime bit is set, boot service bit is set also */
+	if ((attributes &
+	     (EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_BOOTSERVICE_ACCESS)) ==
+	    EFI_VARIABLE_RUNTIME_ACCESS)
+		return EFI_INVALID_PARAMETER;
+
+	/* only EFI_VARIABLE_NON_VOLATILE attribute is invalid */
+	if ((attributes & EFI_VARIABLE_MASK) == EFI_VARIABLE_NON_VOLATILE)
+		return EFI_INVALID_PARAMETER;
+
+	/* Make sure HR is set with NV, BS and RT */
+	if (attributes & EFI_VARIABLE_HARDWARE_ERROR_RECORD &&
+	    (!(attributes & EFI_VARIABLE_NON_VOLATILE) ||
+	     !(attributes & EFI_VARIABLE_RUNTIME_ACCESS) ||
 	     !(attributes & EFI_VARIABLE_BOOTSERVICE_ACCESS)))
 		return EFI_INVALID_PARAMETER;
 
@@ -332,7 +270,7 @@ efi_status_t efi_set_variable_int(u16 *variable_name, const efi_guid_t *vendor,
 			return EFI_WRITE_PROTECTED;
 
 		if (IS_ENABLED(CONFIG_EFI_VARIABLES_PRESEED)) {
-			if (var_type != EFI_AUTH_VAR_NONE)
+			if (var_type >= EFI_AUTH_VAR_PK)
 				return EFI_WRITE_PROTECTED;
 		}
 
@@ -353,7 +291,7 @@ efi_status_t efi_set_variable_int(u16 *variable_name, const efi_guid_t *vendor,
 			return EFI_NOT_FOUND;
 	}
 
-	if (var_type != EFI_AUTH_VAR_NONE) {
+	if (var_type >= EFI_AUTH_VAR_PK) {
 		/* authentication is mandatory */
 		if (!(attributes &
 		      EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS)) {
@@ -365,8 +303,6 @@ efi_status_t efi_set_variable_int(u16 *variable_name, const efi_guid_t *vendor,
 
 	/* authenticate a variable */
 	if (IS_ENABLED(CONFIG_EFI_SECURE_BOOT)) {
-		if (attributes & EFI_VARIABLE_AUTHENTICATED_WRITE_ACCESS)
-			return EFI_INVALID_PARAMETER;
 		if (attributes &
 		    EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS) {
 			u32 env_attr;
@@ -384,8 +320,7 @@ efi_status_t efi_set_variable_int(u16 *variable_name, const efi_guid_t *vendor,
 		}
 	} else {
 		if (attributes &
-		    (EFI_VARIABLE_AUTHENTICATED_WRITE_ACCESS |
-		     EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS)) {
+		    EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS) {
 			EFI_PRINT("Secure boot is not configured\n");
 			return EFI_INVALID_PARAMETER;
 		}
@@ -418,9 +353,11 @@ efi_status_t efi_set_variable_int(u16 *variable_name, const efi_guid_t *vendor,
 	else
 		ret = EFI_SUCCESS;
 
-	/* Write non-volatile EFI variables to file */
-	if (attributes & EFI_VARIABLE_NON_VOLATILE &&
-	    ret == EFI_SUCCESS && efi_obj_list_initialized == EFI_SUCCESS)
+	/*
+	 * Write non-volatile EFI variables to file
+	 * TODO: check if a value change has occured to avoid superfluous writes
+	 */
+	if (attributes & EFI_VARIABLE_NON_VOLATILE)
 		efi_var_to_file();
 
 	return EFI_SUCCESS;
@@ -431,6 +368,26 @@ efi_status_t efi_query_variable_info_int(u32 attributes,
 					 u64 *remaining_variable_storage_size,
 					 u64 *maximum_variable_size)
 {
+	if (attributes == 0)
+		return EFI_INVALID_PARAMETER;
+
+	/* EFI_VARIABLE_AUTHENTICATED_WRITE_ACCESS is deprecated */
+	if ((attributes & EFI_VARIABLE_AUTHENTICATED_WRITE_ACCESS) ||
+	    ((attributes & EFI_VARIABLE_MASK) == 0))
+		return EFI_UNSUPPORTED;
+
+	if ((attributes & EFI_VARIABLE_MASK) == EFI_VARIABLE_NON_VOLATILE)
+		return EFI_INVALID_PARAMETER;
+
+	/* Make sure if runtime bit is set, boot service bit is set also. */
+	if ((attributes &
+	     (EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_BOOTSERVICE_ACCESS)) ==
+	    EFI_VARIABLE_RUNTIME_ACCESS)
+		return EFI_INVALID_PARAMETER;
+
+	if (attributes & ~(u32)EFI_VARIABLE_MASK)
+		return EFI_INVALID_PARAMETER;
+
 	*maximum_variable_storage_size = EFI_VAR_BUF_SIZE -
 					 sizeof(struct efi_var_file);
 	*remaining_variable_storage_size = efi_var_mem_free();
@@ -454,7 +411,7 @@ efi_status_t efi_query_variable_info_int(u32 attributes,
  *					selected type
  * Returns:				status code
  */
-efi_status_t __efi_runtime EFIAPI efi_query_variable_info_runtime(
+static efi_status_t __efi_runtime EFIAPI efi_query_variable_info_runtime(
 			u32 attributes,
 			u64 *maximum_variable_storage_size,
 			u64 *remaining_variable_storage_size,
@@ -509,16 +466,16 @@ efi_status_t efi_init_variables(void)
 	if (ret != EFI_SUCCESS)
 		return ret;
 
+	ret = efi_var_from_file();
+	if (ret != EFI_SUCCESS)
+		return ret;
 	if (IS_ENABLED(CONFIG_EFI_VARIABLES_PRESEED)) {
 		ret = efi_var_restore((struct efi_var_file *)
-				      __efi_var_file_begin);
+				      __efi_var_file_begin, true);
 		if (ret != EFI_SUCCESS)
 			log_err("Invalid EFI variable seed\n");
 	}
 
-	ret = efi_var_from_file();
-	if (ret != EFI_SUCCESS)
-		return ret;
 
 	return efi_init_secure_state();
 }

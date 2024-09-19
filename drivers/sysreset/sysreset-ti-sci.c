@@ -2,7 +2,7 @@
 /*
  * Texas Instruments System Control Interface (TI SCI) system reset driver
  *
- * Copyright (C) 2018 Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (C) 2018 Texas Instruments Incorporated - https://www.ti.com/
  *	Andreas Dannenberg <dannenberg@ti.com>
  */
 
@@ -70,6 +70,6 @@ U_BOOT_DRIVER(ti_sci_sysreset) = {
 	.id = UCLASS_SYSRESET,
 	.of_match = ti_sci_sysreset_of_match,
 	.probe = ti_sci_sysreset_probe,
-	.priv_auto_alloc_size = sizeof(struct ti_sci_sysreset_data),
+	.priv_auto	= sizeof(struct ti_sci_sysreset_data),
 	.ops = &ti_sci_sysreset_ops,
 };

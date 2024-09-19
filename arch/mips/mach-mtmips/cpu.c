@@ -3,9 +3,11 @@
  * Copyright (C) 2018 Stefan Roese <sr@denx.de>
  */
 
-#include <common.h>
+#include <event.h>
 #include <init.h>
 #include <malloc.h>
+#include <asm/addrspace.h>
+#include <asm/global_data.h>
 #include <linux/bitops.h>
 #include <linux/io.h>
 #include <linux/sizes.h>
@@ -14,14 +16,13 @@ DECLARE_GLOBAL_DATA_PTR;
 
 int dram_init(void)
 {
-#ifdef CONFIG_SKIP_LOWLEVEL_INIT
-	gd->ram_size = get_ram_size((void *)CONFIG_SYS_SDRAM_BASE, SZ_256M);
-#endif
+	gd->ram_size = get_ram_size((void *)KSEG1, CONFIG_MAX_MEM_SIZE << 20);
 
 	return 0;
 }
 
-int last_stage_init(void)
+#ifndef CONFIG_SPL_BUILD
+static int last_stage_init(void)
 {
 	void *src, *dst;
 
@@ -46,3 +47,5 @@ int last_stage_init(void)
 
 	return 0;
 }
+EVENT_SPY_SIMPLE(EVT_LAST_STAGE_INIT, last_stage_init);
+#endif

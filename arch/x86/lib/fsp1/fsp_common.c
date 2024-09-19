@@ -13,6 +13,7 @@
 #include <acpi/acpi_s3.h>
 #include <asm/cmos_layout.h>
 #include <asm/early_cmos.h>
+#include <asm/global_data.h>
 #include <asm/io.h>
 #include <asm/mrccache.h>
 #include <asm/post.h>
@@ -100,3 +101,4 @@ int arch_fsp_init(void)
 
 	return 0;
 }
+EVENT_SPY_SIMPLE(EVT_FSP_INIT_F, arch_fsp_init);

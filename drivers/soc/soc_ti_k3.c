@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
- * Copyright (C) 2020 Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (C) 2020 Texas Instruments Incorporated - https://www.ti.com/
  *	Dave Gerlach <d-gerlach@ti.com>
  */
 
@@ -8,21 +8,10 @@
 #include <dm.h>
 #include <soc.h>
 
+#include <asm/arch/hardware.h>
 #include <asm/io.h>
 
-#define AM65X			0xbb5a
-#define J721E			0xbb64
-#define J7200			0xbb6d
-
-#define REV_SR1_0		0
-#define REV_SR2_0		1
-
-#define JTAG_ID_VARIANT_SHIFT	28
-#define JTAG_ID_VARIANT_MASK	(0xf << 28)
-#define JTAG_ID_PARTNO_SHIFT	12
-#define JTAG_ID_PARTNO_MASK	(0xffff << 12)
-
-struct soc_ti_k3_platdata {
+struct soc_ti_k3_plat {
 	const char *family;
 	const char *revision;
 };
@@ -35,14 +24,26 @@ static const char *get_family_string(u32 idreg)
 	soc = (idreg & JTAG_ID_PARTNO_MASK) >> JTAG_ID_PARTNO_SHIFT;
 
 	switch (soc) {
-	case AM65X:
+	case JTAG_ID_PARTNO_AM65X:
 		family = "AM65X";
 		break;
-	case J721E:
+	case JTAG_ID_PARTNO_J721E:
 		family = "J721E";
 		break;
-	case J7200:
+	case JTAG_ID_PARTNO_J7200:
 		family = "J7200";
+		break;
+	case JTAG_ID_PARTNO_AM64X:
+		family = "AM64X";
+		break;
+	case JTAG_ID_PARTNO_J721S2:
+		family = "J721S2";
+		break;
+	case JTAG_ID_PARTNO_AM62X:
+		family = "AM62X";
+		break;
+	case JTAG_ID_PARTNO_AM62AX:
+		family = "AM62AX";
 		break;
 	default:
 		family = "Unknown Silicon";
@@ -51,30 +52,41 @@ static const char *get_family_string(u32 idreg)
 	return family;
 }
 
+static char *j721e_rev_string_map[] = {
+	"1.0", "1.1",
+};
+
+static char *typical_rev_string_map[] = {
+	"1.0", "2.0", "3.0",
+};
+
 static const char *get_rev_string(u32 idreg)
 {
-	const char *revision;
 	u32 rev;
+	u32 soc;
 
 	rev = (idreg & JTAG_ID_VARIANT_MASK) >> JTAG_ID_VARIANT_SHIFT;
+	soc = (idreg & JTAG_ID_PARTNO_MASK) >> JTAG_ID_PARTNO_SHIFT;
 
-	switch (rev) {
-	case REV_SR1_0:
-		revision = "1.0";
-		break;
-	case REV_SR2_0:
-		revision = "2.0";
-		break;
+	switch (soc) {
+	case JTAG_ID_PARTNO_J721E:
+		if (rev >= ARRAY_SIZE(j721e_rev_string_map))
+			goto bail;
+		return j721e_rev_string_map[rev];
+
 	default:
-		revision = "Unknown Revision";
+		if (rev >= ARRAY_SIZE(typical_rev_string_map))
+			goto bail;
+		return typical_rev_string_map[rev];
 	};
 
-	return revision;
+bail:
+	return "Unknown Revision";
 }
 
 static int soc_ti_k3_get_family(struct udevice *dev, char *buf, int size)
 {
-	struct soc_ti_k3_platdata *plat = dev_get_platdata(dev);
+	struct soc_ti_k3_plat *plat = dev_get_plat(dev);
 
 	snprintf(buf, size, "%s", plat->family);
 
@@ -83,7 +95,7 @@ static int soc_ti_k3_get_family(struct udevice *dev, char *buf, int size)
 
 static int soc_ti_k3_get_revision(struct udevice *dev, char *buf, int size)
 {
-	struct soc_ti_k3_platdata *plat = dev_get_platdata(dev);
+	struct soc_ti_k3_plat *plat = dev_get_plat(dev);
 
 	snprintf(buf, size, "SR%s", plat->revision);
 
@@ -97,7 +109,7 @@ static const struct soc_ops soc_ti_k3_ops = {
 
 int soc_ti_k3_probe(struct udevice *dev)
 {
-	struct soc_ti_k3_platdata *plat = dev_get_platdata(dev);
+	struct soc_ti_k3_plat *plat = dev_get_plat(dev);
 	u32 idreg;
 	void *idreg_addr;
 
@@ -124,5 +136,5 @@ U_BOOT_DRIVER(soc_ti_k3) = {
 	.ops		= &soc_ti_k3_ops,
 	.of_match       = soc_ti_k3_ids,
 	.probe          = soc_ti_k3_probe,
-	.platdata_auto_alloc_size = sizeof(struct soc_ti_k3_platdata),
+	.plat_auto	= sizeof(struct soc_ti_k3_plat),
 };

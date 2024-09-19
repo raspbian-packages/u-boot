@@ -2,11 +2,12 @@
 /*
  * OMAP USB2 PHY LAYER
  *
- * Copyright (C) 2018 Texas Instruments Incorporated - http://www.ti.com
+ * Copyright (C) 2018 Texas Instruments Incorporated - https://www.ti.com
  * Written by Jean-Jacques Hiblot <jjhiblot@ti.com>
  */
 
 #include <common.h>
+#include <asm/global_data.h>
 #include <asm/io.h>
 #include <dm.h>
 #include <errno.h>
@@ -261,5 +262,5 @@ U_BOOT_DRIVER(omap_usb2_phy) = {
 	.of_match = omap_usb2_id_table,
 	.probe = omap_usb2_phy_probe,
 	.ops = &omap_usb2_phy_ops,
-	.priv_auto_alloc_size = sizeof(struct omap_usb2_phy),
+	.priv_auto	= sizeof(struct omap_usb2_phy),
 };

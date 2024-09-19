@@ -3,6 +3,8 @@
  * Copyright (C) 2020 Linumiz
  */
 
+#include "am33xx-u-boot.dtsi"
+
 / {
 	chosen {
 		#address-cells = <1>;
@@ -13,19 +15,19 @@
 	};
 
 	ocp {
-		u-boot,dm-pre-reloc;
+		bootph-all;
 	};
 };
 
 &i2c0 {
-	u-boot,dm-pre-reloc;
+	bootph-all;
 };
 
 &uart0 {
-	u-boot,dm-pre-reloc;
+	bootph-all;
 };
 
 &mmc1 {
-	u-boot,dm-pre-reloc;
+	bootph-all;
 	cd-gpios = <&gpio0 6 GPIO_ACTIVE_LOW>;
 };

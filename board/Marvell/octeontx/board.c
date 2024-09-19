@@ -13,6 +13,7 @@
 #include <log.h>
 #include <netdev.h>
 #include <pci_ids.h>
+#include <asm/global_data.h>
 #include <asm/io.h>
 #include <linux/compiler.h>
 #include <linux/libfdt.h>
@@ -62,7 +63,7 @@ int timer_init(void)
 int dram_init(void)
 {
 	gd->ram_size = smc_dram_size(0);
-	gd->ram_size -= CONFIG_SYS_SDRAM_BASE;
+	gd->ram_size -= CFG_SYS_SDRAM_BASE;
 	mem_map_fill();
 
 	return 0;

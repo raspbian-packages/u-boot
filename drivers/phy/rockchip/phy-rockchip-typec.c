@@ -11,6 +11,7 @@
 #include <common.h>
 #include <clk.h>
 #include <dm.h>
+#include <asm/global_data.h>
 #include <dm/device_compat.h>
 #include <dm/lists.h>
 #include <generic-phy.h>
@@ -673,9 +674,9 @@ static int rockchip_tcphy_probe(struct udevice *dev)
 	unsigned int reg;
 	int index, ret;
 
-	priv->reg_base = (void __iomem *)dev_read_addr(dev);
-	if (IS_ERR(priv->reg_base))
-		return PTR_ERR(priv->reg_base);
+	priv->reg_base = dev_read_addr_ptr(dev);
+	if (!priv->reg_base)
+		return -EINVAL;
 
 	ret = dev_read_u32_index(dev, "reg", 1, &reg);
 	if (ret) {
@@ -792,5 +793,5 @@ U_BOOT_DRIVER(rockchip_typec_phy) = {
 	.of_match = rockchip_typec_phy_ids,
 	.probe = rockchip_tcphy_probe,
 	.bind = rockchip_tcphy_bind,
-	.priv_auto_alloc_size = sizeof(struct rockchip_tcphy),
+	.priv_auto	= sizeof(struct rockchip_tcphy),
 };

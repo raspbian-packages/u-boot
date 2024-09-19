@@ -1,25 +1,24 @@
-add-debian-revision-to-u-boot-version
-
-tools-generic-builds.patch
-
-mx53loco
+allwinner/0001-arm-sunxi-Reduce-inrush-current-on-Olimex-A20-OLinuX.patch
 
 arndale/board-spl-rule.diff
-
-ensure-config-sandbox-for-make-env.patch
-
-am57xx/omap5_distro_bootcmd
 
 test-imagetools-test-fixes
 
 exynos/0001-arm-config-fix-default-console-only-to-specify-the-d.patch
 
-riscv64/qemu-riscv64_smode-sifive-fu540-fix-extlinux-define-.patch
+disable-fit-image-tests
 
-n900/bootz_and_raw_initrd.patch
+rockchip/rockchip-inno-usb.patch
 
-rk3399/disable-preboot
+qemu/efi-secure-boot.patch
 
-pinetab/0001-configs-add-PineTab-defconfig.patch
+Makefile-Use-relative-paths-for-debugging-symbols.patch
 
-upstream/0001-efi_loader-switch-to-non-secure-mode-later.patch
+riscv64/efi_loader-avoid-pointer-access-after-calling-efi_de.patch
+riscv64/efi_loader-create-common-function-to-free-struct-efi.patch
+riscv64/board-starfive-handle-compatible-property-in-dynamic.patch
+riscv64/configs-visionfive2-Disable-ENV_IS_NOWHERE.patch
+riscv64/serial-move-sbi_dbcn_available-to-.data-section.patch
+riscv64/riscv-sifive-fu740-reduce-DDR-speed-from-1866MT-s-to-1600MT-s.patch
+
+am62x/0008-arm-dts-k3-am625-Don-t-try-to-build-the-final-firmwa.patch

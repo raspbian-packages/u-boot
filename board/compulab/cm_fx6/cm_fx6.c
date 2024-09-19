@@ -27,6 +27,7 @@
 #include <asm/arch/sys_proto.h>
 #include <asm/arch/iomux.h>
 #include <asm/arch/mxc_hdmi.h>
+#include <asm/global_data.h>
 #include <asm/mach-imx/mxc_i2c.h>
 #include <asm/mach-imx/sata.h>
 #include <asm/mach-imx/video.h>
@@ -621,7 +622,7 @@ int board_init(void)
 		int i;
 
 		cm_fx6_set_usdhc_iomux();
-		for (i = 0; i < CONFIG_SYS_FSL_USDHC_NUM; i++)
+		for (i = 0; i < CFG_SYS_FSL_USDHC_NUM; i++)
 			enable_usdhc_clk(1, i);
 	}
 #endif
@@ -719,21 +720,23 @@ int dram_init(void)
 	return 0;
 }
 
+#ifdef CONFIG_REVISION_TAG
 u32 get_board_rev(void)
 {
 	return cl_eeprom_get_board_rev(CONFIG_SYS_I2C_EEPROM_BUS);
 }
+#endif
 
-static struct mxc_serial_platdata cm_fx6_mxc_serial_plat = {
+static struct mxc_serial_plat cm_fx6_mxc_serial_plat = {
 	.reg = (struct mxc_uart *)UART4_BASE,
 };
 
-U_BOOT_DEVICE(cm_fx6_serial) = {
+U_BOOT_DRVINFO(cm_fx6_serial) = {
 	.name	= "serial_mxc",
-	.platdata = &cm_fx6_mxc_serial_plat,
+	.plat = &cm_fx6_mxc_serial_plat,
 };
 
-#if CONFIG_IS_ENABLED(AHCI)
+#if IS_ENABLED(CONFIG_AHCI)
 static int sata_imx_probe(struct udevice *dev)
 {
 	int i, err;

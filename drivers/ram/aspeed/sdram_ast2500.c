@@ -13,6 +13,7 @@
 #include <ram.h>
 #include <regmap.h>
 #include <reset.h>
+#include <asm/global_data.h>
 #include <asm/io.h>
 #include <asm/arch/scu_ast2500.h>
 #include <asm/arch/sdram_ast2500.h>
@@ -202,7 +203,7 @@ static void ast2500_sdrammc_calc_size(struct dram_info *info)
 	u32 test_pattern = 0xdeadbeef;
 	u32 cap_param = SDRAM_CONF_CAP_1024M;
 	u32 refresh_timing_param = DDR4_TRFC;
-	const u32 write_addr_base = CONFIG_SYS_SDRAM_BASE + write_test_offset;
+	const u32 write_addr_base = CFG_SYS_SDRAM_BASE + write_test_offset;
 
 	for (ram_size = SDRAM_MAX_SIZE; ram_size > SDRAM_MIN_SIZE;
 	     ram_size >>= 1) {
@@ -230,7 +231,7 @@ static void ast2500_sdrammc_calc_size(struct dram_info *info)
 			((refresh_timing_param & SDRAM_AC_TRFC_MASK)
 			 << SDRAM_AC_TRFC_SHIFT));
 
-	info->info.base = CONFIG_SYS_SDRAM_BASE;
+	info->info.base = CFG_SYS_SDRAM_BASE;
 	info->info.size = ram_size - ast2500_sdrammc_get_vga_mem_size(info);
 	clrsetbits_le32(&info->regs->config,
 			(SDRAM_CONF_CAP_MASK << SDRAM_CONF_CAP_SHIFT),
@@ -386,7 +387,7 @@ static int ast2500_sdrammc_probe(struct udevice *dev)
 	return 0;
 }
 
-static int ast2500_sdrammc_ofdata_to_platdata(struct udevice *dev)
+static int ast2500_sdrammc_of_to_plat(struct udevice *dev)
 {
 	struct dram_info *priv = dev_get_priv(dev);
 	struct regmap *map;
@@ -433,7 +434,7 @@ U_BOOT_DRIVER(sdrammc_ast2500) = {
 	.id = UCLASS_RAM,
 	.of_match = ast2500_sdrammc_ids,
 	.ops = &ast2500_sdrammc_ops,
-	.ofdata_to_platdata = ast2500_sdrammc_ofdata_to_platdata,
+	.of_to_plat = ast2500_sdrammc_of_to_plat,
 	.probe = ast2500_sdrammc_probe,
-	.priv_auto_alloc_size = sizeof(struct dram_info),
+	.priv_auto	= sizeof(struct dram_info),
 };

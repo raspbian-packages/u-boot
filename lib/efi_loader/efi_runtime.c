@@ -14,6 +14,7 @@
 #include <log.h>
 #include <malloc.h>
 #include <rtc.h>
+#include <asm/global_data.h>
 #include <u-boot/crc.h>
 
 /* For manual relocation support */
@@ -31,7 +32,7 @@ struct efi_runtime_mmio_list {
 };
 
 /* This list contains all runtime available mmio regions */
-LIST_HEAD(efi_runtime_mmio);
+static LIST_HEAD(efi_runtime_mmio);
 
 static efi_status_t __efi_runtime EFIAPI efi_unimplemented(void);
 
@@ -449,6 +450,50 @@ efi_status_t __weak __efi_runtime EFIAPI efi_set_time(struct efi_time *time)
 }
 
 /**
+ * efi_update_capsule_unsupported() - process information from operating system
+ *
+ * This function implements the UpdateCapsule() runtime service.
+ *
+ * See the Unified Extensible Firmware Interface (UEFI) specification for
+ * details.
+ *
+ * @capsule_header_array:	pointer to array of virtual pointers
+ * @capsule_count:		number of pointers in capsule_header_array
+ * @scatter_gather_list:	pointer to array of physical pointers
+ * Returns:			status code
+ */
+static efi_status_t __efi_runtime EFIAPI efi_update_capsule_unsupported(
+			struct efi_capsule_header **capsule_header_array,
+			efi_uintn_t capsule_count,
+			u64 scatter_gather_list)
+{
+	return EFI_UNSUPPORTED;
+}
+
+/**
+ * efi_query_capsule_caps_unsupported() - check if capsule is supported
+ *
+ * This function implements the QueryCapsuleCapabilities() runtime service.
+ *
+ * See the Unified Extensible Firmware Interface (UEFI) specification for
+ * details.
+ *
+ * @capsule_header_array:	pointer to array of virtual pointers
+ * @capsule_count:		number of pointers in capsule_header_array
+ * @maximum_capsule_size:	maximum capsule size
+ * @reset_type:			type of reset needed for capsule update
+ * Returns:			status code
+ */
+static efi_status_t __efi_runtime EFIAPI efi_query_capsule_caps_unsupported(
+			struct efi_capsule_header **capsule_header_array,
+			efi_uintn_t capsule_count,
+			u64 *maximum_capsule_size,
+			u32 *reset_type)
+{
+	return EFI_UNSUPPORTED;
+}
+
+/**
  * efi_is_runtime_service_pointer() - check if pointer points to runtime table
  *
  * @p:		pointer to check
@@ -471,6 +516,13 @@ void efi_runtime_detach(void)
 	efi_runtime_services.reset_system = efi_reset_system;
 	efi_runtime_services.get_time = efi_get_time;
 	efi_runtime_services.set_time = efi_set_time;
+	if (IS_ENABLED(CONFIG_EFI_RUNTIME_UPDATE_CAPSULE)) {
+		/* won't support at runtime */
+		efi_runtime_services.update_capsule =
+				efi_update_capsule_unsupported;
+		efi_runtime_services.query_capsule_caps =
+				efi_query_capsule_caps_unsupported;
+	}
 
 	/* Update CRC32 */
 	efi_update_table_header_crc32(&efi_runtime_services.hdr);
@@ -620,12 +672,12 @@ void efi_runtime_relocate(ulong offset, struct efi_mem_desc *map)
 	struct elf_rela *rel = (void*)&__efi_runtime_rel_start;
 #else
 	struct elf_rel *rel = (void*)&__efi_runtime_rel_start;
-	static ulong lastoff = CONFIG_SYS_TEXT_BASE;
+	static ulong lastoff = CONFIG_TEXT_BASE;
 #endif
 
 	debug("%s: Relocating to offset=%lx\n", __func__, offset);
 	for (; (ulong)rel < (ulong)&__efi_runtime_rel_stop; rel++) {
-		ulong base = CONFIG_SYS_TEXT_BASE;
+		ulong base = CONFIG_TEXT_BASE;
 		ulong *p;
 		ulong newaddr;
 
@@ -644,7 +696,7 @@ void efi_runtime_relocate(ulong offset, struct efi_mem_desc *map)
 		switch (rel->info & R_MASK) {
 		case R_RELATIVE:
 #ifdef IS_RELA
-		newaddr = rel->addend + offset - CONFIG_SYS_TEXT_BASE;
+		newaddr = rel->addend + offset - CONFIG_TEXT_BASE;
 #else
 		newaddr = *p - lastoff + offset;
 #endif
@@ -655,7 +707,7 @@ void efi_runtime_relocate(ulong offset, struct efi_mem_desc *map)
 			extern struct dyn_sym __dyn_sym_start[];
 			newaddr = __dyn_sym_start[symidx].addr + offset;
 #ifdef IS_RELA
-			newaddr -= CONFIG_SYS_TEXT_BASE;
+			newaddr -= CONFIG_TEXT_BASE;
 #endif
 			break;
 		}
@@ -879,50 +931,6 @@ static efi_status_t __efi_runtime EFIAPI efi_unimplemented(void)
 	return EFI_UNSUPPORTED;
 }
 
-/**
- * efi_update_capsule() - process information from operating system
- *
- * This function implements the UpdateCapsule() runtime service.
- *
- * See the Unified Extensible Firmware Interface (UEFI) specification for
- * details.
- *
- * @capsule_header_array:	pointer to array of virtual pointers
- * @capsule_count:		number of pointers in capsule_header_array
- * @scatter_gather_list:	pointer to arry of physical pointers
- * Returns:			status code
- */
-efi_status_t __efi_runtime EFIAPI efi_update_capsule(
-			struct efi_capsule_header **capsule_header_array,
-			efi_uintn_t capsule_count,
-			u64 scatter_gather_list)
-{
-	return EFI_UNSUPPORTED;
-}
-
-/**
- * efi_query_capsule_caps() - check if capsule is supported
- *
- * This function implements the QueryCapsuleCapabilities() runtime service.
- *
- * See the Unified Extensible Firmware Interface (UEFI) specification for
- * details.
- *
- * @capsule_header_array:	pointer to array of virtual pointers
- * @capsule_count:		number of pointers in capsule_header_array
- * @maximum_capsule_size:	maximum capsule size
- * @reset_type:			type of reset needed for capsule update
- * Returns:			status code
- */
-efi_status_t __efi_runtime EFIAPI efi_query_capsule_caps(
-			struct efi_capsule_header **capsule_header_array,
-			efi_uintn_t capsule_count,
-			u64 *maximum_capsule_size,
-			u32 *reset_type)
-{
-	return EFI_UNSUPPORTED;
-}
-
 struct efi_runtime_services __efi_runtime_data efi_runtime_services = {
 	.hdr = {
 		.signature = EFI_RUNTIME_SERVICES_SIGNATURE,
@@ -940,7 +948,12 @@ struct efi_runtime_services __efi_runtime_data efi_runtime_services = {
 	.set_variable = efi_set_variable,
 	.get_next_high_mono_count = (void *)&efi_unimplemented,
 	.reset_system = &efi_reset_system_boottime,
+#ifdef CONFIG_EFI_RUNTIME_UPDATE_CAPSULE
 	.update_capsule = efi_update_capsule,
 	.query_capsule_caps = efi_query_capsule_caps,
+#else
+	.update_capsule = efi_update_capsule_unsupported,
+	.query_capsule_caps = efi_query_capsule_caps_unsupported,
+#endif
 	.query_variable_info = efi_query_variable_info,
 };

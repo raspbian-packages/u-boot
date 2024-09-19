@@ -11,10 +11,12 @@
 #include <asm/arch/ddr.h>
 #include <asm/arch/imx8mq_pins.h>
 #include <asm/arch/sys_proto.h>
+#include <asm/global_data.h>
 #include <asm/io.h>
 #include <asm/mach-imx/gpio.h>
 #include <asm/mach-imx/iomux-v3.h>
 #include <asm/mach-imx/mxc_i2c.h>
+#include <asm/sections.h>
 #include <linux/delay.h>
 #include <errno.h>
 #include <fsl_esdhc_imx.h>
@@ -88,7 +90,7 @@ static void spl_dram_init(void)
 
 	printf("%s: LPDDR4 %d GiB\n", __func__, size);
 	ddr_init(dram_timing);
-	writel(size, M4_BOOTROM_BASE_ADDR);
+	writel(size, MCU_BOOTROM_BASE_ADDR);
 }
 
 #define USDHC2_CD_GPIO	IMX_GPIO_NR(2, 12)

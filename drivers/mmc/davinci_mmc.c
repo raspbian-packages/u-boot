@@ -478,7 +478,7 @@ int davinci_mmc_init(struct bd_info *bis, struct davinci_mmc *host)
 static int davinci_mmc_probe(struct udevice *dev)
 {
 	struct mmc_uclass_priv *upriv = dev_get_uclass_priv(dev);
-	struct davinci_mmc_plat *plat = dev_get_platdata(dev);
+	struct davinci_mmc_plat *plat = dev_get_plat(dev);
 	struct davinci_mmc_priv *priv = dev_get_priv(dev);
 
 	priv->reg_base = plat->reg_base;
@@ -495,18 +495,18 @@ static int davinci_mmc_probe(struct udevice *dev)
 
 static int davinci_mmc_bind(struct udevice *dev)
 {
-	struct davinci_mmc_plat *plat = dev_get_platdata(dev);
+	struct davinci_mmc_plat *plat = dev_get_plat(dev);
 
 	return mmc_bind(dev, &plat->mmc, &plat->cfg);
 }
 
 #if CONFIG_IS_ENABLED(OF_CONTROL)
-static int davinci_mmc_ofdata_to_platdata(struct udevice *dev)
+static int davinci_mmc_of_to_plat(struct udevice *dev)
 {
-	struct davinci_mmc_plat *plat = dev_get_platdata(dev);
+	struct davinci_mmc_plat *plat = dev_get_plat(dev);
 	struct mmc_config *cfg = &plat->cfg;
 
-	plat->reg_base = (struct davinci_mmc_regs *)dev_read_addr(dev);
+	plat->reg_base = dev_read_addr_ptr(dev);
 	cfg->f_min = 200000;
 	cfg->f_max = 25000000;
 	cfg->voltages = MMC_VDD_32_33 | MMC_VDD_33_34,
@@ -527,15 +527,15 @@ U_BOOT_DRIVER(ti_da830_mmc) = {
 	.id		= UCLASS_MMC,
 #if CONFIG_IS_ENABLED(OF_CONTROL)
 	.of_match	= davinci_mmc_ids,
-	.platdata_auto_alloc_size = sizeof(struct davinci_mmc_plat),
-	.ofdata_to_platdata = davinci_mmc_ofdata_to_platdata,
+	.plat_auto	= sizeof(struct davinci_mmc_plat),
+	.of_to_plat = davinci_mmc_of_to_plat,
 #endif
 #if CONFIG_BLK
 	.bind		= davinci_mmc_bind,
 #endif
 	.probe = davinci_mmc_probe,
 	.ops = &davinci_mmc_ops,
-	.priv_auto_alloc_size = sizeof(struct davinci_mmc_priv),
+	.priv_auto	= sizeof(struct davinci_mmc_priv),
 #if !CONFIG_IS_ENABLED(OF_CONTROL)
 	.flags	= DM_FLAG_PRE_RELOC,
 #endif

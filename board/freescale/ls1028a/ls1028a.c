@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
- * Copyright 2019 NXP
+ * Copyright 2019-2022 NXP
  */
 
 #include <common.h>
+#include <display_options.h>
 #include <init.h>
 #include <malloc.h>
 #include <errno.h>
 #include <fsl_ddr.h>
 #include <net.h>
+#include <asm/global_data.h>
 #include <asm/io.h>
 #include <hwconfig.h>
 #include <fdt_support.h>
@@ -18,9 +20,6 @@
 #include <asm/arch-fsl-layerscape/fsl_icid.h>
 #include <i2c.h>
 #include <asm/arch/soc.h>
-#ifdef CONFIG_FSL_LS_PPA
-#include <asm/arch/ppa.h>
-#endif
 #include <fsl_immap.h>
 #include <netdev.h>
 
@@ -72,18 +71,6 @@ u32 get_lpuart_clk(void)
 
 int board_init(void)
 {
-#ifdef CONFIG_ENV_IS_NOWHERE
-	gd->env_addr = (ulong)&default_environment[0];
-#endif
-
-#ifdef CONFIG_FSL_CAAM
-	sec_init();
-#endif
-
-#ifdef CONFIG_FSL_LS_PPA
-	ppa_init();
-#endif
-
 #ifndef CONFIG_SYS_EARLY_PCI_INIT
 	pci_init();
 #endif
@@ -91,7 +78,7 @@ int board_init(void)
 #if defined(CONFIG_TARGET_LS1028ARDB)
 	u8 val = I2C_MUX_CH_DEFAULT;
 
-#ifndef CONFIG_DM_I2C
+#if !CONFIG_IS_ENABLED(DM_I2C)
 	i2c_write(I2C_MUX_PCA_ADDR_PRI, 0x0b, 1, &val, 1);
 #else
 	struct udevice *dev;
@@ -136,7 +123,7 @@ int board_early_init_f(void)
 	u8 uart;
 #endif
 
-#ifdef CONFIG_SYS_I2C_EARLY_INIT
+#if defined(CONFIG_SYS_I2C_EARLY_INIT) && defined(CONFIG_SPL_BUILD)
 	i2c_early_init_f();
 #endif
 
@@ -335,3 +322,8 @@ int checkboard(void)
 	return 0;
 }
 #endif
+
+void *video_hw_init(void)
+{
+	return NULL;
+}
