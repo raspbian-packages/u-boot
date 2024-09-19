@@ -22,3 +22,4 @@ riscv64/serial-move-sbi_dbcn_available-to-.data-section.patch
 riscv64/riscv-sifive-fu740-reduce-DDR-speed-from-1866MT-s-to-1600MT-s.patch
 
 am62x/0008-arm-dts-k3-am625-Don-t-try-to-build-the-final-firmwa.patch
+always-pass-armv7-flags-when-building-fo.patch
