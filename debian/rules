@@ -1,5 +1,8 @@
 #!/usr/bin/make -f
 
+# Use the system dtc from device-tree-compiler
+export DTC=/usr/bin/dtc
+
 # Disable branch hardening to fix build failure of arch:all build
 # https://bugs.debian.org/1052724
 export DEB_BUILD_MAINT_OPTIONS=hardening=-branch

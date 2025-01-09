@@ -9,6 +9,8 @@ variables:
   SALSA_CI_DISABLE_BLHC: 1
   # Enable arch:arm64 builds
   SALSA_CI_DISABLE_BUILD_PACKAGE_ARM64: 0
+  # Enable arm64 crossbuilding
+  SALSA_CI_DISABLE_CROSSBUILD_ARM64: 0
 
 blhc:
   allow_failure: true

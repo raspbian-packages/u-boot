@@ -1,4 +1,4 @@
-u-boot (2024.01+dfsg-5+rpi1) trixie-staging; urgency=medium
+u-boot (2024.01+dfsg-6+rpi1) trixie-staging; urgency=medium
 
   [changes brought forward from 2014.10+dfsg1-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Fri, 28 Nov 2014 06:00:07 +0000]
   * Don't build versions for various armv7 devices, build rpi version instead.
@@ -13,7 +13,18 @@ u-boot (2024.01+dfsg-5+rpi1) trixie-staging; urgency=medium
   * Always pass armv7 flags when building for armv7 (don't use cc-option,
     whatever that is).
 
- -- Peter Michael Green <plugwash@raspbian.org>  Thu, 19 Sep 2024 15:59:18 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Thu, 09 Jan 2025 18:08:14 +0000
+
+u-boot (2024.01+dfsg-6) unstable; urgency=medium
+
+  * Use system dtc from device-tree-compiler (Closes: #1091125)
+  * debian/control: Move device-tree-compiler from Build-Depends-Arch to
+    Build-Depends.
+  * debian/control: Mark python3-libfdt, python3-jsonschema, and
+    python3-yaml as native to fix cross-building.
+  * debian/control: Update to Standards-Version 4.7.0.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Thu, 02 Jan 2025 13:47:07 -0800
 
 u-boot (2024.01+dfsg-5) unstable; urgency=medium
 
