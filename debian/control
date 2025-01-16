@@ -17,7 +17,7 @@ Build-Depends:
  python3-setuptools [linux-any],
  swig [linux-any],
 Build-Depends-Arch:
- arm-trusted-firmware (>= 2.9~) [arm64],
+ arm-trusted-firmware (>= 2.10.10) [arm64],
  crust-firmware (>= 0.3-2~) [arm64],
  gcc-arm-linux-gnueabihf [arm64],
  libfdt-dev:native [arm64],

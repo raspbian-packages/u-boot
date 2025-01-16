@@ -1,4 +1,4 @@
-u-boot (2024.01+dfsg-6+rpi1) trixie-staging; urgency=medium
+u-boot (2024.01+dfsg-7+rpi1) trixie-staging; urgency=medium
 
   [changes brought forward from 2014.10+dfsg1-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Fri, 28 Nov 2014 06:00:07 +0000]
   * Don't build versions for various armv7 devices, build rpi version instead.
@@ -13,7 +13,14 @@ u-boot (2024.01+dfsg-6+rpi1) trixie-staging; urgency=medium
   * Always pass armv7 flags when building for armv7 (don't use cc-option,
     whatever that is).
 
- -- Raspbian forward porter <root@raspbian.org>  Thu, 09 Jan 2025 18:08:14 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Thu, 16 Jan 2025 13:35:10 +0000
+
+u-boot (2024.01+dfsg-7) unstable; urgency=medium
+
+  * debian/control: Bump versioned dependency on arm-trusted-firmware to
+    2.10.10 or newer.
+
+ -- Vagrant Cascadian <vagrant@debian.org>  Thu, 09 Jan 2025 11:14:04 -0800
 
 u-boot (2024.01+dfsg-6) unstable; urgency=medium
 
