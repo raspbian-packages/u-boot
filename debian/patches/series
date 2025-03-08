@@ -1,0 +1,13 @@
+arndale/board-spl-rule.diff
+
+test-imagetools-test-fixes
+
+exynos/0001-arm-config-fix-default-console-only-to-specify-the-d.patch
+
+disable-fit-image-tests
+
+qemu/efi-secure-boot.patch
+
+Makefile-Use-relative-paths-for-debugging-symbols.patch
+
+sitara/Don-t-attempt-to-build-final-firmware-images.patch
