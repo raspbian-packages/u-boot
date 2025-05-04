@@ -1,4 +1,4 @@
-u-boot (2021.01+dfsg-5+rpi1) bullseye-staging; urgency=medium
+u-boot (2021.01+dfsg-5+rpi1+deb11u1) bullseye-staging; urgency=medium
 
   [changes brought forward from 2014.10+dfsg1-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Fri, 28 Nov 2014 06:00:07 +0000]
   * Don't build versions for various armv7 devices, build rpi version instead.
@@ -7,7 +7,49 @@ u-boot (2021.01+dfsg-5+rpi1) bullseye-staging; urgency=medium
   * Don't build powerpc targets for qemu, my attempts to build the nessacery
     cross-compiler in raspbian failed.
 
- -- Raspbian forward porter <root@raspbian.org>  Fri, 04 Jun 2021 00:18:15 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Sun, 04 May 2025 21:27:20 +0000
+
+u-boot (2021.01+dfsg-5+deb11u1) bullseye-security; urgency=medium
+
+  * Non-maintainer upload by the Debian LTS team.
+  * d/patches/CVE-2022-34835.patch: Add patch to fix CVE-2022-34835.
+    - Fix an integer signedness error and resultant stack-based buffer overflow
+      in the 'i2c md' command that enables the corruption of the return address
+      pointer of the do_i2c_md function (closes: #1014529).
+  * d/patches/CVE-2022-33967.patch: Add patch to fix CVE-2022-33967.
+    - Fix a heap-based buffer overflow vulnerability due to a defect in the
+      metadata reading process which may lead to a denial-of-service (DoS)
+      condition or arbitrary code execution by loading a specially crafted
+      squashfs image.
+  * d/patches/CVE-2022-33103.patch: Add patch to fix CVE-2022-33103.
+    - Fix an an out-of-bounds write (closes: #1014528).
+  * d/patches/CVE-2022-30790.patch: Add patch to fix CVE-2022-30790 and
+    CVE-2022-30552.
+    - Fix a a Buffer Overflow (closes: #1014470).
+  * d/patches/CVE-2022-30767.patch: Add patch to fix CVE-2022-30767.
+    - Fix an unbounded memcpy with a failed length check, leading to a buffer
+      overflow. This issue exists due to an incorrect fix for CVE-2019-14196
+      (closes: #1014471).
+  * d/patches/CVE-2022-2347.patch: Add patch to fix CVE-2022-2347.
+    - Fix an unchecked length field leading to a heap overflow
+      (closes: #1014959).
+  * d/patches/CVE-2024-57254.patch: Add patch to fix CVE-2024-57254.
+    - Fix an integer overflow in sqfs_inode_size (closes: 1098254).
+  * d/patches/CVE-2024-57255.patch: Add patch to fix CVE-2024-57255.
+    - Fix an integer overflow in sqfs_resolve_symlink (closes: #1098254).
+  * d/patches/CVE-2024-57256.patch: Add patch to fix CVE-2024-57256.
+    - Fix an integer overflow in ext4fs_read_symlink (closes: #1098254).
+  * d/patches/CVE-2024-57257.patch: Add patch to fix CVE-2024-57257.
+    - Fix a stack consumption issue in sqfs_size possible with deep symlink
+      nesting (closes: #1098254).
+  * d/patches/CVE-2024-57258-1.patch, d/patches/CVE-2024-57258-2.patch,
+    d/patches/CVE-2024-57258-3.patch: Add patches to fx CVE-2024-57258.
+    - Fix multiple integer overflows (closes: #1098254).
+  * d/patches/CVE-2024-57259.patch: Add patch to fix CVE-2024-57259.
+    - Fix an off-by-one error resulting in a heap memory corruption in
+      sqfs_search_dir (closes: #1098254).
+
+ -- Daniel Leidert <dleidert@debian.org>  Thu, 01 May 2025 01:19:02 +0200
 
 u-boot (2021.01+dfsg-5) unstable; urgency=medium
 
