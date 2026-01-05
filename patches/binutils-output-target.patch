@@ -1,0 +1,43 @@
+Update objcopy --target argument to --output-target,
+per binutils upstream commit 5e83077d552ed6f81dbc092eb3ccf827a43de42c.
+
+diff --git i/arch/sandbox/config.mk w/arch/sandbox/config.mk
+index 405843800e..2ee5981725 100644
+--- i/arch/sandbox/config.mk
++++ w/arch/sandbox/config.mk
+@@ -46,10 +46,10 @@ cmd_u-boot-spl = (cd $(obj) && $(CC) -o $(SPL_BIN) -Wl,-T u-boot-spl.lds \
+ 
+ ifeq ($(HOST_ARCH),$(HOST_ARCH_X86_64))
+ EFI_LDS := ${SRCDIR}/../../../arch/x86/lib/elf_x86_64_efi.lds
+-EFI_TARGET := --target=efi-app-x86_64
++EFI_TARGET := --output-target=efi-app-x86_64
+ else ifeq ($(HOST_ARCH),$(HOST_ARCH_X86))
+ EFI_LDS := ${SRCDIR}/../../../arch/x86/lib/elf_ia32_efi.lds
+-EFI_TARGET := --target=efi-app-ia32
++EFI_TARGET := --output-target=efi-app-ia32
+ else ifeq ($(HOST_ARCH),$(HOST_ARCH_AARCH64))
+ EFI_LDS := ${SRCDIR}/../../../arch/arm/lib/elf_aarch64_efi.lds
+ OBJCOPYFLAGS += -j .text -j .secure_text -j .secure_data -j .rodata -j .data \
+diff --git i/arch/x86/config.mk w/arch/x86/config.mk
+index 6d4839dfb3..c2bb5549b7 100644
+--- i/arch/x86/config.mk
++++ w/arch/x86/config.mk
+@@ -69,7 +69,7 @@ endif
+ 
+ LDSCRIPT_EFI := $(srctree)/arch/x86/lib/elf_$(EFIARCH)_efi.lds
+ EFISTUB := crt0_$(EFIARCH)_efi.o reloc_$(EFIARCH)_efi.o
+-OBJCOPYFLAGS_EFI += --target=efi-app-$(EFIARCH)
++OBJCOPYFLAGS_EFI += --output-target=efi-app-$(EFIARCH)
+ 
+ CPPFLAGS_REMOVE_crt0-efi-$(EFIARCH).o += $(CFLAGS_NON_EFI)
+ CPPFLAGS_crt0-efi-$(EFIARCH).o += $(CFLAGS_EFI)
+@@ -127,7 +127,7 @@ endif
+ endif
+ 
+ ifdef CONFIG_X86_64
+-EFI_TARGET := --target=efi-app-x86_64
++EFI_TARGET := --output-target=efi-app-x86_64
+ else
+-EFI_TARGET := --target=efi-app-ia32
++EFI_TARGET := --output-target=efi-app-ia32
+ endif
