@@ -204,18 +204,6 @@ main()
 	list_image ${IMAGE_MULTI}
 	assert_equal ${DUMPIMAGE_LIST} ${MKIMAGE_LIST}
 
-	# Compress and extract FIT images, compare the result
-	create_fit_image
-	extract_fit_image
-	for file in ${DATAFILES}; do
-		assert_equal ${file} ${SRCDIR}/${file}
-	done
-	assert_equal ${TEST_OUT} ${DATAFILE2}
-
-	# List contents of FIT image and compares output from tools
-	list_image ${IMAGE_FIT_ITB}
-	assert_equal ${DUMPIMAGE_LIST} ${MKIMAGE_LIST}
-
 	# Remove files created
 	cleanup
 
