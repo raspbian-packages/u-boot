@@ -1,0 +1,45 @@
+From 9a13a76e6256c51d04f41139733dbb31755e8d30 Mon Sep 17 00:00:00 2001
+From: Stefan Roese <sr@denx.de>
+Date: Mon, 16 Jan 2023 09:01:48 +0100
+Subject: [PATCH] timer: orion-timer: Fix problem in early_init_done()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+It was noticed that Clearfog is currently broken with this newly
+introduced early_init_done() function. Apparently the timer is enabled
+here when U-Boot is run but not configured - at least not correctly.
+Resulting in a hangup in the timer reading functions.
+
+To fix this, also read the value of the reload register and check it's
+value with the one written to by U-Boot. Only if this matches, the
+init has already been done.
+
+Fixes: 5387b093cb79 ("timer: orion-timer: Fix problem with early static variable")
+Signed-off-by: Stefan Roese <sr@denx.de>
+Acked-by: Pali Rohár <pali@kernel.org>
+Cc: Martin Rowe <martin.p.rowe@gmail.com>
+Cc: Tony Dinh <mibodhi@gmail.com>
+Cc: Pali Rohár <pali@kernel.org>
+Cc: Michael Walle <michael@walle.cc>
+---
+ drivers/timer/orion-timer.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/timer/orion-timer.c b/drivers/timer/orion-timer.c
+index 810a03d549..9cab27f2e4 100644
+--- a/drivers/timer/orion-timer.c
++++ b/drivers/timer/orion-timer.c
+@@ -25,7 +25,8 @@ struct orion_timer_priv {
+ 
+ static bool early_init_done(void *base)
+ {
+-	if (readl(base + TIMER_CTRL) & TIMER0_EN)
++	if ((readl(base + TIMER_CTRL) & TIMER0_EN) &&
++	    (readl(base + TIMER0_RELOAD) == ~0))
+ 		return true;
+ 	return false;
+ }
+-- 
+2.39.2
+
