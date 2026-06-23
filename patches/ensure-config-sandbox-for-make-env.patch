@@ -1,0 +1,16 @@
+Ensure that CONFIG_SANDBOX is set when running "make env", avoiding a
+failure to build caused by config_distro_bootcmd.h following the wrong
+codepath...
+
+--- a/include/configs/sandbox.h
++++ b/include/configs/sandbox.h
+@@ -64,6 +64,9 @@
+ #ifdef __ASSEMBLY__
+ #define BOOTENV
+ #else
++#ifndef CONFIG_SANDBOX
++#define CONFIG_SANDBOX 1
++#endif
+ #include <config_distro_bootcmd.h>
+ #endif
+ 
