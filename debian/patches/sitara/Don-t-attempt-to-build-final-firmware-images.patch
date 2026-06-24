@@ -1,0 +1,120 @@
+From: Martyn Welch <martyn.welch@collabora.com>
+Date: Mon, 5 Feb 2024 12:36:21 +0000
+Subject: sitara: Don't attempt to build final firmware images
+
+The final firmware images require access to firmware not yet present in
+linux-firmware. In certain instances it will be either desirable or
+required to sign the elements that are included in the final firmware
+images with device specific keys, which won't be present at build time.
+
+Build and package the firmware elements that are required to form the
+firmware images at a later date.
+
+Signed-off-by: Martyn Welch <martyn.welch@collabora.com>
+---
+ arch/arm/dts/k3-am625-beagleplay-u-boot.dtsi | 4 ++++
+ arch/arm/dts/k3-am625-r5-beagleplay.dts      | 2 ++
+ arch/arm/dts/k3-am625-sk-binman.dtsi         | 8 ++++++++
+ arch/arm/dts/k3-binman.dtsi                  | 4 ++++
+ 4 files changed, 18 insertions(+)
+
+diff --git a/arch/arm/dts/k3-am625-beagleplay-u-boot.dtsi b/arch/arm/dts/k3-am625-beagleplay-u-boot.dtsi
+index a067b0b..50438c3 100644
+--- a/arch/arm/dts/k3-am625-beagleplay-u-boot.dtsi
++++ b/arch/arm/dts/k3-am625-beagleplay-u-boot.dtsi
+@@ -65,6 +65,8 @@
+ 
+ #ifdef CONFIG_TARGET_AM625_A53_BEAGLEPLAY
+ 
++#if 0
++
+ #define SPL_NODTB "spl/u-boot-spl-nodtb.bin"
+ #define SPL_AM625_BEAGLEPLAY_DTB "spl/dts/ti/k3-am625-beagleplay.dtb"
+ #define UBOOT_NODTB "u-boot-nodtb.bin"
+@@ -275,6 +277,8 @@
+ 
+ #endif
+ 
++#endif
++
+ &main_bcdma {
+ 	reg = <0x00 0x485c0100 0x00 0x100>,
+ 	      <0x00 0x4c000000 0x00 0x20000>,
+diff --git a/arch/arm/dts/k3-am625-r5-beagleplay.dts b/arch/arm/dts/k3-am625-r5-beagleplay.dts
+index 9e0a6ed..cc21b82 100644
+--- a/arch/arm/dts/k3-am625-r5-beagleplay.dts
++++ b/arch/arm/dts/k3-am625-r5-beagleplay.dts
+@@ -77,6 +77,7 @@
+ 	ti,sci = <&dm_tifs>;
+ };
+ 
++#if 0
+ &binman {
+ 	tiboot3-am62x-gp-evm.bin {
+ 		filename = "tiboot3-am62x-gp-evm.bin";
+@@ -131,3 +132,4 @@
+ 		};
+ 	};
+ };
++#endif
+diff --git a/arch/arm/dts/k3-am625-sk-binman.dtsi b/arch/arm/dts/k3-am625-sk-binman.dtsi
+index 534eb14..5986acb 100644
+--- a/arch/arm/dts/k3-am625-sk-binman.dtsi
++++ b/arch/arm/dts/k3-am625-sk-binman.dtsi
+@@ -7,6 +7,8 @@
+ 
+ #ifdef CONFIG_TARGET_AM625_R5_EVM
+ 
++#if 0
++
+ &binman {
+ 	tiboot3-am62x-hs-evm.bin {
+ 		filename = "tiboot3-am62x-hs-evm.bin";
+@@ -150,11 +152,15 @@
+ 
+ #endif
+ 
++#endif
++
+ #ifdef CONFIG_TARGET_AM625_A53_EVM
+ 
+ #define SPL_AM625_SK_DTB "spl/dts/ti/k3-am625-sk.dtb"
+ #define AM625_SK_DTB "u-boot.dtb"
+ 
++#if 0
++
+ &binman {
+ 	ti-dm {
+ 		filename = "ti-dm.bin";
+@@ -484,3 +490,5 @@
+ };
+ 
+ #endif
++
++#endif
+diff --git a/arch/arm/dts/k3-binman.dtsi b/arch/arm/dts/k3-binman.dtsi
+index 5163161..b853758 100644
+--- a/arch/arm/dts/k3-binman.dtsi
++++ b/arch/arm/dts/k3-binman.dtsi
+@@ -5,6 +5,7 @@
+ 
+ #include "k3-security.h"
+ 
++
+ / {
+ 	binman: binman {
+ 		multiple-images;
+@@ -27,6 +28,7 @@
+ 	};
+ };
+ 
++#if 0
+ #ifndef CONFIG_ARM64
+ 
+ &binman {
+@@ -492,3 +494,5 @@
+ };
+ 
+ #endif
++
++#endif
