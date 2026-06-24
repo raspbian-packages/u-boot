@@ -1,0 +1,2 @@
+arch/arm/mach-k3/keys/ti-degenerate-key.pem	/usr/lib/u-boot/am62x_evm_r5
+arch/arm/mach-k3/keys/custMpk.pem		/usr/lib/u-boot/am62x_evm_r5
