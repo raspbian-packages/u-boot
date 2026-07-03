@@ -111,8 +111,6 @@ arm64	sunxi		teres_i		/usr/lib/arm-trusted-firmware/sun50i_a64/bl31.bin u-boot.b
 # Vagrant Cascadian <vagrant@debian.org>
 arm64	tegra		p2371-2180	u-boot.bin
 
-avr32	-		hammerhead	u-boot.img
-
 # Hector Oron <zumbi@debian.org>
 riscv64	sifive	sifive_fu540	u-boot.bin
 

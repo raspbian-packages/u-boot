@@ -1,4 +1,4 @@
-u-boot (2021.01+dfsg-5+rpi1+deb11u2) bullseye-staging; urgency=medium
+u-boot (2021.01+dfsg-5+rpi1+deb11u3) bullseye-staging; urgency=medium
 
   [changes brought forward from 2014.10+dfsg1-2+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Fri, 28 Nov 2014 06:00:07 +0000]
   * Don't build versions for various armv7 devices, build rpi version instead.
@@ -7,7 +7,19 @@ u-boot (2021.01+dfsg-5+rpi1+deb11u2) bullseye-staging; urgency=medium
   * Don't build powerpc targets for qemu, my attempts to build the nessacery
     cross-compiler in raspbian failed.
 
- -- Raspbian forward porter <root@raspbian.org>  Mon, 18 May 2026 02:33:18 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Fri, 03 Jul 2026 03:33:47 +0000
+
+u-boot (2021.01+dfsg-5+deb11u3) bullseye-security; urgency=high
+
+  * Non-maintainer upload by the LTS Team.
+  * CVE-2024-42040: buffer overread vulnerability in the DHCP implementation.
+    (Closes: #1081557)
+  * CVE-2026-46728: mishandles use of unit addresses in a FIT.
+    (Closes: #1136954)
+  * Remove avr32 arch support removed in dpkg 1.22.0 (Closes: #1056750)
+    - now also leads to DAK rejecting the upload even for older suites.
+
+ -- Andreas Henriksson <andreas@fatal.se>  Tue, 23 Jun 2026 21:07:40 +0200
 
 u-boot (2021.01+dfsg-5+deb11u2) bullseye-security; urgency=medium
 
